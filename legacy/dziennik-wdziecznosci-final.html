@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='31' fill='%23fbf0e2'/%3E%3Cpath d='M20 26h24l-2.5 24a4 4 0 0 1-4 3.6H26.5a4 4 0 0 1-4-3.6L20 26z' fill='%23e2793f'/%3E%3Cpath d='M20 26h24l-.6 6H20.6L20 26z' fill='%23c1592a'/%3E%3Cpath d='M44 30c4 0 7 2.4 7 6s-3 6-7 5.5' fill='none' stroke='%238a3324' stroke-width='2.5' stroke-linecap='round'/%3E%3Cellipse cx='32' cy='25' rx='13' ry='3.4' fill='%23f3e3d3'/%3E%3Cpath d='M27 17c0-3 2-5 2-8 2 2 3 4 3 6 1-2 2-3 2-5 2 2 3 5 2 8-1 2-3 3-5 3s-4-1.5-4-4z' fill='%23c8912b'/%3E%3C/svg%3E">
+<title>🍂 Dziennik Wdzięczności</title>
+<style>
+  :root{
+    --bg:#fbf0e2; --card:#fffaf3; --ink:#3d2418; --muted:#8f6a54;
+    --accent:#c1592a; --accent2:#8a3324; --gold:#c8912b;
+    --accent-soft:#f6dcb8; --border:#ecd5b3;
+  }
+  :root[data-theme="dark"]{
+    --bg:#241611; --card:#2f1e16; --ink:#f3e3d3; --muted:#c39d81;
+    --accent:#e2793f; --accent2:#f0a15c; --gold:#e0ab52;
+    --accent-soft:#43291b; --border:#4a3121;
+  }
+  .top-row{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .theme-toggle{
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:8px 12px; font-size:1rem; cursor:pointer; flex-shrink:0; margin-top:4px;
+  }
+  .streak{
+    display:inline-block; background:var(--accent-soft); color:var(--accent2);
+    border-radius:20px; padding:4px 12px; font-size:.85rem; font-weight:600; margin-bottom:18px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; color:var(--ink);
+    font-family:Georgia,'Iowan Old Style',serif;
+    -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(ellipse at 10% 0%, rgba(200,145,43,.18) 0%, transparent 55%),
+      radial-gradient(ellipse at 90% 15%, rgba(193,89,42,.16) 0%, transparent 50%),
+      var(--bg);
+    min-height:100vh;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:28px 20px 60px;}
+  h1{font-size:1.7rem;margin:0 0 4px;font-weight:600;letter-spacing:.2px;
+     background:linear-gradient(90deg,var(--accent2),var(--accent),var(--gold));
+     -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .date{color:var(--muted);font-size:.9rem;margin-bottom:22px;}
+  .quote{
+    background:var(--accent-soft); border-radius:14px; padding:18px 20px;
+    font-style:italic; line-height:1.5; margin-bottom:24px; position:relative;
+    border-left:4px solid var(--accent);
+  }
+  .quote button{
+    position:absolute; top:10px; right:10px; background:none; border:none;
+    color:var(--muted); font-size:.75rem; cursor:pointer; font-family:inherit;
+  }
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    padding:20px; margin-bottom:16px;
+  }
+  label{display:block; font-size:.95rem; font-weight:600; margin-bottom:6px;}
+  .hint{font-size:.8rem; color:var(--muted); margin:-2px 0 8px;}
+  input[type=text], textarea{
+    width:100%; border:1px solid var(--border); border-radius:10px;
+    padding:10px 12px; font-family:inherit; font-size:.95rem; color:var(--ink);
+    background:transparent; resize:vertical; margin-bottom:12px;
+  }
+  input[type=text]:focus, textarea:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  .grateful-row{display:flex; gap:8px; align-items:center; margin-bottom:10px;}
+  .grateful-row span{color:var(--accent); font-weight:700; width:18px;}
+  .grateful-row input{margin-bottom:0;}
+  .save-btn{
+    width:100%; padding:13px; border:none; border-radius:12px;
+    background:linear-gradient(90deg,var(--accent2),var(--accent));
+    color:#fff; font-size:1rem; font-weight:600; cursor:pointer; font-family:inherit;
+  }
+  .cancel-btn{
+    width:100%; padding:10px; margin-top:8px; border:1px solid var(--border); border-radius:12px;
+    background:transparent; color:var(--muted); font-size:.9rem; cursor:pointer; font-family:inherit;
+  }
+  .status{text-align:center; font-size:.85rem; color:var(--muted); margin-top:10px; min-height:1.2em;}
+  .editing-banner{
+    background:var(--accent-soft); border:1px solid var(--accent); border-radius:10px;
+    padding:8px 12px; font-size:.85rem; margin-bottom:14px; color:var(--accent2); font-weight:600;
+  }
+  .history{margin-top:36px;}
+  .history h2{font-size:1.15rem; margin-bottom:10px; color:var(--accent2);}
+  .entry{
+    border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:10px;
+    background:var(--card); position:relative;
+  }
+  .entry .d{font-weight:600; font-size:.85rem; color:var(--accent); margin-bottom:6px;}
+  .entry ul{margin:0 0 6px; padding-left:18px; font-size:.9rem;}
+  .entry .extra{font-size:.85rem; color:var(--muted); margin-top:4px;}
+  .entry-actions{position:absolute; top:12px; right:14px; display:flex; gap:6px;}
+  .entry-actions button{
+    background:none; border:1px solid var(--border);
+    border-radius:8px; padding:3px 10px; font-size:.78rem; color:var(--accent); cursor:pointer;
+    font-family:inherit;
+  }
+  .entry-actions .del{color:#a13a2a;}
+  .empty{color:var(--muted); font-size:.9rem; text-align:center; padding:20px 0;}
+  .note{font-size:.78rem; color:var(--muted); text-align:center; margin-top:30px; line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top-row">
+    <div>
+      <h1>🍂 Dziennik Wdzięczności</h1>
+      <div class="date" id="todayLabel"></div>
+    </div>
+    <button class="theme-toggle" id="themeToggle" title="Przełącz motyw">🌙</button>
+  </div>
+  <div class="streak" id="streakBadge"></div>
+
+  <div class="quote">
+    <span id="quoteText">Wczytuję cytat…</span>
+    <button id="newQuoteBtn" title="Losuj inny">⟳ inny</button>
+  </div>
+
+  <div class="card">
+    <div class="editing-banner" id="editingBanner" style="display:none;"></div>
+    <label>Za co jestem dziś wdzięczna? (3 rzeczy)</label>
+    <div class="hint">Im bardziej konkretnie, tym lepiej — zamiast „rodzina”, spróbuj „telefon od mamy dziś rano”.</div>
+    <div class="grateful-row"><span>1.</span><input type="text" id="g1" placeholder="np. poranna kawa w spokoju"></div>
+    <div class="grateful-row"><span>2.</span><input type="text" id="g2" placeholder="np. wiadomość od przyjaciółki"></div>
+    <div class="grateful-row"><span>3.</span><input type="text" id="g3" placeholder="np. słońce po południu"></div>
+
+    <label>Dlaczego to dla mnie ważne?</label>
+    <textarea id="why" rows="2" placeholder="Rozwiń jedną z powyższych rzeczy..."></textarea>
+
+    <label>Kogo dziś doceniam?</label>
+    <input type="text" id="person" placeholder="np. sąsiadka, która pomogła z paczką">
+
+    <label>Z czego jestem dziś dumna?</label>
+    <input type="text" id="proud" placeholder="np. dokończyłam trudne zadanie">
+
+    <label>Jakie wyzwanie dziś miałam i czego mnie nauczyło?</label>
+    <textarea id="lesson" rows="2" placeholder="Nawet trudny dzień może dać jakąś lekcję..."></textarea>
+
+    <button class="save-btn" id="saveBtn">Zapisz wpis dnia</button>
+    <button class="cancel-btn" id="cancelBtn" style="display:none;">Anuluj edycję</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="card" id="summaryCard">
+    <label style="margin-bottom:10px;">📅 Podsumowanie miesiąca</label>
+    <select id="monthSelect" style="width:100%; padding:9px 10px; border:1px solid var(--border); border-radius:10px; background:var(--card); color:var(--ink); font-family:inherit; margin-bottom:14px;"></select>
+    <div id="summaryContent"></div>
+  </div>
+
+  <div class="history">
+    <h2>Poprzednie wpisy</h2>
+    <div id="historyList" class="empty">Brak wpisów.</div>
+  </div>
+
+  <div class="card" style="margin-top:24px;">
+    <label style="margin-bottom:10px;">💾 Kopia zapasowa</label>
+    <div class="hint">Eksportuj wszystkie wpisy do pliku, który możesz bezpiecznie przechować (np. na dysku w chmurze). W razie potrzeby wczytaj go z powrotem.</div>
+    <button class="cancel-btn" id="exportBtn" style="margin-top:4px;">⬇️ Eksportuj wpisy (plik .json)</button>
+    <label for="importFile" class="cancel-btn" style="display:block; text-align:center; margin-top:8px; cursor:pointer;">⬆️ Importuj kopię zapasową</label>
+    <input type="file" id="importFile" accept="application/json" style="display:none;">
+    <div class="status" id="backupStatus"></div>
+  </div>
+
+  <div class="note">Wpisy zapisują się lokalnie w tej przeglądarce (localStorage). Otwieraj ten sam plik, w tej samej przeglądarce, by mieć dostęp do historii. Warto od czasu do czasu zrobić kopię zapasową powyżej.</div>
+</div>
+
+<script>
+const STORAGE_KEY = 'gratitude_journal_entries_v1';
+
+const QUOTES = [
+  "Wdzięczność to pamięć serca.",
+  "Zauważanie małych rzeczy zmienia sposób, w jaki widzimy cały dzień.",
+  "Nie jesteśmy szczęśliwi, bo mamy dużo — jesteśmy szczęśliwi, gdy potrafimy docenić to, co mamy.",
+  "Każdy dzień kryje coś, za co warto podziękować, nawet jeśli trzeba tego poszukać.",
+  "Wdzięczność zamienia to, co mamy, w coś wystarczającego.",
+  "Spokój zaczyna się od zauważenia dobra, które już jest obecne.",
+  "Najprostsze chwile bywają najcenniejsze, jeśli poświęcimy im uwagę.",
+  "Uważność na dobro nie wymaga wielkich zmian — wystarczy chwila refleksji.",
+  "Dziękowanie za drobiazgi otwiera oczy na to, co ważne.",
+  "Trudny dzień też może zostawić po sobie coś wartościowego.",
+  "Docenianie innych jest jednym z najprostszych sposobów, by poczuć się bliżej ludzi.",
+  "Wdzięczność nie usuwa trudności, ale zmienia sposób, w jaki na nie patrzymy.",
+  "Czasem wystarczy zatrzymać się na chwilę, by dostrzec, ile już mamy.",
+  "Radość rośnie, gdy dzielimy się wdzięcznością z innymi.",
+  "To, na czym skupiamy uwagę, staje się większe w naszym życiu — warto wybierać dobro.",
+  "Jesień uczy, że odpuszczanie też może być formą wdzięczności.",
+  "Nawet liść, zanim opadnie, zdąży zabłysnąć kolorem — warto zauważać takie chwile.",
+  "Ciepła herbata, koc i chwila spokoju też zasługują na podziękowanie."
+];
+
+function todayKey(){ return new Date().toISOString().slice(0,10); }
+function todayLabel(){
+  return new Date().toLocaleDateString('pl-PL', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+}
+document.getElementById('todayLabel').textContent = todayLabel();
+
+const THEME_KEY = 'gratitude_journal_theme';
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('themeToggle').textContent = t === 'dark' ? '☀️' : '🌙';
+}
+applyTheme(localStorage.getItem(THEME_KEY) || 'light');
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+});
+
+function showQuote(){
+  const q = QUOTES[Math.floor(Math.random()*QUOTES.length)];
+  document.getElementById('quoteText').textContent = '„' + q + '”';
+}
+showQuote();
+document.getElementById('newQuoteBtn').addEventListener('click', showQuote);
+
+function loadEntries(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e){ return {}; }
+}
+function persistEntries(entries){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+}
+
+let editingDate = null;
+const statusEl = document.getElementById('status');
+const historyEl = document.getElementById('historyList');
+const saveBtn = document.getElementById('saveBtn');
+const cancelBtn = document.getElementById('cancelBtn');
+const editingBanner = document.getElementById('editingBanner');
+
+function fillForm(e){
+  document.getElementById('g1').value = (e.grateful && e.grateful[0]) || '';
+  document.getElementById('g2').value = (e.grateful && e.grateful[1]) || '';
+  document.getElementById('g3').value = (e.grateful && e.grateful[2]) || '';
+  document.getElementById('why').value = e.why || '';
+  document.getElementById('person').value = e.person || '';
+  document.getElementById('proud').value = e.proud || '';
+  document.getElementById('lesson').value = e.lesson || '';
+}
+function clearForm(){
+  ['g1','g2','g3','why','person','proud','lesson'].forEach(id => document.getElementById(id).value = '');
+}
+function startEdit(date, entry){
+  editingDate = date;
+  fillForm(entry);
+  saveBtn.textContent = 'Zapisz zmiany';
+  cancelBtn.style.display = 'block';
+  editingBanner.style.display = 'block';
+  editingBanner.textContent = '✏️ Edytujesz wpis z: ' + date;
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function stopEdit(){
+  editingDate = null;
+  clearForm();
+  saveBtn.textContent = 'Zapisz wpis dnia';
+  cancelBtn.style.display = 'none';
+  editingBanner.style.display = 'none';
+}
+cancelBtn.addEventListener('click', stopEdit);
+
+saveBtn.addEventListener('click', () => {
+  const targetDate = editingDate || todayKey();
+  const entry = {
+    date: targetDate,
+    grateful: [
+      document.getElementById('g1').value.trim(),
+      document.getElementById('g2').value.trim(),
+      document.getElementById('g3').value.trim()
+    ].filter(Boolean),
+    why: document.getElementById('why').value.trim(),
+    person: document.getElementById('person').value.trim(),
+    proud: document.getElementById('proud').value.trim(),
+    lesson: document.getElementById('lesson').value.trim(),
+    savedAt: Date.now()
+  };
+  if (entry.grateful.length === 0){
+    statusEl.textContent = 'Wpisz przynajmniej jedną rzecz, za którą jesteś wdzięczna 🌱';
+    return;
+  }
+  try {
+    const entries = loadEntries();
+    const wasEditing = !!editingDate;
+    entries[targetDate] = entry;
+    persistEntries(entries);
+    statusEl.textContent = wasEditing ? 'Wpis zaktualizowany ✓' : 'Zapisano ✓';
+    if (wasEditing) stopEdit();
+    refreshAll();
+  } catch(e){
+    statusEl.textContent = 'Nie udało się zapisać w tej przeglądarce.';
+  }
+});
+
+function computeStreak(entries){
+  const dates = new Set(Object.keys(entries));
+  let count = 0;
+  let cursor = new Date();
+  // if no entry today, streak still counts back from yesterday
+  if (!dates.has(todayKeyFor(cursor))) cursor.setDate(cursor.getDate()-1);
+  while (dates.has(todayKeyFor(cursor))){
+    count++;
+    cursor.setDate(cursor.getDate()-1);
+  }
+  return count;
+}
+function todayKeyFor(d){ return d.toISOString().slice(0,10); }
+
+function renderStreak(){
+  const entries = loadEntries();
+  const streak = computeStreak(entries);
+  const badge = document.getElementById('streakBadge');
+  badge.textContent = streak > 0 ? '🔥 ' + streak + (streak === 1 ? ' dzień z rzędu' : ' dni z rzędu') : '🌱 zacznij dziś swoją serię';
+}
+
+const MONTHS_PL = ['styczeń','luty','marzec','kwiecień','maj','czerwiec','lipiec','sierpień','wrzesień','październik','listopad','grudzień'];
+
+function populateMonthSelect(){
+  const entries = loadEntries();
+  const months = new Set(Object.keys(entries).map(d => d.slice(0,7)));
+  const current = todayKey().slice(0,7);
+  months.add(current);
+  const sorted = Array.from(months).sort().reverse();
+  const sel = document.getElementById('monthSelect');
+  sel.innerHTML = sorted.map(m => {
+    const [y, mo] = m.split('-');
+    return '<option value="' + m + '">' + MONTHS_PL[parseInt(mo,10)-1] + ' ' + y + '</option>';
+  }).join('');
+  sel.value = current;
+}
+
+function renderSummary(){
+  const entries = loadEntries();
+  const month = document.getElementById('monthSelect').value;
+  const monthEntries = Object.keys(entries).filter(d => d.startsWith(month)).sort();
+  const container = document.getElementById('summaryContent');
+  if (!monthEntries.length){
+    container.innerHTML = '<div class="empty" style="padding:6px 0;">Brak wpisów w tym miesiącu.</div>';
+    return;
+  }
+  // longest streak within month
+  let longest = 0, run = 0, prevDay = null;
+  monthEntries.forEach(d => {
+    const day = parseInt(d.slice(8,10),10);
+    if (prevDay !== null && day === prevDay + 1) run++; else run = 1;
+    longest = Math.max(longest, run);
+    prevDay = day;
+  });
+  // most mentioned people
+  const peopleCount = {};
+  monthEntries.forEach(d => {
+    const p = (entries[d].person || '').trim();
+    if (p) peopleCount[p] = (peopleCount[p]||0) + 1;
+  });
+  const topPeople = Object.entries(peopleCount).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  // sample gratitude highlights (up to 3)
+  const samples = [];
+  monthEntries.forEach(d => (entries[d].grateful||[]).forEach(g => { if (g) samples.push(g); }));
+  const shuffled = samples.sort(()=>Math.random()-0.5).slice(0,3);
+
+  let html = '<div class="hint" style="margin-bottom:10px;">📝 ' + monthEntries.length + ' ' + (monthEntries.length===1?'wpis':'wpisów') +
+    ' • 🔥 najdłuższa seria: ' + longest + ' ' + (longest===1?'dzień':'dni') + '</div>';
+  if (topPeople.length){
+    html += '<div style="margin-bottom:10px;"><strong>Najczęściej doceniani:</strong> ' +
+      topPeople.map(([n,c]) => escapeHtml(n) + ' (' + c + ')').join(', ') + '</div>';
+  }
+  if (shuffled.length){
+    html += '<div><strong>Kilka chwil z tego miesiąca:</strong><ul style="margin:6px 0 0; padding-left:18px;">' +
+      shuffled.map(s => '<li>' + escapeHtml(s) + '</li>').join('') + '</ul></div>';
+  }
+  container.innerHTML = html;
+}
+document.getElementById('monthSelect').addEventListener('change', renderSummary);
+
+function refreshAll(){
+  renderHistory();
+  renderStreak();
+  populateMonthSelect();
+  renderSummary();
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderHistory(){
+  const entries = loadEntries();
+  const dates = Object.keys(entries).sort().reverse();
+  if (!dates.length){
+    historyEl.className = 'empty';
+    historyEl.textContent = 'Brak wpisów — Twój pierwszy wpis pojawi się tutaj po zapisaniu.';
+    return;
+  }
+  historyEl.className = '';
+  historyEl.innerHTML = dates.map(date => {
+    const e = entries[date];
+    const items = (e.grateful||[]).map(g => '<li>' + escapeHtml(g) + '</li>').join('');
+    let extra = '';
+    if (e.person) extra += 'Doceniam: ' + escapeHtml(e.person) + '. ';
+    if (e.proud) extra += 'Duma: ' + escapeHtml(e.proud) + '. ';
+    if (e.lesson) extra += 'Lekcja: ' + escapeHtml(e.lesson) + '.';
+    return '<div class="entry">' +
+      '<div class="entry-actions"><button class="edit" data-date="' + escapeHtml(date) + '">edytuj</button>' +
+      '<button class="del" data-date="' + escapeHtml(date) + '">usuń</button></div>' +
+      '<div class="d">🍁 ' + escapeHtml(date) + '</div>' +
+      '<ul>' + items + '</ul>' +
+      (extra ? '<div class="extra">' + extra + '</div>' : '') +
+      '</div>';
+  }).join('');
+}
+
+historyEl.addEventListener('click', (ev) => {
+  const editBtn = ev.target.closest('.edit');
+  const delBtn = ev.target.closest('.del');
+  if (editBtn){
+    const date = editBtn.getAttribute('data-date');
+    const entries = loadEntries();
+    if (entries[date]) startEdit(date, entries[date]);
+  } else if (delBtn){
+    const date = delBtn.getAttribute('data-date');
+    if (confirm('Usunąć wpis z ' + date + '?')){
+      const entries = loadEntries();
+      delete entries[date];
+      persistEntries(entries);
+      refreshAll();
+    }
+  }
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const entries = loadEntries();
+  const blob = new Blob([JSON.stringify(entries, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'kopia-dziennika-wdziecznosci-' + todayKey() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  document.getElementById('backupStatus').textContent = 'Pobrano kopię zapasową ✓';
+});
+
+document.getElementById('importFile').addEventListener('change', (ev) => {
+  const file = ev.target.files[0];
+  const backupStatus = document.getElementById('backupStatus');
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const imported = JSON.parse(reader.result);
+      if (typeof imported !== 'object' || Array.isArray(imported)) throw new Error('bad format');
+      const current = loadEntries();
+      const merged = Object.assign({}, current, imported);
+      persistEntries(merged);
+      refreshAll();
+      backupStatus.textContent = 'Wczytano kopię zapasową ✓ (wpisy scalone z obecnymi)';
+    } catch(e){
+      backupStatus.textContent = 'Nie udało się wczytać pliku — sprawdź, czy to poprawna kopia zapasowa.';
+    }
+  };
+  reader.readAsText(file);
+  ev.target.value = '';
+});
+
+refreshAll();
+</script>
+</body>
+</html>

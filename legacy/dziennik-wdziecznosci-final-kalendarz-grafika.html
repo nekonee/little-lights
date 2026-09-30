@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='31' fill='%23fbf0e2'/%3E%3Cpath d='M20 26h24l-2.5 24a4 4 0 0 1-4 3.6H26.5a4 4 0 0 1-4-3.6L20 26z' fill='%23e2793f'/%3E%3Cpath d='M20 26h24l-.6 6H20.6L20 26z' fill='%23c1592a'/%3E%3Cpath d='M44 30c4 0 7 2.4 7 6s-3 6-7 5.5' fill='none' stroke='%238a3324' stroke-width='2.5' stroke-linecap='round'/%3E%3Cellipse cx='32' cy='25' rx='13' ry='3.4' fill='%23f3e3d3'/%3E%3Cpath d='M27 17c0-3 2-5 2-8 2 2 3 4 3 6 1-2 2-3 2-5 2 2 3 5 2 8-1 2-3 3-5 3s-4-1.5-4-4z' fill='%23c8912b'/%3E%3C/svg%3E">
+<title>🍂 Dziennik Wdzięczności</title>
+<style>
+  /* Domyślny fallback (pierwsze malowanie, zanim JS ustawi motyw) = jesień jasny */
+  :root{
+    --bg:#fbf0e2; --card:#fffaf3; --ink:#3d2418; --muted:#8f6a54;
+    --accent:#c1592a; --accent2:#8a3324; --gold:#c8912b;
+    --accent-soft:#f6dcb8; --border:#ecd5b3;
+  }
+  /* JESIEŃ — gotowe */
+  :root[data-theme="jesien-jasny"]{
+    --bg:#fbf0e2; --card:#fffaf3; --ink:#3d2418; --muted:#8f6a54;
+    --accent:#c1592a; --accent2:#8a3324; --gold:#c8912b;
+    --accent-soft:#f6dcb8; --border:#ecd5b3;
+    --glow1:#c8912b; --glow2:#c1592a;
+  }
+  :root[data-theme="jesien-ciemny"]{
+    --bg:#241611; --card:#2f1e16; --ink:#f3e3d3; --muted:#c39d81;
+    --accent:#e2793f; --accent2:#f0a15c; --gold:#e0ab52;
+    --accent-soft:#43291b; --border:#4a3121;
+    --glow1:#e0ab52; --glow2:#e2793f;
+  }
+  /* ZIMA jasny — świeży śnieg, szron, sosna kaukaska, ciepłe światełka jako akcent */
+  :root[data-theme="zima-jasny"]{
+    --bg:#eef3f6; --card:#ffffff; --ink:#1f3b34; --muted:#7893a0;
+    --accent:#2f6e52; --accent2:#1f4d38; --gold:#e3b23c;
+    --accent-soft:#dcebf0; --border:#cfe0e6;
+    --glow1:#bcd6e0; --glow2:#2f6e52;
+  }
+  /* ZIMA ciemny — mroźna noc, blask świecy, światełka choinkowe. Chłodne granaty dominują, bursztyn to tylko mały akcent */
+  :root[data-theme="zima-ciemny"]{
+    --bg:#0d1420; --card:#151f2f; --ink:#e4edf2; --muted:#7f92a3;
+    --accent:#5f9bc7; --accent2:#3d6d92; --gold:#e0a95a;
+    --accent-soft:#1c2c40; --border:#233246;
+    --glow1:#3a5f82; --glow2:#1f4d38;
+  }
+  /* WIOSNA jasny — celowo NIE pastelowo-wielkanocna: szałwiowa zieleń, wilgotna ziemia, przygaszona terakota */
+  :root[data-theme="wiosna-jasny"]{
+    --bg:#f4f2ea; --card:#fbfaf5; --ink:#33402e; --muted:#7c8a6d;
+    --accent:#7c9473; --accent2:#4f6b48; --gold:#c17b62;
+    --accent-soft:#e3e8d6; --border:#dce0d0;
+    --glow1:#c17b62; --glow2:#7c9473;
+  }
+  /* WIOSNA ciemny — mokry las o zmierzchu */
+  :root[data-theme="wiosna-ciemny"]{
+    --bg:#1a2117; --card:#212b1c; --ink:#e6e9dd; --muted:#93a184;
+    --accent:#8fae7f; --accent2:#5f7d54; --gold:#c98a6d;
+    --accent-soft:#2c3524; --border:#3a4530;
+    --glow1:#c98a6d; --glow2:#8fae7f;
+  }
+  /* LATO jasny — sky blue/lazur, sosny nad morzem, piasek, lody */
+  :root[data-theme="lato-jasny"]{
+    --bg:#fbf6ec; --card:#ffffff; --ink:#163a4a; --muted:#5f7f8a;
+    --accent:#2f8fd1; --accent2:#145a86; --gold:#e3a856;
+    --accent-soft:#d7eefb; --border:#cfe6f2;
+    --glow1:#e3a856; --glow2:#2f8fd1;
+  }
+  /* LATO ciemny — Hotel California: granatowo-fioletowy zmierzch, pomarańcz zachodu tylko jako wąski pas przy horyzoncie */
+  :root[data-theme="lato-ciemny"]{
+    --bg:#171833; --card:#20213f; --ink:#f3e3cf; --muted:#a29fc2;
+    --accent:#c9506b; --accent2:#8a5aa8; --gold:#e8934a;
+    --accent-soft:#2d2a4d; --border:#332f57;
+    --glow1:#3d3a6b; --glow2:#c9502a;
+  }
+  .top-row{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .theme-select{
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:8px 10px; font-size:.85rem; cursor:pointer; flex-shrink:0; margin-top:4px;
+    color:var(--ink); font-family:inherit; max-width:150px;
+  }
+  .streak{
+    display:inline-block; background:var(--accent-soft); color:var(--accent2);
+    border-radius:20px; padding:4px 12px; font-size:.85rem; font-weight:600; margin-bottom:18px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; color:var(--ink);
+    font-family:Georgia,'Iowan Old Style',serif;
+    -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(ellipse at 10% 0%, color-mix(in srgb, var(--glow1) 18%, transparent) 0%, transparent 55%),
+      radial-gradient(ellipse at 90% 15%, color-mix(in srgb, var(--glow2) 16%, transparent) 0%, transparent 50%),
+      var(--bg);
+    min-height:100vh;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:28px 20px 60px;}
+  h1{font-size:1.7rem;margin:0 0 4px;font-weight:600;letter-spacing:.2px;
+     background:linear-gradient(90deg,var(--accent2),var(--accent),var(--gold));
+     -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .lights-decor{display:none; margin:-4px 0 12px; line-height:0;}
+  html[data-theme="zima-jasny"] .lights-decor, html[data-theme="zima-ciemny"] .lights-decor{display:block;}
+  .lights-decor svg{width:100%; height:34px; display:block;}
+  .lights-decor .bulb{animation:twinkle 2.6s ease-in-out infinite;}
+  @keyframes twinkle{0%,100%{opacity:1;} 50%{opacity:.45;}}
+  .date{color:var(--muted);font-size:.9rem;margin-bottom:22px;}
+  .quote{
+    background:var(--accent-soft); border-radius:14px; padding:18px 20px;
+    font-style:italic; line-height:1.5; margin-bottom:24px; position:relative;
+    border-left:4px solid var(--accent);
+  }
+  .quote button{
+    position:absolute; top:10px; right:10px; background:none; border:none;
+    color:var(--muted); font-size:.75rem; cursor:pointer; font-family:inherit;
+  }
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    padding:20px; margin-bottom:16px;
+  }
+  label{display:block; font-size:.95rem; font-weight:600; margin-bottom:6px;}
+  .hint{font-size:.8rem; color:var(--muted); margin:-2px 0 8px;}
+  input[type=text], textarea{
+    width:100%; border:1px solid var(--border); border-radius:10px;
+    padding:10px 12px; font-family:inherit; font-size:.95rem; color:var(--ink);
+    background:transparent; resize:vertical; margin-bottom:12px;
+  }
+  input[type=text]:focus, textarea:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  .grateful-row{display:flex; gap:8px; align-items:center; margin-bottom:10px;}
+  .grateful-row span{color:var(--accent); font-weight:700; width:18px;}
+  .grateful-row input{margin-bottom:0;}
+  .save-btn{
+    width:100%; padding:13px; border:none; border-radius:12px;
+    background:linear-gradient(90deg,var(--accent2),var(--accent));
+    color:#fff; font-size:1rem; font-weight:600; cursor:pointer; font-family:inherit;
+  }
+  .cancel-btn{
+    width:100%; padding:10px; margin-top:8px; border:1px solid var(--border); border-radius:12px;
+    background:transparent; color:var(--muted); font-size:.9rem; cursor:pointer; font-family:inherit;
+  }
+  .status{text-align:center; font-size:.85rem; color:var(--muted); margin-top:10px; min-height:1.2em;}
+  .entry-indicator{
+    background:var(--accent-soft); border:1px solid var(--border); border-radius:10px;
+    padding:8px 12px; font-size:.85rem; margin-bottom:14px; color:var(--accent2); font-weight:600;
+  }
+  .date-picker-wrap{position:relative; margin-bottom:16px;}
+  .date-picker-row{display:flex; gap:8px;}
+  .date-trigger{
+    flex:1; text-align:left; padding:10px 12px; border:1px solid var(--border); border-radius:10px;
+    background:transparent; color:var(--ink); font-family:inherit; font-size:.95rem; cursor:pointer;
+  }
+  .today-btn{
+    padding:10px 14px; border:1px solid var(--border); border-radius:10px;
+    background:transparent; color:var(--accent); font-family:inherit; font-size:.85rem; cursor:pointer;
+  }
+  .calendar-popover{
+    position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:20;
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:14px; box-shadow:0 8px 24px rgba(0,0,0,.18);
+  }
+  .cal-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; font-weight:600; color:var(--accent2);}
+  .cal-header button{background:none; border:1px solid var(--border); border-radius:8px; width:30px; height:30px; cursor:pointer; color:var(--ink); font-family:inherit;}
+  .cal-weekdays{display:grid; grid-template-columns:repeat(7,1fr); font-size:.72rem; color:var(--muted); text-align:center; margin-bottom:4px;}
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:2px;}
+  .cal-day{
+    position:relative; aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+    border-radius:8px; font-size:.85rem; cursor:pointer; color:var(--ink);
+  }
+  .cal-day.other-month{color:var(--muted); opacity:.4;}
+  .cal-day:hover{background:var(--accent-soft);}
+  .cal-day.today{outline:1px solid var(--accent);}
+  .cal-day.selected{background:var(--accent); color:#fff;}
+  .cal-day .dot{
+    position:absolute; bottom:3px; width:4px; height:4px; border-radius:50%; background:var(--gold);
+  }
+  .cal-day.selected .dot{background:#fff;}
+  .history{margin-top:36px;}
+  .history h2{font-size:1.15rem; margin-bottom:10px; color:var(--accent2);}
+  .entry{
+    border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:10px;
+    background:var(--card); position:relative;
+  }
+  .entry .d{font-weight:600; font-size:.85rem; color:var(--accent); margin-bottom:6px;}
+  .entry ul{margin:0 0 6px; padding-left:18px; font-size:.9rem;}
+  .entry .extra{font-size:.85rem; color:var(--muted); margin-top:4px;}
+  .entry-actions{position:absolute; top:12px; right:14px; display:flex; gap:6px;}
+  .entry-actions button{
+    background:none; border:1px solid var(--border);
+    border-radius:8px; padding:3px 10px; font-size:.78rem; color:var(--accent); cursor:pointer;
+    font-family:inherit;
+  }
+  .entry-actions .del{color:#a13a2a;}
+  .empty{color:var(--muted); font-size:.9rem; text-align:center; padding:20px 0;}
+  .note{font-size:.78rem; color:var(--muted); text-align:center; margin-top:30px; line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="lights-decor" id="lightsDecor" aria-hidden="true"></div>
+  <div class="top-row">
+    <div>
+      <h1>🍂 Dziennik Wdzięczności</h1>
+      <div class="date" id="todayLabel"></div>
+    </div>
+    <select class="theme-select" id="themeSelect" title="Wybierz motyw">
+      <option value="jesien-jasny">🍂 Jesień jasny</option>
+      <option value="jesien-ciemny">🍂 Jesień ciemny</option>
+      <option value="zima-jasny">❄️ Zima jasny</option>
+      <option value="zima-ciemny">❄️ Zima ciemny</option>
+      <option value="wiosna-jasny">🌸 Wiosna jasny</option>
+      <option value="wiosna-ciemny">🌸 Wiosna ciemny</option>
+      <option value="lato-jasny">☀️ Lato jasny</option>
+      <option value="lato-ciemny">☀️ Lato ciemny</option>
+    </select>
+  </div>
+  <div class="streak" id="streakBadge"></div>
+
+  <div class="quote">
+    <span id="quoteText">Wczytuję cytat…</span>
+    <button id="newQuoteBtn" title="Losuj inny">⟳ inny</button>
+  </div>
+
+  <div class="card">
+    <div class="date-picker-wrap">
+      <label>Piszesz wpis na dzień:</label>
+      <div class="date-picker-row">
+        <button type="button" class="date-trigger" id="dateTrigger">📅 <span id="dateTriggerLabel"></span></button>
+        <button type="button" class="today-btn" id="todayBtn">Dziś</button>
+      </div>
+      <div class="calendar-popover" id="calendarPopover" style="display:none;">
+        <div class="cal-header">
+          <button type="button" id="calPrev">‹</button>
+          <span id="calMonthLabel"></span>
+          <button type="button" id="calNext">›</button>
+        </div>
+        <div class="cal-weekdays"><span>Pn</span><span>Wt</span><span>Śr</span><span>Cz</span><span>Pt</span><span>So</span><span>Nd</span></div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+    </div>
+    <div class="entry-indicator" id="entryIndicator"></div>
+
+    <label>Za co jestem wdzięczna? (3 rzeczy)</label>
+    <div class="hint">Im bardziej konkretnie, tym lepiej — zamiast „rodzina”, spróbuj „telefon od mamy dziś rano”.</div>
+    <div class="grateful-row"><span>1.</span><input type="text" id="g1" placeholder="np. poranna kawa w spokoju"></div>
+    <div class="grateful-row"><span>2.</span><input type="text" id="g2" placeholder="np. wiadomość od przyjaciółki"></div>
+    <div class="grateful-row"><span>3.</span><input type="text" id="g3" placeholder="np. słońce po południu"></div>
+
+    <label>Dlaczego to dla mnie ważne?</label>
+    <textarea id="why" rows="2" placeholder="Rozwiń jedną z powyższych rzeczy..."></textarea>
+
+    <label>Kogo dziś doceniam?</label>
+    <input type="text" id="person" placeholder="np. sąsiadka, która pomogła z paczką">
+
+    <label>Z czego jestem dziś dumna?</label>
+    <input type="text" id="proud" placeholder="np. dokończyłam trudne zadanie">
+
+    <label>Jakie wyzwanie dziś miałam i czego mnie nauczyło?</label>
+    <textarea id="lesson" rows="2" placeholder="Nawet trudny dzień może dać jakąś lekcję..."></textarea>
+
+    <button class="save-btn" id="saveBtn">Zapisz wpis</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="card" id="summaryCard">
+    <label style="margin-bottom:10px;">📅 Podsumowanie miesiąca</label>
+    <select id="monthSelect" style="width:100%; padding:9px 10px; border:1px solid var(--border); border-radius:10px; background:var(--card); color:var(--ink); font-family:inherit; margin-bottom:14px;"></select>
+    <div id="summaryContent"></div>
+  </div>
+
+  <div class="history">
+    <h2>Poprzednie wpisy</h2>
+    <div id="historyList" class="empty">Brak wpisów.</div>
+  </div>
+
+  <div class="card" style="margin-top:24px;">
+    <label style="margin-bottom:10px;">💾 Kopia zapasowa</label>
+    <div class="hint">Eksportuj wszystkie wpisy do pliku, który możesz bezpiecznie przechować (np. na dysku w chmurze). W razie potrzeby wczytaj go z powrotem.</div>
+    <button class="cancel-btn" id="exportBtn" style="margin-top:4px;">⬇️ Eksportuj wpisy (plik .json)</button>
+    <label for="importFile" class="cancel-btn" style="display:block; text-align:center; margin-top:8px; cursor:pointer;">⬆️ Importuj kopię zapasową</label>
+    <input type="file" id="importFile" accept="application/json" style="display:none;">
+    <div class="status" id="backupStatus"></div>
+  </div>
+
+  <div class="note">Wpisy zapisują się lokalnie w tej przeglądarce (localStorage). Otwieraj ten sam plik, w tej samej przeglądarce, by mieć dostęp do historii. Warto od czasu do czasu zrobić kopię zapasową powyżej.</div>
+</div>
+
+<script>
+const STORAGE_KEY = 'gratitude_journal_entries_v1';
+
+const QUOTES = [
+  "Wdzięczność to pamięć serca.",
+  "Zauważanie małych rzeczy zmienia sposób, w jaki widzimy cały dzień.",
+  "Nie jesteśmy szczęśliwi, bo mamy dużo — jesteśmy szczęśliwi, gdy potrafimy docenić to, co mamy.",
+  "Każdy dzień kryje coś, za co warto podziękować, nawet jeśli trzeba tego poszukać.",
+  "Wdzięczność zamienia to, co mamy, w coś wystarczającego.",
+  "Spokój zaczyna się od zauważenia dobra, które już jest obecne.",
+  "Najprostsze chwile bywają najcenniejsze, jeśli poświęcimy im uwagę.",
+  "Uważność na dobro nie wymaga wielkich zmian — wystarczy chwila refleksji.",
+  "Dziękowanie za drobiazgi otwiera oczy na to, co ważne.",
+  "Trudny dzień też może zostawić po sobie coś wartościowego.",
+  "Docenianie innych jest jednym z najprostszych sposobów, by poczuć się bliżej ludzi.",
+  "Wdzięczność nie usuwa trudności, ale zmienia sposób, w jaki na nie patrzymy.",
+  "Czasem wystarczy zatrzymać się na chwilę, by dostrzec, ile już mamy.",
+  "Radość rośnie, gdy dzielimy się wdzięcznością z innymi.",
+  "To, na czym skupiamy uwagę, staje się większe w naszym życiu — warto wybierać dobro.",
+  "Jesień uczy, że odpuszczanie też może być formą wdzięczności.",
+  "Nawet liść, zanim opadnie, zdąży zabłysnąć kolorem — warto zauważać takie chwile.",
+  "Ciepła herbata, koc i chwila spokoju też zasługują na podziękowanie."
+];
+
+function todayKey(){ return new Date().toISOString().slice(0,10); }
+function todayLabel(){
+  return new Date().toLocaleDateString('pl-PL', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+}
+document.getElementById('todayLabel').textContent = todayLabel();
+
+const THEME_KEY = 'gratitude_journal_theme';
+const themeSelect = document.getElementById('themeSelect');
+const SEASON_EMOJI = { jesien:'🍂', zima:'❄️', wiosna:'🌿', lato:'🌊' };
+const h1El = document.querySelector('h1');
+
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  themeSelect.value = t;
+  const season = t.split('-')[0];
+  const emoji = SEASON_EMOJI[season] || '🍂';
+  h1El.textContent = emoji + ' Dziennik Wdzięczności';
+  document.title = emoji + ' Dziennik Wdzięczności';
+}
+applyTheme(localStorage.getItem(THEME_KEY) || 'jesien-jasny');
+themeSelect.addEventListener('change', () => {
+  localStorage.setItem(THEME_KEY, themeSelect.value);
+  applyTheme(themeSelect.value);
+});
+
+// Girlanda światełek — widoczna tylko w motywach zimowych (sterowane przez CSS)
+function buildLightsSVG(seed){
+  seed = seed || 0;
+  const W = 640, H = 34, count = 14;
+  const colors = ['#e2483f','#3fae6a','#e8c15a','#5f9bc7','#e28fc0'];
+  let path = 'M0,' + (H/2);
+  let bulbs = '';
+  for (let i = 0; i <= count; i++){
+    const x = (W / count) * i;
+    const y = H/2 + Math.sin(i * 1.15 + seed) * 10;
+    path += ' L' + x.toFixed(1) + ',' + y.toFixed(1);
+    if (i < count){
+      const color = colors[(i + seed) % colors.length];
+      bulbs += '<circle class="bulb" style="animation-delay:' + (((i+seed)%8)*0.18) + 's" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4.5" fill="' + color + '"/>';
+    }
+  }
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">' +
+    '<path d="' + path + '" fill="none" stroke="var(--border)" stroke-width="1.5" opacity="0.6"/>' +
+    bulbs + '</svg>';
+}
+function renderAllLights(){
+  document.getElementById('lightsDecor').innerHTML = buildLightsSVG(0);
+  const segments = document.querySelectorAll('.quote, .card, .history');
+  segments.forEach((el, idx) => {
+    const prev = el.previousElementSibling;
+    if (prev && prev.classList && prev.classList.contains('lights-decor')) return;
+    const div = document.createElement('div');
+    div.className = 'lights-decor';
+    div.setAttribute('aria-hidden', 'true');
+    div.innerHTML = buildLightsSVG(idx + 1);
+    el.parentNode.insertBefore(div, el);
+  });
+}
+renderAllLights();
+
+function showQuote(){
+  const q = QUOTES[Math.floor(Math.random()*QUOTES.length)];
+  document.getElementById('quoteText').textContent = '„' + q + '”';
+}
+showQuote();
+document.getElementById('newQuoteBtn').addEventListener('click', showQuote);
+
+function loadEntries(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e){ return {}; }
+}
+function persistEntries(entries){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+}
+
+let selectedDate = todayKey();
+let calendarViewDate = new Date();
+const statusEl = document.getElementById('status');
+const historyEl = document.getElementById('historyList');
+const saveBtn = document.getElementById('saveBtn');
+const entryIndicator = document.getElementById('entryIndicator');
+const dateTrigger = document.getElementById('dateTrigger');
+const dateTriggerLabel = document.getElementById('dateTriggerLabel');
+const calendarPopover = document.getElementById('calendarPopover');
+
+function fillForm(e){
+  document.getElementById('g1').value = (e.grateful && e.grateful[0]) || '';
+  document.getElementById('g2').value = (e.grateful && e.grateful[1]) || '';
+  document.getElementById('g3').value = (e.grateful && e.grateful[2]) || '';
+  document.getElementById('why').value = e.why || '';
+  document.getElementById('person').value = e.person || '';
+  document.getElementById('proud').value = e.proud || '';
+  document.getElementById('lesson').value = e.lesson || '';
+}
+function clearForm(){
+  ['g1','g2','g3','why','person','proud','lesson'].forEach(id => document.getElementById(id).value = '');
+}
+
+function formatDateLabel(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  const label = d.toLocaleDateString('pl-PL', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function loadFormForDate(){
+  const entries = loadEntries();
+  const existing = entries[selectedDate];
+  if (existing) fillForm(existing); else clearForm();
+  dateTriggerLabel.textContent = formatDateLabel(selectedDate);
+  entryIndicator.textContent = existing
+    ? '✏️ Edytujesz istniejący wpis z tego dnia'
+    : (selectedDate === todayKey() ? '🆕 Nowy wpis na dziś' : '🆕 Nowy wpis na wybrany dzień');
+  saveBtn.textContent = existing ? 'Zapisz zmiany' : 'Zapisz wpis';
+  statusEl.textContent = '';
+}
+
+function selectDate(dateStr){
+  selectedDate = dateStr;
+  calendarViewDate = new Date(dateStr + 'T00:00:00');
+  loadFormForDate();
+  closeCalendar();
+}
+
+function renderCalendarGrid(){
+  const entries = loadEntries();
+  const year = calendarViewDate.getFullYear();
+  const month = calendarViewDate.getMonth();
+  const monthLabel = calendarViewDate.toLocaleDateString('pl-PL', { month:'long', year:'numeric' });
+  document.getElementById('calMonthLabel').textContent = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
+
+  const firstOfMonth = new Date(year, month, 1);
+  const startOffset = (firstOfMonth.getDay() + 6) % 7; // Monday-first
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const gridStart = new Date(year, month, 1 - startOffset);
+
+  const grid = document.getElementById('calGrid');
+  let html = '';
+  for (let i = 0; i < 42; i++){
+    const cellDate = new Date(gridStart);
+    cellDate.setDate(gridStart.getDate() + i);
+    const cellKey = todayKeyFor(cellDate);
+    const inMonth = cellDate.getMonth() === month;
+    const classes = ['cal-day'];
+    if (!inMonth) classes.push('other-month');
+    if (cellKey === todayKey()) classes.push('today');
+    if (cellKey === selectedDate) classes.push('selected');
+    html += '<div class="' + classes.join(' ') + '" data-date="' + cellKey + '">' +
+      cellDate.getDate() +
+      (entries[cellKey] ? '<span class="dot"></span>' : '') +
+      '</div>';
+  }
+  grid.innerHTML = html;
+}
+
+function openCalendar(){
+  renderCalendarGrid();
+  calendarPopover.style.display = 'block';
+}
+function closeCalendar(){
+  calendarPopover.style.display = 'none';
+}
+dateTrigger.addEventListener('click', (ev) => {
+  ev.stopPropagation();
+  calendarPopover.style.display === 'block' ? closeCalendar() : openCalendar();
+});
+calendarPopover.addEventListener('click', (ev) => ev.stopPropagation());
+document.addEventListener('click', closeCalendar);
+
+document.getElementById('calPrev').addEventListener('click', () => {
+  calendarViewDate.setMonth(calendarViewDate.getMonth() - 1);
+  renderCalendarGrid();
+});
+document.getElementById('calNext').addEventListener('click', () => {
+  calendarViewDate.setMonth(calendarViewDate.getMonth() + 1);
+  renderCalendarGrid();
+});
+document.getElementById('calGrid').addEventListener('click', (ev) => {
+  const cell = ev.target.closest('.cal-day');
+  if (cell) selectDate(cell.getAttribute('data-date'));
+});
+document.getElementById('todayBtn').addEventListener('click', () => selectDate(todayKey()));
+
+saveBtn.addEventListener('click', () => {
+  const entry = {
+    date: selectedDate,
+    grateful: [
+      document.getElementById('g1').value.trim(),
+      document.getElementById('g2').value.trim(),
+      document.getElementById('g3').value.trim()
+    ].filter(Boolean),
+    why: document.getElementById('why').value.trim(),
+    person: document.getElementById('person').value.trim(),
+    proud: document.getElementById('proud').value.trim(),
+    lesson: document.getElementById('lesson').value.trim(),
+    savedAt: Date.now()
+  };
+  if (entry.grateful.length === 0){
+    statusEl.textContent = 'Wpisz przynajmniej jedną rzecz, za którą jesteś wdzięczna 🌱';
+    return;
+  }
+  try {
+    const entries = loadEntries();
+    entries[selectedDate] = entry;
+    persistEntries(entries);
+    statusEl.textContent = 'Zapisano ✓';
+    loadFormForDate();
+    refreshAll();
+  } catch(e){
+    statusEl.textContent = 'Nie udało się zapisać w tej przeglądarce.';
+  }
+});
+
+function computeStreak(entries){
+  const dates = new Set(Object.keys(entries));
+  let count = 0;
+  let cursor = new Date();
+  // if no entry today, streak still counts back from yesterday
+  if (!dates.has(todayKeyFor(cursor))) cursor.setDate(cursor.getDate()-1);
+  while (dates.has(todayKeyFor(cursor))){
+    count++;
+    cursor.setDate(cursor.getDate()-1);
+  }
+  return count;
+}
+function todayKeyFor(d){ return d.toISOString().slice(0,10); }
+
+function renderStreak(){
+  const entries = loadEntries();
+  const streak = computeStreak(entries);
+  const badge = document.getElementById('streakBadge');
+  badge.textContent = streak > 0 ? '🔥 ' + streak + (streak === 1 ? ' dzień z rzędu' : ' dni z rzędu') : '🌱 zacznij dziś swoją serię';
+}
+
+const MONTHS_PL = ['styczeń','luty','marzec','kwiecień','maj','czerwiec','lipiec','sierpień','wrzesień','październik','listopad','grudzień'];
+
+function populateMonthSelect(){
+  const entries = loadEntries();
+  const months = new Set(Object.keys(entries).map(d => d.slice(0,7)));
+  const current = todayKey().slice(0,7);
+  months.add(current);
+  const sorted = Array.from(months).sort().reverse();
+  const sel = document.getElementById('monthSelect');
+  sel.innerHTML = sorted.map(m => {
+    const [y, mo] = m.split('-');
+    return '<option value="' + m + '">' + MONTHS_PL[parseInt(mo,10)-1] + ' ' + y + '</option>';
+  }).join('');
+  sel.value = current;
+}
+
+function renderSummary(){
+  const entries = loadEntries();
+  const month = document.getElementById('monthSelect').value;
+  const monthEntries = Object.keys(entries).filter(d => d.startsWith(month)).sort();
+  const container = document.getElementById('summaryContent');
+  if (!monthEntries.length){
+    container.innerHTML = '<div class="empty" style="padding:6px 0;">Brak wpisów w tym miesiącu.</div>';
+    return;
+  }
+  // longest streak within month
+  let longest = 0, run = 0, prevDay = null;
+  monthEntries.forEach(d => {
+    const day = parseInt(d.slice(8,10),10);
+    if (prevDay !== null && day === prevDay + 1) run++; else run = 1;
+    longest = Math.max(longest, run);
+    prevDay = day;
+  });
+  // most mentioned people
+  const peopleCount = {};
+  monthEntries.forEach(d => {
+    const p = (entries[d].person || '').trim();
+    if (p) peopleCount[p] = (peopleCount[p]||0) + 1;
+  });
+  const topPeople = Object.entries(peopleCount).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  // sample gratitude highlights (up to 3)
+  const samples = [];
+  monthEntries.forEach(d => (entries[d].grateful||[]).forEach(g => { if (g) samples.push(g); }));
+  const shuffled = samples.sort(()=>Math.random()-0.5).slice(0,3);
+
+  let html = '<div class="hint" style="margin-bottom:10px;">📝 ' + monthEntries.length + ' ' + (monthEntries.length===1?'wpis':'wpisów') +
+    ' • 🔥 najdłuższa seria: ' + longest + ' ' + (longest===1?'dzień':'dni') + '</div>';
+  if (topPeople.length){
+    html += '<div style="margin-bottom:10px;"><strong>Najczęściej doceniani:</strong> ' +
+      topPeople.map(([n,c]) => escapeHtml(n) + ' (' + c + ')').join(', ') + '</div>';
+  }
+  if (shuffled.length){
+    html += '<div><strong>Kilka chwil z tego miesiąca:</strong><ul style="margin:6px 0 0; padding-left:18px;">' +
+      shuffled.map(s => '<li>' + escapeHtml(s) + '</li>').join('') + '</ul></div>';
+  }
+  container.innerHTML = html;
+}
+document.getElementById('monthSelect').addEventListener('change', renderSummary);
+
+function refreshAll(){
+  renderHistory();
+  renderStreak();
+  populateMonthSelect();
+  renderSummary();
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderHistory(){
+  const entries = loadEntries();
+  const dates = Object.keys(entries).sort().reverse();
+  if (!dates.length){
+    historyEl.className = 'empty';
+    historyEl.textContent = 'Brak wpisów — Twój pierwszy wpis pojawi się tutaj po zapisaniu.';
+    return;
+  }
+  historyEl.className = '';
+  historyEl.innerHTML = dates.map(date => {
+    const e = entries[date];
+    const items = (e.grateful||[]).map(g => '<li>' + escapeHtml(g) + '</li>').join('');
+    let extra = '';
+    if (e.person) extra += 'Doceniam: ' + escapeHtml(e.person) + '. ';
+    if (e.proud) extra += 'Duma: ' + escapeHtml(e.proud) + '. ';
+    if (e.lesson) extra += 'Lekcja: ' + escapeHtml(e.lesson) + '.';
+    return '<div class="entry">' +
+      '<div class="entry-actions"><button class="edit" data-date="' + escapeHtml(date) + '">edytuj</button>' +
+      '<button class="del" data-date="' + escapeHtml(date) + '">usuń</button></div>' +
+      '<div class="d">🍁 ' + escapeHtml(date) + '</div>' +
+      '<ul>' + items + '</ul>' +
+      (extra ? '<div class="extra">' + extra + '</div>' : '') +
+      '</div>';
+  }).join('');
+}
+
+historyEl.addEventListener('click', (ev) => {
+  const editBtn = ev.target.closest('.edit');
+  const delBtn = ev.target.closest('.del');
+  if (editBtn){
+    const date = editBtn.getAttribute('data-date');
+    selectDate(date);
+    window.scrollTo({top:0, behavior:'smooth'});
+  } else if (delBtn){
+    const date = delBtn.getAttribute('data-date');
+    if (confirm('Usunąć wpis z ' + date + '?')){
+      const entries = loadEntries();
+      delete entries[date];
+      persistEntries(entries);
+      refreshAll();
+    }
+  }
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const entries = loadEntries();
+  const blob = new Blob([JSON.stringify(entries, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'kopia-dziennika-wdziecznosci-' + todayKey() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  document.getElementById('backupStatus').textContent = 'Pobrano kopię zapasową ✓';
+});
+
+document.getElementById('importFile').addEventListener('change', (ev) => {
+  const file = ev.target.files[0];
+  const backupStatus = document.getElementById('backupStatus');
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const imported = JSON.parse(reader.result);
+      if (typeof imported !== 'object' || Array.isArray(imported)) throw new Error('bad format');
+      const current = loadEntries();
+      const merged = Object.assign({}, current, imported);
+      persistEntries(merged);
+      refreshAll();
+      backupStatus.textContent = 'Wczytano kopię zapasową ✓ (wpisy scalone z obecnymi)';
+    } catch(e){
+      backupStatus.textContent = 'Nie udało się wczytać pliku — sprawdź, czy to poprawna kopia zapasowa.';
+    }
+  };
+  reader.readAsText(file);
+  ev.target.value = '';
+});
+
+loadFormForDate();
+refreshAll();
+</script>
+</body>
+</html>

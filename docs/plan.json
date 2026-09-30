@@ -1,0 +1,309 @@
+[
+  {
+    "id": 1,
+    "title": "Jakość kodu i struktura projektu — czysto, czytelnie, utrzymywalnie",
+    "description": "Wymaganie nadrzędne dla całego planu. To mały projekt, ale piszemy go tak, jak pisze się porządny kod: czytelnie, modularnie, z testami logiki i bez skrótów, które się mszczą. Obecny prototyp to jeden plik HTML z CSS, HTML i JS razem, z dużą liczbą stylów inline i HTML-em sklejanym z tekstu. Zaczynamy od refaktoru bez zmiany zachowania, a dopiero potem dokładamy funkcje z kolejnych punktów. Bez frameworka, bundlera i TypeScriptu: zwykły JavaScript z modułami ES i zwykły CSS.",
+    "priority": "high",
+    "details": [
+      "Kolejność pracy: krok 0 to przeniesienie obecnej aplikacji do repozytorium i podział na moduły bez zmiany zachowania (dane z kopii zapasowej muszą działać tak samo). Dopiero na tym budujemy punkty z planu, po jednej funkcji naraz, w małych opisanych commitach.",
+      "Struktura: index.html (tylko szkielet, meta tagi i miejsca na treść, bez logiki i bez stylów inline); manifest.json; css/ (tokens.css — 8 motywów jako zmienne, base.css, components.css, splash.css); js/ (app.js — start i połączenie modułów; dates.js; store.js — wpisy i szkice; backup.js — eksport, import, scalanie; calendar.js; streak-summary.js; themes.js; garland.js; splash.js; quotes.js — cytaty jako dane, łatwe do dopisania; strings.js — teksty interfejsu); assets/ (ikony, obrazy startowe); tests/; tools/ (opcjonalny skrypt generujący ikony i obrazy startowe z SVG); README.md.",
+      "Uruchamianie bez budowania: pliki są serwowane w takiej postaci, w jakiej leżą (GitHub Pages działa od razu). Lokalnie serwer w jednej komendzie, np. python3 -m http.server, i adres http://localhost:8000. Uwaga: moduły ES nie ładują się z file://, więc plik HTML nie otworzy się już dwuklikiem, jak dziś.",
+      "Podział odpowiedzialności: logika (daty, streak, podsumowanie miesiąca, scalanie i walidacja importu, siatka miesiąca) w czystych funkcjach bez dostępu do DOM i localStorage, a osobno cienka warstwa interfejsu, która tylko renderuje i podpina zdarzenia. Jeden stan aplikacji, funkcje render bez efektów ubocznych, delegowanie zdarzeń, brak globalnych zmiennych i handlerów inline.",
+      "Bezpieczny DOM: zero sklejania HTML z tekstu użytkownika (innerHTML z konkatenacją). Elementy budowane przez createElement i textContent albo przez mały pomocnik. To usuwa też ryzyko, że złośliwy plik z importu wstrzyknie kod.",
+      "Dane: jedyny dostęp do localStorage w store.js; klucze jako stałe; parsowanie w try/catch z sensownym komunikatem; walidacja w jednym miejscu (zasady z punktu 7). Format wpisu opisany w README i oznaczony wersją w kluczu (_v1) plus funkcja migrate(), na razie pusta, żeby przyszła zmiana formatu nie wymagała przepisywania.",
+      "CSS: kolory tylko przez zmienne motywu (jedyny wyjątek: 5 stałych kolorów żarówek), jednostki rem, spójne nazewnictwo klas, mobile-first, bez !important i bez stylów inline. Zmiana motywu i skali tekstu z jednego miejsca.",
+      "Nazewnictwo i teksty: identyfikatory w kodzie po angielsku, krótkie funkcje o jednej odpowiedzialności, brak duplikacji (np. jedno miejsce renderowania wpisu i jedno miejsce formatowania daty), stałe zamiast magicznych liczb (np. 10 minut w punkcie 9 czy 500 ms w punkcie 10). Wszystkie teksty interfejsu i komunikaty w jednym module.",
+      "Komentarze tylko tam, gdzie kod sam nie wyjaśnia powodu (dziwactwa iOS, świadome decyzje). Bez komentarzy opisujących oczywiste linijki, bez zakomentowanego kodu i martwych funkcji.",
+      "Kontrola jakości: // @ts-check z JSDoc dla głównych typów (Entry, Draft) daje sprawdzanie typów bez kompilatora; .editorconfig i Prettier do formatowania; ESLint opcjonalnie. Node 23 jest już zainstalowany na komputerze, ale aplikacja go do działania nie potrzebuje. To tylko narzędzia deweloperskie.",
+      "Testy: wbudowany runner Node (node --test), bez zależności. Testujemy czyste funkcje: dates, streak, podsumowanie, walidację i scalanie importu, siatkę miesiąca. Uruchamiać w kilku strefach czasowych (TZ=Europe/Warsaw, America/Los_Angeles, Pacific/Kiritimati). Dane testowe wyłącznie wymyślone — prawdziwych wpisów nie kopiujemy do repozytorium. Interfejs sprawdzamy ręcznie według kryteriów „gotowe” opisanych w tym punkcie niżej.",
+      "Git: folder nie jest jeszcze repozytorium (git jest zainstalowany). git init na start, .gitignore z .DS_Store, node_modules i kopia-dziennika-*.json, żeby prywatne wpisy nigdy nie trafiły do publicznego repozytorium. Commity małe, z opisem po co, nie tylko co.",
+      "README: jak uruchomić lokalnie, jak opublikować, opis struktury, opis formatu danych i kopii zapasowej, jak dodać cytat, motyw albo ikonę, znane dziwactwa iOS.",
+      "Dostępność jako standard: lang=pl, prawdziwe <label> przy polach, prawdziwe <button> zamiast div, widoczny stan focusu, kontrast wg punktu 15, aria tylko tam, gdzie potrzebna.",
+      "Definition of done dla każdej funkcji: logika ma testy i przechodzą; interfejs sprawdzony w podglądzie 390×844 (iPhone 14) w kilku motywach, w tym w obu zimowych, i przy ograniczonym ruchu; brak błędów w konsoli; README zaktualizowane, jeśli funkcja zmienia strukturę albo format.",
+      "Czego nie robimy bez konkretnego powodu: frameworki (React itp.), TypeScript, bundler, biblioteki interfejsu, zależności runtime. Zależności tylko deweloperskie."
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Dodać manifest.json i meta tagi trybu aplikacji",
+    "description": "Podstawa PWA. Baza kodu: dziennik-wdziecznosci-final-kalendarz-grafika.html (starsza wersja dziennik-wdziecznosci-final.html jest już nieaktualna) — po wystawieniu plik nazywa się index.html.",
+    "priority": "normal",
+    "details": [
+      "manifest.json: name „Dziennik Wdzięczności”, short_name „Dziennik”, lang pl, start_url „./”, scope „./”, display standalone, background_color i theme_color z motywu domyślnego (jesień jasny #fbf0e2), ikony 192x192 i 512x512 PNG.",
+      "W <head> statycznie (nie dopisywane przez JS): link rel=manifest, meta apple-mobile-web-app-capable=yes, apple-mobile-web-app-title=Dziennik, apple-mobile-web-app-status-bar-style=black-translucent (razem z obsługą safe area, patrz punkt 13), meta format-detection telephone=no.",
+      "Ikony i zabezpieczenie ich wyglądu: punkt 3."
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Ikona na ekranie głównym zawsze taka, jaką zaprojektowałam",
+    "description": "Ikona (kubek pumpkin spice latte z listkiem na jasnym tle) jest odczytywana raz, przy dodaniu do ekranu początkowego, i iOS potrafi ją po cichu zastąpić zrzutem strony albo czarnymi rogami. Dlatego stosujemy wszystkie dostępne zabezpieczenia naraz.",
+    "priority": "normal",
+    "details": [
+      "Zrobić prawdziwe pliki PNG z obecnego SVG (ten z favicon): apple-touch-icon 180x180 (opcjonalnie 167, 152, 120) oraz 192 i 512 do manifestu. iOS ignoruje SVG i data: URI jako ikonę ekranu głównego.",
+      "Obecny SVG ma tło w kształcie koła z przezroczystymi rogami — na ikonę zrobić pełne, kwadratowe tło (#fbf0e2) bez przezroczystości i bez własnych zaokrągleń. iOS sam zaokrągla rogi, a przezroczystość wypełnia na czarno. Ważne elementy trzymać w środkowych ok. 80%.",
+      "Static <link rel=apple-touch-icon sizes=180x180 href=apple-touch-icon.png?v=1> w <head> oraz dodatkowa kopia w katalogu głównym /apple-touch-icon.png (Safari szuka jej tam samo, gdy link zawiedzie).",
+      "Ikona z tego samego adresu i po https, bez przekierowań, poprawny typ image/png. Pliku nie ukrywać za żadnym logowaniem.",
+      "Zmiana ikony w przyszłości: podbić wersję w nazwie (?v=2 albo nowa nazwa pliku), bo Safari mocno cache’uje, a potem usunąć aplikację z ekranu i dodać ją ponownie.",
+      "Ikona jest stała i niezależna od motywu sezonowego (zgodnie ze specyfikacją).",
+      "Najpierw wystawić stronę z gotową ikoną, dopiero potem instalować na iPhonie, bo ikona zapamiętuje się przy instalacji.",
+      "Test po instalacji: jeśli zamiast ikony jest zrzut strony albo pierwsza litera, ikona się nie wczytała. Otworzyć adres pliku ikony bezpośrednio w Safari i sprawdzić, co jest nie tak.",
+      "Favicon w karcie przeglądarki to osobna sprawa i może zostać jako SVG."
+    ]
+  },
+  {
+    "id": 4,
+    "title": "Wystawić plik w internecie (hosting)",
+    "description": "iPhone/Safari wymaga, by strona była dostępna pod adresem https:// — nie zadziała to z lokalnego pliku na dysku. Najprościej: darmowy hosting statyczny typu GitHub Pages albo Netlify. Zanim zaczniesz używać aplikacji, wybierz adres, który zostanie na stałe.",
+    "priority": "normal",
+    "details": [
+      "localStorage jest przypisany do adresu (origin). Zmiana adresu, nazwy użytkownika, repozytorium albo domeny oznacza nowy, pusty magazyn danych — wpisy trzeba by przenieść przez eksport i import. Wybrać docelowy adres przed pierwszym wpisem w PWA.",
+      "Na hosting trafia tylko kod (index.html, manifest, ikony). Wpisy zostają na telefonie. Nie wrzucać do repozytorium plików z kopią zapasową (kopia-dziennika-wdziecznosci-*.json).",
+      "Ten sam adres otwarty na komputerze będzie działał, ale ma osobny magazyn danych (patrz punkt 20).",
+      "Publikacja z repozytorium git (punkt 1): struktura plików działa bez budowania, więc GitHub Pages serwuje ją bez zmian. Przed pierwszą publikacją sprawdzić .gitignore, żeby żaden plik z kopią wpisów nie trafił do repozytorium."
+    ]
+  },
+  {
+    "id": 5,
+    "title": "Zainstalować na iPhonie",
+    "description": "Otwierasz link w Safari, klikasz ikonę „Udostępnij”, wybierasz „Dodaj do ekranu początkowego”. Od tej pory masz ikonkę jak zwykła aplikacja, otwierającą się na pełnym ekranie. Instalować dopiero, gdy hosting i ikona (punkty 3–4) są gotowe.",
+    "priority": "normal"
+  },
+  {
+    "id": 6,
+    "title": "Sprawdzić zapis danych po instalacji i przenieść obecne wpisy",
+    "description": "Zainstalowana aplikacja ma własny, oddzielny magazyn danych (localStorage) — inny niż karta w Safari i inny niż plik otwierany z dysku komputera. Obecne wpisy przenosimy wyłącznie przez plik kopii zapasowej.",
+    "priority": "normal",
+    "details": [
+      "Po instalacji zaimportować kopia-dziennika-wdziecznosci-2026-09-26.json (3 wpisy: 25, 26 i 27.09.2026) i sprawdzić, czy daty i treść się zgadzają.",
+      "Test trwałości: dodać wpis, zamknąć aplikację przesunięciem w górę, otworzyć ponownie; potem po restarcie iPhone’a.",
+      "Przy starcie wywołać navigator.storage.persist() (bez gwarancji, że iOS to uwzględni), a pod przyciskiem kopii pokazywać „Ostatnia kopia: X dni temu”, żeby łatwo było pamiętać o eksporcie."
+    ]
+  },
+  {
+    "id": 7,
+    "title": "Jednolity format dat i czas lokalny w całej aplikacji",
+    "description": "Fundament dla kalendarza, powrotu do dzisiejszej daty i streaka. Obecny kod liczy dni przez toISOString() (czas UTC), przez co w Polsce daty przesuwają się o dzień, a przy północy wpis trafia pod zły dzień.",
+    "priority": "high",
+    "details": [
+      "Jedna zasada: dzień to tekst YYYY-MM-DD w czasie lokalnym urządzenia (bez strefy czasowej), a moment zapisu (savedAt) to liczba milisekund epoch. Tak wygląda już obecna kopia zapasowa, więc format pliku JSON się nie zmienia.",
+      "Jeden zestaw funkcji pomocniczych, oparty na liczbach rok/miesiąc/dzień: dateKey(y,m,d), todayKey() (z getFullYear/getMonth/getDate), parseKey(key), addDaysKey(key,n) liczone przez Date.UTC (odporne na zmianę czasu), isValidKey(key), formatDatePL(key).",
+      "Zakaz toISOString() i slice(0,10) do dat. Zamienić wszystkie użycia: todayKey, todayKeyFor, streak, lista miesięcy, nazwa pliku eksportu, budowanie siatki kalendarza.",
+      "Jeden format wyświetlania wszędzie: długi zapis po polsku „piątek, 25 września 2026” (przycisk daty, wskaźnik edycji, karty historii zamiast surowego 2026-09-25), miesiące jako „wrzesień 2026”. Używać Intl z jawnym pl-PL, nie języka urządzenia.",
+      "Streak liczony po kluczach dat: cofamy się przez addDaysKey(-1), a jeśli dziś nie ma wpisu, zaczynamy od wczoraj.",
+      "Walidacja przy imporcie: klucz pasuje do ^\\d{4}-\\d{2}-\\d{2}$ i jest prawdziwą datą (2026-02-31 odrzucone); pole date w wpisie musi równać się kluczowi (klucz wygrywa); savedAt to liczba (inaczej 0); grateful to tablica tekstów (maks. 3).",
+      "Testy tych funkcji z różnymi strefami: TZ=Europe/Warsaw, America/Los_Angeles, Pacific/Kiritimati; przypadki: 00:30 lokalnie, 31 stycznia, 29 lutego 2028, zmiana czasu 29.03.2026 i 25.10.2026 (doba 25-godzinna psuje liczenie przez milisekundy).",
+      "Kod w js/dates.js jako czyste funkcje bez DOM i localStorage, z testami w tests/ (punkt 1)."
+    ]
+  },
+  {
+    "id": 8,
+    "title": "Kalendarz wyboru daty — napisać od zera",
+    "description": "Obecny kalendarz jest do wyrzucenia w całości (renderCalendarGrid, selectDate, przyciski ‹ ›, calendarViewDate, popover). Główna przyczyna błędów: klucze dni liczone przez toISOString() w UTC, więc kropki, podświetlenie „dziś” i kliknięcie wypadają o dzień obok, a wpis mógłby się zapisać pod złą datą. Drugi błąd: setMonth(±1) na 31. dniu przeskakuje o dwa miesiące. Piszemy własny komponent, bez biblioteki, na funkcjach z punktu 7.",
+    "priority": "high",
+    "details": [
+      "Zakres od zera: przycisk z datą i przycisk „Dziś”, panel z siatką miesiąca, nawigacja między miesiącami, kropki pod dniami z wpisem, podświetlenie wybranego dnia i „dziś”, wczytanie wpisu albo pustego formularza po kliknięciu dnia.",
+      "Stan: selectedDate jako tekst YYYY-MM-DD oraz osobno viewYear i viewMonth jako liczby. Zero obiektów Date trzymanych jako stan.",
+      "Nawigacja miesięcy na liczbach: viewMonth−−, a przy <0 ustawić 11 i viewYear−− (analogicznie do przodu). Nigdy setMonth.",
+      "Siatka: tydzień od poniedziałku, offset = (new Date(y,m,1).getDay()+6)%7, liczba dni = new Date(y,m+1,0).getDate(). Zawsze 6 wierszy po 7 komórek, żeby wysokość panelu nie skakała. Klucz każdej komórki składany z liczb (dateKey), dni sąsiednich miesięcy przygaszone, ale klikalne (kliknięcie przełącza widok na ten miesiąc).",
+      "Panel rozwijany w karcie pod przyciskiem (nie pływający popover), bez z-index i przycinania. Komórki minimum 44x44 pt: przy iPhonie 14 (390 pt) kalendarz na pełną szerokość wnętrza karty daje ok. 44 pt na komórkę, więc bez dodatkowego wewnętrznego paddingu.",
+      "Komórki jako <button> z aria-label („25 września 2026, wpis zapisany”), aria-current=date dla dziś, aria-pressed dla wybranego; touch-action: manipulation. Cyfry dni czcionką systemową (Georgia ma cyfry nautyczne o nierównej wysokości).",
+      "Kropka: kolor var(--accent) (obecny --gold ma słaby kontrast w jasnych motywach, np. 1,96:1 w zima jasny); na wybranym dniu kropka i tekst w kolorze --on-accent (punkt 15). Dzień „dziś”: obrysowany. Dzień z niezapisanym szkicem może mieć pustą kropkę (opcjonalnie, patrz punkt 10).",
+      "Dni z przyszłości: domyślnie nieaktywne (wyszarzone), a strzałka ‹ › nie wychodzi poza bieżący miesiąc. To decyzja robocza — do zmiany, jeśli będziesz chciała planować wpisy z wyprzedzeniem. Przeszłość zawsze dozwolona.",
+      "„Dziś”: jeden wspólny kod goToToday() (ten sam wywołuje automatyczny powrót z punktu 9): ustawia dzisiejszy dzień, przełącza widok na bieżący miesiąc, zamyka panel.",
+      "Zamykanie panelu: po wyborze dnia, ponownym dotknięciu przycisku daty i dotknięciu poza panelem. Otwarcie zawsze pokazuje miesiąc wybranego dnia.",
+      "Po zapisie, usunięciu i imporcie wpisu odświeżyć kropki także przy otwartym panelu.",
+      "Edge case’y do sprawdzenia: miesiące 28/29/30/31-dniowe, luty 2028 (rok przestępny), miesiąc zaczynający się w poniedziałek (offset 0) i w niedzielę (offset 6), miesiąc na 6 wierszy, przejście grudzień↔styczeń, dni zmiany czasu (29.03 i 25.10.2026), północ przy otwartej aplikacji (pierścień „dziś” się przesuwa), wpisy o niepoprawnych kluczach po imporcie (pomijać bez błędu), zmiana daty lub strefy w telefonie.",
+      "Weryfikacja: pomocnicze funkcje dat uruchomione w kilku strefach (punkt 7) oraz ręczny przegląd na szerokości 390 px we wszystkich 8 motywach.",
+      "Podział: część czysta w js/calendar.js (funkcja budująca siatkę miesiąca, np. monthGrid(year, month) zwracająca 42 klucze dat wraz z informacją o miesiącu) i osobno renderowanie do DOM, żeby siatkę dało się przetestować w Node w kilku strefach czasowych."
+    ]
+  },
+  {
+    "id": 9,
+    "title": "Automatyczny powrót do dzisiejszej daty przy otwarciu aplikacji",
+    "description": "PWA na iPhonie zwykle tygodniami żyje w tle, więc po powrocie potrafi pokazywać wczorajszą datę i wczorajszy formularz, a nowy wpis wylądowałby pod złym dniem. Rozwiązanie: aplikacja sama wykonuje to samo, co przycisk „Dziś” (wspólna funkcja goToToday()), w sytuacjach opisanych niżej. Bezpieczne dzięki szkicom z punktu 10.",
+    "priority": "high",
+    "details": [
+      "Zimny start (aplikacja uruchomiona od nowa): zawsze dziś. Jeśli istnieje niezapisany szkic z innego dnia, nad formularzem baner „Masz niezapisany szkic z 24 września — [Otwórz]”.",
+      "Powrót z tła (visibilitychange → visible oraz pageshow po bfcache): jeśli aplikacja była w tle co najmniej 10 minut albo zmienił się dzień kalendarzowy, wróć do dziś. Krótkie przełączenie do innej aplikacji nie rusza tego, co piszesz. Próg 10 minut to stała do zmiany.",
+      "Północ przy otwartej aplikacji: gdy formularz jest nietknięty, po cichu przejść na nowy dzień. Gdy w tej chwili piszesz (niezapisane zmiany), nie przerywać — po zapisie pokazać „Jest już nowy dzień — [Przejdź do dziś]”, a wpis zostaje pod dniem, w którym go zaczęłaś.",
+      "Jedna funkcja syncToday(powód) z zapamiętanym lastKnownToday. Timer do najbliższej północy tylko przypomina o sprawdzeniu, bo iOS usypia timery w tle — prawdziwym źródłem są zdarzenia powrotu do aplikacji.",
+      "Co się odświeża po zmianie dnia: data w nagłówku, wskaźnik „Nowy wpis na dziś”, kalendarz (pierścień „dziś” i miesiąc widoku), streak, domyślny miesiąc w podsumowaniu.",
+      "Bez zdarzeń specjalnych, dzień liczony za każdym razem od nowa z zegara urządzenia (nie z pamięci), więc zmiana strefy czasowej albo daty w telefonie nie psuje działania."
+    ]
+  },
+  {
+    "id": 10,
+    "title": "Niezapisane dane zapisywać jako szkic",
+    "description": "Nic, co wpisujesz, nie może zniknąć przy zmianie dnia, przełączeniu aplikacji albo zabiciu jej przez iOS. Niezapisany formularz ląduje w szkicu, który nie jest częścią wpisów.",
+    "priority": "high",
+    "details": [
+      "Osobny klucz localStorage (np. gratitude_journal_drafts_v1) z obiektem szkiców kluczowanym datą. Szkice nie wchodzą do eksportu, streaka, kropek w kalendarzu ani podsumowania miesiąca.",
+      "Zapis szkicu: przy wpisywaniu z opóźnieniem ok. 500 ms oraz od razu przy visibilitychange → hidden i pagehide (iOS może zamknąć aplikację w tle bez ostrzeżenia), przy zmianie dnia i przy powrocie do dziś (punkt 9).",
+      "Szkic powstaje tylko, gdy formularz różni się od zapisanego wpisu. Gdy jest identyczny albo pusty, szkic jest usuwany.",
+      "Wczytanie dnia: jeśli istnieje szkic, formularz pokazuje szkic z oznaczeniem „📝 Szkic — jeszcze niezapisany” i przyciskiem „Odrzuć szkic” (wraca do zapisanego wpisu albo pustego formularza).",
+      "Kliknięcie „Zapisz wpis” usuwa szkic tego dnia. Usunięcie wpisu z historii usuwa także jego szkic.",
+      "Opcjonalnie: dzień ze szkicem oznaczony w kalendarzu pustą kropką.",
+      "Awaria zapisu szkicu (pełny magazyn) nie blokuje pisania, tylko pokazuje dyskretny komunikat."
+    ]
+  },
+  {
+    "id": 11,
+    "title": "Girlanda światełek w motywach zimowych — dopracować (wygląd i telefon)",
+    "description": "Najbardziej lubiany detal aplikacji, więc robimy go porządnie. Obecna wersja na telefonie wygląda źle: SVG ma viewBox 640 i preserveAspectRatio=none, więc na wnętrzu ok. 350 px żarówki rozciągają się w wąskie owale, sznurek jest łamaną linią, liczba żarówek jest stała, a opóźnienia migotania powtarzają się co 8 żarówek (wygląda mechanicznie). Sznurek w kolorze --border jest w zima jasny prawie niewidoczny (#cfe0e6 na bieli).",
+    "priority": "high",
+    "details": [
+      "Skala: szerokość mierzona w pikselach (ResizeObserver, orientationchange), viewBox = rzeczywisty rozmiar w px, bez preserveAspectRatio=none. Żarówki zawsze są kółkami r≈4,5. Liczba żarówek = round(szerokość / ok. 30 px), czyli na iPhonie 14 (wnętrze ok. 350 px) ok. 11–12.",
+      "Sznurek: zamiast łamanej linii, gładkie, zwisające łuki jak prawdziwa girlanda: 3–4 zawieszenia na szerokość, punkty zaczepienia u góry, zwis ok. 10–14 px, każdy łuk jako krzywa Béziera (Q). Żarówki rozłożone równomiernie wzdłuż łuku i zwisające pod sznurkiem na krótkich uchwytach z małą oprawką (prostokąt ok. 3x4 px).",
+      "Żarówka: koło r≈4,5 w jednym z 5 stałych kolorów (#e2483f, #3fae6a, #e8c15a, #5f9bc7, #e28fc0) plus miękka poświata: drugie koło r≈9 z radialGradient tego samego koloru, opacity ok. 0,25. Bez filtrów SVG feGaussianBlur (ciężkie na iOS). Kolory w cyklu tak, by sąsiednie żarówki nie były identyczne.",
+      "Migotanie: opacity 1 → 0,45 → 1, czas 2,2–3,0 s per żarówka, ujemne animation-delay z pseudolosowego generatora z ziarnem (nie wzór (i%8)*0,18), więc rytm nigdy się nie powtarza, a animacja startuje od razu w środku cyklu. Animować wyłącznie opacity (poświata i żarówka razem).",
+      "Bateria i płynność: animacja pauzowana poza ekranem (IntersectionObserver → animation-play-state: paused). Przy prefers-reduced-motion: reduce żarówki świecą na stałe bez migotania. Sprawdzić na iPhonie 14; jeśli zacina, animować tylko widoczne girlandy.",
+      "Pozycja: pełna szerokość ekranu (ujemne marginesy równe paddingowi kontenera, 20 px), żeby sznurek wisiał od krawędzi do krawędzi. Wysokość zarezerwowana na stałe (ok. 40 px), więc układ nie skacze; pointer-events: none; aria-hidden=true.",
+      "Kolor sznurka: var(--muted) z opacity ok. 0,5 zamiast var(--border), sprawdzić w obu motywach zimowych. Grubość ok. 1,5 pt (zgodnie ze specyfikacją).",
+      "Różnorodność: każda instancja ma własne ziarno (faza łuków, przesunięcie kolorów, opóźnienia), więc girlandy nad różnymi sekcjami nie wyglądają identycznie. Girlanda nad nagłówkiem, cytatem, formularzem, podsumowaniem miesiąca, historią i kopią zapasową (jak dotąd).",
+      "Widoczność tylko w zima-jasny i zima-ciemny. Przy przełączeniu na motyw zimowy przebudować girlandy (w display:none szerokość wynosi 0), przy przełączeniu na inny ukryć lub usunąć bez zostawiania duplikatów.",
+      "Weryfikacja: zrzuty na szerokości 390 px, w poziomie i w szerokim oknie, w obu motywach zimowych."
+    ]
+  },
+  {
+    "id": 12,
+    "title": "Czytelność tekstu na iPhonie (czcionki i rozmiary)",
+    "description": "Urządzenie docelowe: iPhone 14 (ekran 6,1″, 390×844 pt w CSS, 3x, z notchem, nie Dynamic Island). Obecne rozmiary są za małe (najmniejsze teksty mają ok. 11,5–12,5 px), a pola tekstowe mają 15,2 px, przez co Safari powiększa stronę po dotknięciu pola.",
+    "priority": "normal",
+    "details": [
+      "Baza: html font-size 16px, wszystkie rozmiary w rem, -webkit-text-size-adjust: 100%. Skala zmienia się z jednego miejsca.",
+      "Pola tekstowe i textarea: dokładnie 17 px (nigdy poniżej 16 px — to eliminuje zoom przy fokusie), line-height 1,45–1,5, padding ok. 12×14 px. Textarea: rows=3, min-height ok. 96 px.",
+      "Etykiety pól 17 px półgrube; treść cytatu i wpisów w historii 16–17 px; podpowiedzi (.hint) 14 px zamiast 12,8; status, streak, przyciski 14–16 px; data 15 px; najmniejszy tekst w całej aplikacji 13 px (dni tygodnia w kalendarzu, notka na dole).",
+      "Nagłówek h1 ok. 27 px: sprawdzić, jak zawija się obok selektora motywu (ograniczyć jego szerokość do ok. 120 px, tytuł może zająć dwie linie).",
+      "Cele dotykowe minimum 44×44 pt: przyciski „edytuj” i „usuń” w historii (obecnie ok. 26 px, blisko siebie) przenieść z rogu karty do osobnego rzędu na dole karty; przycisk „Dziś”, przełączniki miesięcy i komórki kalendarza również 44 pt.",
+      "Cyfry: Georgia ma cyfry nautyczne (3, 4, 5, 7, 9 schodzą poniżej linii), co pogarsza czytelność dat i kalendarza. Cyfry w kalendarzu i liczniku czcionką systemową (-apple-system) z font-variant-numeric: tabular-nums.",
+      "Krój: Georgia zostaje (zgodnie ze specyfikacją). Opcjonalnie porównać na telefonie z ui-serif (New York) — jedna linijka do zmiany.",
+      "Kontrast tekstu: patrz punkt 15 (kolor --muted i tekst na akcencie).",
+      "Opcjonalnie w przyszłości: ustawienie „Rozmiar tekstu” (mały/średni/duży) jako jedna zmienna CSS.",
+      "Weryfikacja na prawdziwym telefonie i w podglądzie 390×844."
+    ]
+  },
+  {
+    "id": 13,
+    "title": "Poprawki specyficzne dla iPhone’a",
+    "description": "Zestaw drobnych zmian, żeby zainstalowana aplikacja zachowywała się jak natywna na iPhonie 14 (390×844 pt, notch, safe area ok. 47 pt na górze i 34 pt na dole w pionie, iOS 16+).",
+    "priority": "normal",
+    "details": [
+      "viewport-fit=cover w meta viewport i wcięcia na safe area: padding-top/bottom z env(safe-area-inset-*) na kontenerze, przy black-translucent status bar (tło motywu sięga pod pasek statusu, nic nie wchodzi pod notch).",
+      "Wysokość: min-height: 100dvh (z zapasem na starsze wersje), zamiast 100vh, które na iOS sięga za dolny pasek.",
+      "Nie blokować powiększania (bez maximum-scale=1 i user-scalable=no) — to kwestia dostępności. Zoom po fokusie rozwiązuje punkt 12.",
+      "touch-action: manipulation na przyciskach i komórkach (bez opóźnienia i przypadkowego zoomu po dwukrotnym dotknięciu), -webkit-tap-highlight-color zgodny z motywem.",
+      "Wygląd natywnych kontrolek: appearance/-webkit-appearance: none dla input, textarea i select (iOS dodaje wewnętrzny cień i własne zaokrąglenia), spójne zaokrąglenia ze specyfikacją.",
+      "Klawiatura: po fokusie przewinąć pole tak, by nie chowało się pod klawiaturą (scrollIntoView block center, ewentualnie visualViewport); atrybuty autocapitalize=sentences, enterkeyhint=next w polach 1–3.",
+      "meta theme-color aktualizowany przy zmianie motywu (dotyczy Safari, w trybie standalone ignorowany).",
+      "Zdarzenie pagehide i visibilitychange do natychmiastowego zapisu szkicu (punkt 10).",
+      "color-mix() wymaga iOS 16.2+; iPhone 14 po aktualizacji to spełnia. Zostawić fallback (poświata w tle znika, reszta działa).",
+      "Zastąpić okno confirm() własnym oknem w stylu motywu przy usuwaniu wpisu (z czytelną datą w treści pytania).",
+      "Ekran startowy (apple-touch-startup-image i animowany ekran w aplikacji): punkt 21.",
+      "Opcjonalnie: baner „Dodaj do ekranu początkowego”, gdy strona jest otwarta w Safari, a nie zainstalowana (sprawdzenie przez navigator.standalone)."
+    ]
+  },
+  {
+    "id": 14,
+    "title": "Eksport/import przez iOS z zasadą „nowszy wygrywa”",
+    "description": "Zwykłe pobieranie pliku działa na iOS inaczej niż na komputerze, więc eksport idzie przez Share Sheet (mail, Pliki, AirDrop). Import wybiera plik z Plików albo Maila. Format pliku zostaje bez zmian (obiekt kluczowany datą YYYY-MM-DD, wpisy z polami date, grateful, why, person, proud, lesson, savedAt).",
+    "priority": "normal",
+    "details": [
+      "Eksport: navigator.canShare({files}) i navigator.share z plikiem application/json (UTF-8, wcięcie 2 spacje), wywołany bezpośrednio w obsłudze kliknięcia (bez wcześniejszych await, inaczej iOS zwraca NotAllowedError). Gdy Share Sheet nie jest dostępny, fallback: dotychczasowe pobranie linkiem. Anulowanie okna udostępniania nie jest błędem.",
+      "Nazwa pliku: kopia-dziennika-wdziecznosci-YYYY-MM-DD.json z lokalną datą (punkt 7).",
+      "Import: input type=file z accept=.json,application/json. Kompatybilny wstecz z obecnym formatem, w tym z plikiem kopia-dziennika-wdziecznosci-2026-09-26.json.",
+      "Zasada scalania: dla każdej daty zostaje wpis z większym savedAt. Brak lub niepoprawny savedAt liczy się jako 0; przy remisie zostaje wpis obecny; wpis obecny tylko w pliku jest dodawany, a tylko lokalny — zachowany.",
+      "Konsekwencja do udokumentowania w aplikacji: usunięcia nie są synchronizowane. Jeśli usuniesz wpis, a później wgrasz starszą kopię, wpis wróci.",
+      "Walidacja i raport: zasady z punktu 7, komunikat „Dodano X, zaktualizowano Y, bez zmian Z, pominięto W (nieprawidłowe)”. Scalanie i zapis w jednym kroku, a jeśli zapis się nie uda, nic się nie zmienia.",
+      "Przed importem zapisać lokalną kopię poprzedniego stanu (osobny klucz localStorage), żeby dało się cofnąć pomyłkę.",
+      "Reszta rekomendacji z punktu 6: navigator.storage.persist() i licznik „Ostatnia kopia: X dni temu”.",
+      "Walidacja i scalanie w js/backup.js jako czyste funkcje z testami na wymyślonych danych (punkt 1). Prawdziwej kopii wpisów nie dodawać do repozytorium ani do testów."
+    ]
+  },
+  {
+    "id": 15,
+    "title": "Motywy sezonowe (8 motywów) — przenieść i poprawić kontrast",
+    "description": "System ośmiu motywów (4 pory roku × jasny/ciemny), wybierany z dropdownu w prawym górnym rogu i zapamiętywany, jest już w pliku dziennik-wdziecznosci-final-kalendarz-grafika.html z paletami zgodnymi ze specyfikacją. Zadanie: przenieść bez zmian klimatu oraz poprawić czytelność tekstu, która w kilku motywach jest za niska.",
+    "priority": "normal",
+    "details": [
+      "Zmierzone kontrasty (WCAG) do poprawy: kolor --muted na karcie ma 3,24:1 w zima jasny, 3,52:1 w wiosna jasny i 4,30:1 w lato jasny (cel: minimum 4,5:1 dla małego tekstu). Wystarczy je delikatnie przyciemnić, nie zmieniając charakteru palety.",
+      "Biały tekst na akcencie (przycisk zapisu, wybrany dzień) ma kontrast zbyt niski w kilku motywach: jesień ciemny 2,98:1 (a na accent2 jasnopomarańczowym tylko 2,11:1), zima ciemny 3,00:1, wiosna ciemny 2,46:1, wiosna jasny 3,31:1, lato jasny 3,52:1. Rozwiązanie: nowy token --on-accent per motyw (ciemny tekst w ciemnych motywach, biały w jasnych tam, gdzie kontrast wystarcza) i użycie go na przycisku zapisu, wybranym dniu i odznakach.",
+      "Zmiany kolorów wprowadzać tylko po Twojej akceptacji, bo palety są Twoim wyborem (szczególnie lato ciemny, którego klimat ma zostać nietknięty). Kontrast najpierw pokazać w porównaniu przed/po.",
+      "Poświata w tle z osobnych zmiennych glow1/glow2, typografia szeryfowa i zaokrąglenia jak w specyfikacji (sekcja 9).",
+      "Zapamiętanie motywu w localStorage (jest); przy pierwszym uruchomieniu domyślnie jesień jasny."
+    ]
+  },
+  {
+    "id": 16,
+    "title": "Emoji pór roku — cztery różne, spójne w całej aplikacji",
+    "description": "Cztery pory roku = cztery różne emoji: jesień 🍂, zima ❄️, wiosna 🌿, lato 🌊. Dziś w dropdownie motywów wiosna ma 🌸, a lato ☀️, tytuł po wyborze motywu pokazuje 🌿 i 🌊, a karty historii mają na stałe 🍁, więc jest ich więcej niż cztery.",
+    "priority": "normal",
+    "details": [
+      "Jedno źródło prawdy: mapa SEASON_EMOJI używana w opcjach dropdownu, nagłówku h1, tytule karty/okna oraz emoji przy dacie w historii wpisów (zamiast stałego 🍁 — emoji bieżącej pory roku).",
+      "Motyw jasny i ciemny tej samej pory roku mają to samo emoji.",
+      "Wiosna to celowo 🌿, nie 🌸 (kiczowate skojarzenie), lato to 🌊, nie ☀️ (zgodnie ze specyfikacją, sekcja 9.4)."
+    ]
+  },
+  {
+    "id": 17,
+    "title": "Drobne błędy formularza i podsumowania",
+    "description": "Błędy znalezione w obecnym kodzie, niezależne od kalendarza.",
+    "priority": "normal",
+    "details": [
+      "Komunikat „Zapisano ✓” jest natychmiast zamazywany, bo loadFormForDate() czyści status zaraz po jego ustawieniu. Pokazywać komunikat kilka sekund.",
+      "Po usunięciu wpisu z aktualnie wybranego dnia formularz dalej pokazuje jego treść. Po usunięciu przeładować formularz dla wybranego dnia.",
+      "Lista miesięcy w podsumowaniu po każdym zapisie wraca na bieżący miesiąc (populateMonthSelect ustawia sel.value = current). Zachować wybrany miesiąc, o ile nadal istnieje na liście.",
+      "Losowe „kilka chwil z tego miesiąca” tasuje się na nowo przy każdym odświeżeniu, w tym po zapisie. Losować przy zmianie miesiąca albo przy otwarciu, nie po każdym zapisie.",
+      "Streak i inne miejsca liczone w UTC: punkt 7."
+    ]
+  },
+  {
+    "id": 18,
+    "title": "Wybór ikony z listy",
+    "description": "To jedyny punkt z ograniczeniem: ikonka na ekranie głównym iOS jest ustawiana raz, przy instalacji (z apple-touch-icon i manifestu). Żeby zmienić ikonę na inną z listy, trzeba by usunąć aplikację z ekranu i zainstalować ją ponownie z nową ikoną — nie da się tego zmienić „w locie” z poziomu samej aplikacji, tak jak np. schematu kolorów.",
+    "priority": "low"
+  },
+  {
+    "id": 19,
+    "title": "Service worker — działanie bez internetu",
+    "description": "Na wszelki wypadek: bez service workera zainstalowana PWA ładuje stronę z sieci, więc bez internetu (albo przy słabym zasięgu) może się nie otworzyć. Wpisy same są zawsze lokalne. Service worker zapisuje w pamięci podręcznej index.html, manifest i ikony.",
+    "priority": "low",
+    "details": [
+      "Strategia: najpierw sieć, w razie braku sieci wersja z pamięci podręcznej (network-first z fallbackiem). Cache-first mógłby po aktualizacji długo pokazywać starą wersję aplikacji.",
+      "Wersjonowana nazwa pamięci podręcznej i usuwanie starych wersji przy aktywacji.",
+      "Pamiętać, że dane (localStorage) nie są w cache service workera i nie zmieniają się przy aktualizacji kodu.",
+      "Lista plików do zapamiętania odpowiada strukturze z punktu 1 (index.html, css/, js/, manifest, ikony). Nowy moduł trzeba dopisać do listy albo generować ją skryptem, żeby nie zapomnieć."
+    ]
+  },
+  {
+    "id": 20,
+    "title": "Dane dostępne też na komputerze (format JSON zostaje)",
+    "description": "Format kopii zapasowej zostaje JSON, bez zmian. Ten sam plik można otworzyć w hostowanej aplikacji w przeglądarce na komputerze i wgrać przez import (z zasadą „nowszy wygrywa”). Główne miejsce prowadzenia dziennika to telefon.",
+    "priority": "low",
+    "details": [
+      "Komputer i telefon mają osobne magazyny danych, bez synchronizacji. Przenoszenie odbywa się ręcznie przez plik (eksport → AirDrop/Pliki/mail → import).",
+      "Sprawdzić, czy plik z iPhone’a bez zmian importuje się na komputerze i odwrotnie.",
+      "Synchronizacja przez iCloud lub backend pozostaje poza zakresem (specyfikacja, sekcja 12)."
+    ]
+  },
+  {
+    "id": 21,
+    "title": "Ekran startowy z animowanym gradientem",
+    "description": "Krótki, ciepły ekran przy uruchomieniu aplikacji z ekranu głównego: miękki, powoli poruszający się gradient w kolorach aktualnego motywu, emoji pory roku i tytuł „Dziennik Wdzięczności”. Ograniczenie iOS: systemowy ekran startowy (apple-touch-startup-image) to statyczny obraz i nie da się go animować. Dlatego całość składa się z dwóch warstw: statycznego obrazu, który iOS pokazuje od razu, oraz animowanego ekranu w samej aplikacji, który płynnie go przejmuje.",
+    "priority": "low",
+    "details": [
+      "Warstwa 1, systemowa: apple-touch-startup-image dla iPhone’a 14 — obraz PNG 1170×2532 z media=(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait). Pełny kolor tła motywu domyślnego (jesień jasny #fbf0e2) z bardzo delikatnym gradientem, bez tekstu i bez emoji, żeby nic nie skakało przy przejściu. Link statyczny w <head>. Obraz jest odczytywany przy instalacji, więc jego zmiana wymaga ponownej instalacji (jak ikona, punkt 3). Pole background_color z manifestu iOS ignoruje.",
+      "Warstwa 2, w aplikacji: pełnoekranowy element umieszczony w HTML od pierwszego malowania (bez czekania na JS), z CSS w <head>. Startuje w kolorze obrazu z warstwy 1 i w ciągu ok. 300 ms płynnie przechodzi w gradient aktualnego motywu.",
+      "Wyświetlany motyw musi być znany przed pierwszym malowaniem: krótki skrypt w <head> ustawia data-theme z localStorage, zanim pojawi się cokolwiek (to jednocześnie usuwa obecny błysk domyślnego motywu przy starcie).",
+      "Gradient: dwie do trzech dużych, rozmytych plam z kolorów glow1, glow2 i accent danego motywu na tle bg, poruszanych bardzo powoli (ok. 8–12 s cyklu, ruch i zmiana przezroczystości). Animować transform i opacity, nie punkty gradientu (przemalowywanie gradientów jest kosztowne na iOS). Wyjątek pod ręką: w motywach zimowych można dodać kilka migoczących żarówek z girlandy z punktu 11.",
+      "Zawartość: emoji pory roku (punkt 16) i tytuł, oba pojawiają się łagodnie (fade + minimalne przesunięcie). Bez paska ładowania.",
+      "Czas: tylko przy zimnym starcie, nigdy przy powrocie z tła (punkt 9). Minimalnie ok. 1,2 s, maksymalnie ok. 2 s albo do gotowości aplikacji, jeśli ta jest później. Dotknięcie ekranu pomija ekran startowy. Zanikanie ok. 400 ms. Aplikacja ładuje dane i buduje interfejs pod spodem, więc ekran startowy nie opóźnia pracy, a tylko ją zasłania.",
+      "Ograniczony ruch: przy prefers-reduced-motion: reduce statyczny gradient, bez animacji, skrócony do ok. 0,6 s.",
+      "Safe area: gradient sięga pod notch i dolny pasek; tekst zostaje w centrum widoku (punkt 13).",
+      "Jeśli kiedyś zmienisz telefon, potrzebne będą osobne obrazy dla jego rozdzielczości (inne wymiary w media query). Dla innych rozmiarów iOS pokaże biały lub czarny ekran, dopóki się nie załaduje warstwa 2.",
+      "Weryfikacja: uruchomienie po zabiciu aplikacji, po restarcie telefonu, w każdym z 8 motywów, w trybie oszczędzania energii.",
+      "Jak to zbudować i co zmienia w strukturze: nowe są tylko css/splash.css, js/splash.js (ok. 40 linii: ekran jest już w index.html, moduł pilnuje minimalnego czasu, czeka na sygnał gotowości aplikacji, obsługuje dotknięcie i po zaniknięciu usuwa element z DOM, żeby nie blokował dotyku), krótki skrypt motywu w <head> oraz obrazy w assets/splash/. Reszta projektu bez zmian.",
+      "Obrazy PNG (ikony i ekran startowy 1170×2532) generuje jednorazowo skrypt tools/make-assets.mjs z plików SVG (narzędzie deweloperskie, nie jest częścią aplikacji), albo można je wyeksportować ręcznie z dowolnego edytora. Pliki PNG są zapisane w repozytorium jak zwykłe zasoby."
+    ]
+  }
+]

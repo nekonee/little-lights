@@ -1,0 +1,6 @@
+.DS_Store
+node_modules/
+
+# Prywatne kopie zapasowe wpisów nigdy nie trafiają do repozytorium
+backups/
+kopia-dziennika-*.json
