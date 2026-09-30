@@ -52,6 +52,12 @@ export function formatDateLabel(dateKey) {
   );
 }
 
+/** @param {string} monthKey YYYY-MM @returns {string} np. „wrzesień 2026” */
+export function formatMonthKey(monthKey) {
+  const [year, month] = monthKey.split('-');
+  return `${MONTHS_PL[parseInt(month, 10) - 1]} ${year}`;
+}
+
 export function formatMonthLabel(date) {
   return capitalize(date.toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' }));
 }

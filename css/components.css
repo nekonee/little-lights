@@ -1,0 +1,334 @@
+.top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.theme-select {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 4px;
+  color: var(--ink);
+  font-family: inherit;
+  max-width: 150px;
+}
+.streak {
+  display: inline-block;
+  background: var(--accent-soft);
+  color: var(--accent2);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+.lights-decor {
+  display: none;
+  margin: -4px 0 12px;
+  line-height: 0;
+}
+html[data-theme='zima-jasny'] .lights-decor,
+html[data-theme='zima-ciemny'] .lights-decor {
+  display: block;
+}
+.lights-decor svg {
+  width: 100%;
+  height: 34px;
+  display: block;
+}
+.lights-decor .bulb {
+  animation: twinkle 2.6s ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+.date {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 22px;
+}
+.quote {
+  background: var(--accent-soft);
+  border-radius: 14px;
+  padding: 18px 20px;
+  font-style: italic;
+  line-height: 1.5;
+  margin-bottom: 24px;
+  position: relative;
+  border-left: 4px solid var(--accent);
+}
+.quote button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.grateful-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.grateful-row span {
+  color: var(--accent);
+  font-weight: 700;
+  width: 18px;
+}
+.grateful-row input {
+  margin-bottom: 0;
+}
+.save-btn {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.cancel-btn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+.entry-indicator {
+  background: var(--accent-soft);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  margin-bottom: 14px;
+  color: var(--accent2);
+  font-weight: 600;
+}
+.date-picker-wrap {
+  position: relative;
+  margin-bottom: 16px;
+}
+.date-picker-row {
+  display: flex;
+  gap: 8px;
+}
+.date-trigger {
+  flex: 1;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.today-btn {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.calendar-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: var(--accent2);
+}
+.cal-header button {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  color: var(--ink);
+  font-family: inherit;
+}
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 4px;
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.cal-day {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--ink);
+}
+.cal-day.other-month {
+  color: var(--muted);
+  opacity: 0.4;
+}
+.cal-day:hover {
+  background: var(--accent-soft);
+}
+.cal-day.today {
+  outline: 1px solid var(--accent);
+}
+.cal-day.selected {
+  background: var(--accent);
+  color: #fff;
+}
+.cal-day .dot {
+  position: absolute;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+.cal-day.selected .dot {
+  background: #fff;
+}
+.history {
+  margin-top: 36px;
+}
+.history h2 {
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+  color: var(--accent2);
+}
+.entry {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  background: var(--card);
+  position: relative;
+}
+.entry .d {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.entry ul {
+  margin: 0 0 6px;
+  padding-left: 18px;
+  font-size: 0.9rem;
+}
+.entry .extra {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.entry-actions {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  display: flex;
+  gap: 6px;
+}
+.entry-actions button {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px 10px;
+  font-size: 0.78rem;
+  color: var(--accent);
+  cursor: pointer;
+  font-family: inherit;
+}
+.entry-actions .del {
+  color: #a13a2a;
+}
+
+.card-title {
+  margin-bottom: 10px;
+}
+.card--spaced {
+  margin-top: 24px;
+}
+.month-select {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+  font-family: inherit;
+  margin-bottom: 14px;
+}
+.summary-stats {
+  margin-bottom: 10px;
+}
+.summary-people {
+  margin-bottom: 10px;
+}
+.summary-list {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+.empty--compact {
+  padding: 6px 0;
+}
+.cancel-btn--tight {
+  margin-top: 4px;
+}
+.file-btn {
+  text-align: center;
+  cursor: pointer;
+}

@@ -45,7 +45,9 @@ function countPeople(entries, dates) {
     const person = (entries[date].person || '').trim();
     if (person) counts.set(person, (counts.get(person) || 0) + 1);
   }
-  return Array.from(counts).sort((a, b) => b[1] - a[1]).slice(0, TOP_PEOPLE_LIMIT);
+  return Array.from(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, TOP_PEOPLE_LIMIT);
 }
 
 function pickHighlights(entries, dates, random) {

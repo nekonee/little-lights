@@ -1,0 +1,123 @@
+/* Domyślny fallback (pierwsze malowanie, zanim JS ustawi motyw) = jesień jasny */
+:root {
+  --bg: #fbf0e2;
+  --card: #fffaf3;
+  --ink: #3d2418;
+  --muted: #8f6a54;
+  --accent: #c1592a;
+  --accent2: #8a3324;
+  --gold: #c8912b;
+  --accent-soft: #f6dcb8;
+  --border: #ecd5b3;
+}
+/* JESIEŃ — gotowe */
+:root[data-theme='jesien-jasny'] {
+  --bg: #fbf0e2;
+  --card: #fffaf3;
+  --ink: #3d2418;
+  --muted: #8f6a54;
+  --accent: #c1592a;
+  --accent2: #8a3324;
+  --gold: #c8912b;
+  --accent-soft: #f6dcb8;
+  --border: #ecd5b3;
+  --glow1: #c8912b;
+  --glow2: #c1592a;
+}
+:root[data-theme='jesien-ciemny'] {
+  --bg: #241611;
+  --card: #2f1e16;
+  --ink: #f3e3d3;
+  --muted: #c39d81;
+  --accent: #e2793f;
+  --accent2: #f0a15c;
+  --gold: #e0ab52;
+  --accent-soft: #43291b;
+  --border: #4a3121;
+  --glow1: #e0ab52;
+  --glow2: #e2793f;
+}
+/* ZIMA jasny — świeży śnieg, szron, sosna kaukaska, ciepłe światełka jako akcent */
+:root[data-theme='zima-jasny'] {
+  --bg: #eef3f6;
+  --card: #ffffff;
+  --ink: #1f3b34;
+  --muted: #7893a0;
+  --accent: #2f6e52;
+  --accent2: #1f4d38;
+  --gold: #e3b23c;
+  --accent-soft: #dcebf0;
+  --border: #cfe0e6;
+  --glow1: #bcd6e0;
+  --glow2: #2f6e52;
+}
+/* ZIMA ciemny — mroźna noc, blask świecy, światełka choinkowe. Chłodne granaty dominują, bursztyn to tylko mały akcent */
+:root[data-theme='zima-ciemny'] {
+  --bg: #0d1420;
+  --card: #151f2f;
+  --ink: #e4edf2;
+  --muted: #7f92a3;
+  --accent: #5f9bc7;
+  --accent2: #3d6d92;
+  --gold: #e0a95a;
+  --accent-soft: #1c2c40;
+  --border: #233246;
+  --glow1: #3a5f82;
+  --glow2: #1f4d38;
+}
+/* WIOSNA jasny — celowo NIE pastelowo-wielkanocna: szałwiowa zieleń, wilgotna ziemia, przygaszona terakota */
+:root[data-theme='wiosna-jasny'] {
+  --bg: #f4f2ea;
+  --card: #fbfaf5;
+  --ink: #33402e;
+  --muted: #7c8a6d;
+  --accent: #7c9473;
+  --accent2: #4f6b48;
+  --gold: #c17b62;
+  --accent-soft: #e3e8d6;
+  --border: #dce0d0;
+  --glow1: #c17b62;
+  --glow2: #7c9473;
+}
+/* WIOSNA ciemny — mokry las o zmierzchu */
+:root[data-theme='wiosna-ciemny'] {
+  --bg: #1a2117;
+  --card: #212b1c;
+  --ink: #e6e9dd;
+  --muted: #93a184;
+  --accent: #8fae7f;
+  --accent2: #5f7d54;
+  --gold: #c98a6d;
+  --accent-soft: #2c3524;
+  --border: #3a4530;
+  --glow1: #c98a6d;
+  --glow2: #8fae7f;
+}
+/* LATO jasny — sky blue/lazur, sosny nad morzem, piasek, lody */
+:root[data-theme='lato-jasny'] {
+  --bg: #fbf6ec;
+  --card: #ffffff;
+  --ink: #163a4a;
+  --muted: #5f7f8a;
+  --accent: #2f8fd1;
+  --accent2: #145a86;
+  --gold: #e3a856;
+  --accent-soft: #d7eefb;
+  --border: #cfe6f2;
+  --glow1: #e3a856;
+  --glow2: #2f8fd1;
+}
+/* LATO ciemny — Hotel California: granatowo-fioletowy zmierzch, pomarańcz zachodu tylko jako wąski pas przy horyzoncie */
+:root[data-theme='lato-ciemny'] {
+  --bg: #171833;
+  --card: #20213f;
+  --ink: #f3e3cf;
+  --muted: #a29fc2;
+  --accent: #c9506b;
+  --accent2: #8a5aa8;
+  --gold: #e8934a;
+  --accent-soft: #2d2a4d;
+  --border: #332f57;
+  --glow1: #3d3a6b;
+  --glow2: #c9502a;
+}

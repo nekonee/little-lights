@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+    <title>🍂 Dziennik Wdzięczności</title>
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/components.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="lights-decor" id="lightsDecor" aria-hidden="true"></div>
+      <div class="top-row">
+        <div>
+          <h1>🍂 Dziennik Wdzięczności</h1>
+          <div class="date" id="todayLabel"></div>
+        </div>
+        <select class="theme-select" id="themeSelect" title="Wybierz motyw">
+          <option value="jesien-jasny">🍂 Jesień jasny</option>
+          <option value="jesien-ciemny">🍂 Jesień ciemny</option>
+          <option value="zima-jasny">❄️ Zima jasny</option>
+          <option value="zima-ciemny">❄️ Zima ciemny</option>
+          <option value="wiosna-jasny">🌸 Wiosna jasny</option>
+          <option value="wiosna-ciemny">🌸 Wiosna ciemny</option>
+          <option value="lato-jasny">☀️ Lato jasny</option>
+          <option value="lato-ciemny">☀️ Lato ciemny</option>
+        </select>
+      </div>
+      <div class="streak" id="streakBadge"></div>
+
+      <div class="quote">
+        <span id="quoteText">Wczytuję cytat…</span>
+        <button id="newQuoteBtn" title="Losuj inny">⟳ inny</button>
+      </div>
+
+      <div class="card">
+        <div class="date-picker-wrap">
+          <label>Piszesz wpis na dzień:</label>
+          <div class="date-picker-row">
+            <button type="button" class="date-trigger" id="dateTrigger">
+              📅 <span id="dateTriggerLabel"></span>
+            </button>
+            <button type="button" class="today-btn" id="todayBtn">Dziś</button>
+          </div>
+          <div class="calendar-popover" id="calendarPopover" hidden>
+            <div class="cal-header">
+              <button type="button" id="calPrev">‹</button>
+              <span id="calMonthLabel"></span>
+              <button type="button" id="calNext">›</button>
+            </div>
+            <div class="cal-weekdays">
+              <span>Pn</span><span>Wt</span><span>Śr</span><span>Cz</span><span>Pt</span
+              ><span>So</span><span>Nd</span>
+            </div>
+            <div class="cal-grid" id="calGrid"></div>
+          </div>
+        </div>
+        <div class="entry-indicator" id="entryIndicator"></div>
+
+        <label>Za co jestem wdzięczna? (3 rzeczy)</label>
+        <div class="hint">
+          Im bardziej konkretnie, tym lepiej — zamiast „rodzina”, spróbuj „telefon od mamy dziś
+          rano”.
+        </div>
+        <div class="grateful-row">
+          <span>1.</span><input type="text" id="g1" placeholder="np. poranna kawa w spokoju" />
+        </div>
+        <div class="grateful-row">
+          <span>2.</span><input type="text" id="g2" placeholder="np. wiadomość od przyjaciółki" />
+        </div>
+        <div class="grateful-row">
+          <span>3.</span><input type="text" id="g3" placeholder="np. słońce po południu" />
+        </div>
+
+        <label>Dlaczego to dla mnie ważne?</label>
+        <textarea id="why" rows="2" placeholder="Rozwiń jedną z powyższych rzeczy..."></textarea>
+
+        <label>Kogo dziś doceniam?</label>
+        <input type="text" id="person" placeholder="np. sąsiadka, która pomogła z paczką" />
+
+        <label>Z czego jestem dziś dumna?</label>
+        <input type="text" id="proud" placeholder="np. dokończyłam trudne zadanie" />
+
+        <label>Jakie wyzwanie dziś miałam i czego mnie nauczyło?</label>
+        <textarea
+          id="lesson"
+          rows="2"
+          placeholder="Nawet trudny dzień może dać jakąś lekcję..."
+        ></textarea>
+
+        <button class="save-btn" id="saveBtn">Zapisz wpis</button>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="card" id="summaryCard">
+        <label class="card-title">📅 Podsumowanie miesiąca</label>
+        <select class="month-select" id="monthSelect"></select>
+        <div id="summaryContent"></div>
+      </div>
+
+      <div class="history">
+        <h2>Poprzednie wpisy</h2>
+        <div id="historyList" class="empty">Brak wpisów.</div>
+      </div>
+
+      <div class="card card--spaced">
+        <label class="card-title">💾 Kopia zapasowa</label>
+        <div class="hint">
+          Eksportuj wszystkie wpisy do pliku, który możesz bezpiecznie przechować (np. na dysku w
+          chmurze). W razie potrzeby wczytaj go z powrotem.
+        </div>
+        <button class="cancel-btn cancel-btn--tight" id="exportBtn">
+          ⬇️ Eksportuj wpisy (plik .json)
+        </button>
+        <label for="importFile" class="cancel-btn file-btn">⬆️ Importuj kopię zapasową</label>
+        <input type="file" id="importFile" accept="application/json" hidden />
+        <div class="status" id="backupStatus"></div>
+      </div>
+
+      <div class="note">
+        Wpisy zapisują się lokalnie w tej przeglądarce (localStorage). Otwieraj ten sam plik, w tej
+        samej przeglądarce, by mieć dostęp do historii. Warto od czasu do czasu zrobić kopię
+        zapasową powyżej.
+      </div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>

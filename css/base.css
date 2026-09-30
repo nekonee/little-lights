@@ -1,0 +1,86 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: Georgia, 'Iowan Old Style', serif;
+  -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(
+      ellipse at 10% 0%,
+      color-mix(in srgb, var(--glow1) 18%, transparent) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at 90% 15%,
+      color-mix(in srgb, var(--glow2) 16%, transparent) 0%,
+      transparent 50%
+    ),
+    var(--bg);
+  min-height: 100vh;
+}
+.wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+}
+h1 {
+  font-size: 1.7rem;
+  margin: 0 0 4px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  background: linear-gradient(90deg, var(--accent2), var(--accent), var(--gold));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+label {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: -2px 0 8px;
+}
+input[type='text'],
+textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: transparent;
+  resize: vertical;
+  margin-bottom: 12px;
+}
+input[type='text']:focus,
+textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.status {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 10px;
+  min-height: 1.2em;
+}
+.empty {
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 20px 0;
+}
+.note {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 30px;
+  line-height: 1.5;
+}

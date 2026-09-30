@@ -4,3 +4,6 @@ node_modules/
 # Prywatne kopie zapasowe wpisów nigdy nie trafiają do repozytorium
 backups/
 kopia-dziennika-*.json
+
+# Zrzuty ekranu i pliki robocze narzędzi
+.openchamber/

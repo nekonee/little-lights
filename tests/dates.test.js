@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import {
   MONTHS_PL,
   formatDateLabel,
+  formatMonthKey,
   formatMonthLabel,
   formatTodayLabel,
   keyFromDate,
@@ -29,6 +30,11 @@ test('formatTodayLabel zwraca dzień tygodnia, dzień, miesiąc i rok po polsku'
 
 test('formatMonthLabel zwraca miesiąc w mianowniku z wielką literą', () => {
   assert.equal(formatMonthLabel(new Date(2026, 8, 15)), 'Wrzesień 2026');
+});
+
+test('formatMonthKey zamienia YYYY-MM na nazwę miesiąca i rok', () => {
+  assert.equal(formatMonthKey('2026-09'), 'wrzesień 2026');
+  assert.equal(formatMonthKey('2027-01'), 'styczeń 2027');
 });
 
 test('MONTHS_PL ma dwanaście nazw', () => {
