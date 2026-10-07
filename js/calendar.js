@@ -1,89 +1,104 @@
 import { byId, h } from './dom.js';
-import { formatMonthPL, keyFromLocalDate, monthKey, parseKey, todayKey } from './dates.js';
-import { loadEntries } from './store.js';
-
-const GRID_CELLS = 42;
+import { formatDatePL, formatMonthPL, monthKey, todayKey } from './dates.js';
+import {
+  calendarReducer,
+  canGoNext,
+  createCalendarState,
+  describeCell,
+  monthGrid,
+} from './calendar-model.js';
 
 /**
- * Wybór daty wpisu: przycisk z datą, przycisk „Dziś” i miesięczny kalendarz z kropkami
- * pod dniami, które mają wpis.
+ * Wybór daty wpisu: przycisk z datą i panel z miesięcznym kalendarzem rozwijany w karcie.
+ * Wszystkie reguły są w calendar-model.js; tu tylko rysowanie i zdarzenia.
+ * @param {{selected: string, onSelectDate: (key: string) => void}} options
  */
-export function initCalendar({ getSelectedDate, onSelectDate }) {
+export function initCalendar({ selected, onSelectDate }) {
   const trigger = byId('dateTrigger');
   const triggerLabel = byId('dateTriggerLabel');
-  const popover = byId('calendarPopover');
+  const panel = byId('calendarPanel');
   const monthLabel = byId('calMonthLabel');
+  const previousButton = byId('calPrev');
+  const nextButton = byId('calNext');
   const grid = byId('calGrid');
-  let viewDate = new Date();
+  let state = createCalendarState(selected);
+  let entries = {};
 
-  function buildCell(cellDate, entries) {
-    const cellKey = keyFromLocalDate(cellDate);
+  function buildCell(cell, today) {
+    const info = describeCell(cell, { today, selected: state.selected, entries });
     const classes = ['cal-day'];
-    if (cellDate.getMonth() !== viewDate.getMonth()) classes.push('other-month');
-    if (cellKey === todayKey()) classes.push('today');
-    if (cellKey === getSelectedDate()) classes.push('selected');
+    if (!info.inMonth) classes.push('other-month');
+    if (info.isToday) classes.push('today');
+    if (info.isSelected) classes.push('selected');
     return h(
-      'div',
-      { class: classes.join(' '), dataset: { date: cellKey } },
-      String(cellDate.getDate()),
-      entries[cellKey] && h('span', { class: 'dot' }),
+      'button',
+      {
+        type: 'button',
+        class: classes.join(' '),
+        dataset: { date: info.key },
+        'aria-label': info.label,
+        'aria-pressed': info.isSelected ? 'true' : 'false',
+        'aria-current': info.isToday ? 'date' : null,
+        disabled: info.isFuture,
+      },
+      String(info.day),
+      info.hasEntry ? h('span', { class: 'dot', 'aria-hidden': 'true' }) : null,
     );
   }
 
-  function renderGrid() {
-    const entries = loadEntries();
-    const year = viewDate.getFullYear();
-    const month = viewDate.getMonth();
-    monthLabel.textContent = formatMonthPL(monthKey(year, month + 1));
-
-    const mondayFirstOffset = (new Date(year, month, 1).getDay() + 6) % 7;
-    const gridStart = new Date(year, month, 1 - mondayFirstOffset);
-    const cells = [];
-    for (let i = 0; i < GRID_CELLS; i++) {
-      const cellDate = new Date(gridStart);
-      cellDate.setDate(gridStart.getDate() + i);
-      cells.push(buildCell(cellDate, entries));
-    }
-    grid.replaceChildren(...cells);
+  function render() {
+    const today = todayKey();
+    triggerLabel.textContent = formatDatePL(state.selected);
+    trigger.setAttribute('aria-expanded', String(state.open));
+    panel.hidden = !state.open;
+    if (!state.open) return;
+    const view = { year: state.viewYear, month: state.viewMonth };
+    monthLabel.textContent = formatMonthPL(monthKey(view.year, view.month));
+    nextButton.disabled = !canGoNext(view, today);
+    grid.replaceChildren(...monthGrid(view.year, view.month).map((cell) => buildCell(cell, today)));
   }
 
-  function open() {
-    renderGrid();
-    popover.hidden = false;
+  function dispatch(action) {
+    const previousSelected = state.selected;
+    state = calendarReducer(state, action, { today: todayKey() });
+    render();
+    const pickedByUser = action.type !== 'select';
+    if (pickedByUser && state.selected !== previousSelected) onSelectDate(state.selected);
   }
 
-  function close() {
-    popover.hidden = true;
-  }
-
-  function shiftMonth(delta) {
-    viewDate.setMonth(viewDate.getMonth() + delta);
-    renderGrid();
-  }
-
-  trigger.addEventListener('click', (event) => {
-    event.stopPropagation();
-    if (popover.hidden) open();
-    else close();
-  });
-  popover.addEventListener('click', (event) => event.stopPropagation());
-  document.addEventListener('click', close);
-  byId('calPrev').addEventListener('click', () => shiftMonth(-1));
-  byId('calNext').addEventListener('click', () => shiftMonth(1));
+  trigger.addEventListener('click', () => dispatch({ type: 'toggle' }));
+  previousButton.addEventListener('click', () => dispatch({ type: 'prev' }));
+  nextButton.addEventListener('click', () => dispatch({ type: 'next' }));
   grid.addEventListener('click', (event) => {
     const cell = event.target.closest('.cal-day');
-    if (cell) onSelectDate(cell.dataset.date);
+    if (cell) dispatch({ type: 'pickDay', key: cell.dataset.date });
   });
-  byId('todayBtn').addEventListener('click', () => onSelectDate(todayKey()));
+  document.addEventListener('click', (event) => {
+    // composedPath, bo komórka klikniętego dnia mogła już zniknąć z drzewa po przerysowaniu siatki
+    const path = event.composedPath();
+    const insideCalendar = path.includes(panel) || path.includes(trigger);
+    if (state.open && !insideCalendar) dispatch({ type: 'close' });
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || !state.open) return;
+    dispatch({ type: 'close' });
+    trigger.focus();
+  });
+
+  render();
 
   return {
-    close,
-    setLabel(text) {
-      triggerLabel.textContent = text;
+    /** Zewnętrzna zmiana dnia (np. „edytuj” w historii). Zwraca, czy dzień został przyjęty. */
+    select(key) {
+      dispatch({ type: 'select', key });
+      return state.selected === key;
     },
-    showMonthOf(key) {
-      const { year, month, day } = parseKey(key);
-      viewDate = new Date(year, month - 1, day);
+    goToToday() {
+      dispatch({ type: 'goToToday' });
+    },
+    setEntries(nextEntries) {
+      entries = nextEntries;
+      render();
     },
   };
 }

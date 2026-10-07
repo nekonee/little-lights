@@ -1,6 +1,7 @@
 import { initBackupPanel } from './backup-panel.js';
 import { initCalendar } from './calendar.js';
 import { formatDatePL, todayKey } from './dates.js';
+import { byId } from './dom.js';
 import { initForm } from './form.js';
 import { initGarlands } from './garland.js';
 import { renderStreak, renderTodayLabel } from './header.js';
@@ -14,15 +15,13 @@ import { initThemes } from './themes.js';
 const state = { selectedDate: todayKey() };
 
 const form = initForm({ onSave: saveEntry });
-const calendar = initCalendar({
-  getSelectedDate: () => state.selectedDate,
-  onSelectDate: selectDate,
-});
+const calendar = initCalendar({ selected: state.selectedDate, onSelectDate: showDate });
 const history = initHistory({ onEdit: editEntry, onDelete: deleteEntry });
 const summary = initSummary();
 
 function refreshAll() {
   const entries = loadEntries();
+  calendar.setEntries(entries);
   history.render(entries);
   renderStreak(entries);
   summary.refresh(entries);
@@ -33,7 +32,6 @@ function loadFormForDate() {
   if (existing) form.fill(existing);
   else form.clear();
 
-  calendar.setLabel(formatDatePL(state.selectedDate));
   const isToday = state.selectedDate === todayKey();
   form.setMode({
     indicatorText: existing
@@ -46,11 +44,13 @@ function loadFormForDate() {
   form.setStatus('');
 }
 
-function selectDate(dateKey) {
+function showDate(dateKey) {
   state.selectedDate = dateKey;
-  calendar.showMonthOf(dateKey);
   loadFormForDate();
-  calendar.close();
+}
+
+function goToToday() {
+  calendar.goToToday();
 }
 
 function saveEntry() {
@@ -73,7 +73,8 @@ function saveEntry() {
 }
 
 function editEntry(date) {
-  selectDate(date);
+  if (!calendar.select(date)) return;
+  showDate(date);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -85,6 +86,7 @@ function deleteEntry(date) {
   refreshAll();
 }
 
+byId('todayBtn').addEventListener('click', goToToday);
 renderTodayLabel();
 initThemes();
 initGarlands();

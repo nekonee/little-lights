@@ -37,20 +37,26 @@
 
       <div class="card">
         <div class="date-picker-wrap">
-          <label>Piszesz wpis na dzień:</label>
+          <label for="dateTrigger">Piszesz wpis na dzień:</label>
           <div class="date-picker-row">
-            <button type="button" class="date-trigger" id="dateTrigger">
+            <button
+              type="button"
+              class="date-trigger"
+              id="dateTrigger"
+              aria-expanded="false"
+              aria-controls="calendarPanel"
+            >
               📅 <span id="dateTriggerLabel"></span>
             </button>
             <button type="button" class="today-btn" id="todayBtn">Dziś</button>
           </div>
-          <div class="calendar-popover" id="calendarPopover" hidden>
+          <div class="calendar-panel" id="calendarPanel" hidden>
             <div class="cal-header">
-              <button type="button" id="calPrev">‹</button>
-              <span id="calMonthLabel"></span>
-              <button type="button" id="calNext">›</button>
+              <button type="button" id="calPrev" aria-label="Poprzedni miesiąc">‹</button>
+              <span id="calMonthLabel" aria-live="polite"></span>
+              <button type="button" id="calNext" aria-label="Następny miesiąc">›</button>
             </div>
-            <div class="cal-weekdays">
+            <div class="cal-weekdays" aria-hidden="true">
               <span>Pn</span><span>Wt</span><span>Śr</span><span>Cz</span><span>Pt</span
               ><span>So</span><span>Nd</span>
             </div>

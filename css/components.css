@@ -135,7 +135,6 @@ html[data-theme='zima-ciemny'] .lights-decor {
   font-weight: 600;
 }
 .date-picker-wrap {
-  position: relative;
   margin-bottom: 16px;
 }
 .date-picker-row {
@@ -144,6 +143,7 @@ html[data-theme='zima-ciemny'] .lights-decor {
 }
 .date-trigger {
   flex: 1;
+  min-height: 44px;
   text-align: left;
   padding: 10px 12px;
   border: 1px solid var(--border);
@@ -153,8 +153,10 @@ html[data-theme='zima-ciemny'] .lights-decor {
   font-family: inherit;
   font-size: 0.95rem;
   cursor: pointer;
+  touch-action: manipulation;
 }
 .today-btn {
+  min-height: 44px;
   padding: 10px 14px;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -163,36 +165,36 @@ html[data-theme='zima-ciemny'] .lights-decor {
   font-family: inherit;
   font-size: 0.85rem;
   cursor: pointer;
+  touch-action: manipulation;
 }
-.calendar-popover {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  z-index: 20;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 14px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+.calendar-panel {
+  margin-top: 10px;
+  padding: 10px 0 4px;
+  border-top: 1px solid var(--border);
 }
 .cal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   font-weight: 600;
   color: var(--accent2);
 }
 .cal-header button {
   background: none;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  width: 30px;
-  height: 30px;
+  border-radius: 10px;
+  width: 44px;
+  height: 44px;
   cursor: pointer;
   color: var(--ink);
   font-family: inherit;
+  font-size: 1.1rem;
+  touch-action: manipulation;
+}
+.cal-header button:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 .cal-weekdays {
   display: grid;
@@ -205,28 +207,39 @@ html[data-theme='zima-ciemny'] .lights-decor {
 .cal-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
 }
 .cal-day {
   position: relative;
-  aspect-ratio: 1;
+  min-height: 44px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  font-size: 0.85rem;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  font-family: -apple-system, system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
   color: var(--ink);
+  touch-action: manipulation;
 }
 .cal-day.other-month {
   color: var(--muted);
   opacity: 0.4;
 }
-.cal-day:hover {
+.cal-day:disabled {
+  color: var(--muted);
+  opacity: 0.3;
+  cursor: default;
+}
+.cal-day:not(:disabled):hover {
   background: var(--accent-soft);
 }
 .cal-day.today {
   outline: 1px solid var(--accent);
+  outline-offset: -3px;
 }
 .cal-day.selected {
   background: var(--accent);
@@ -234,7 +247,7 @@ html[data-theme='zima-ciemny'] .lights-decor {
 }
 .cal-day .dot {
   position: absolute;
-  bottom: 3px;
+  bottom: 5px;
   width: 4px;
   height: 4px;
   border-radius: 50%;

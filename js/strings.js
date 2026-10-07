@@ -12,6 +12,10 @@ export const strings = {
       ? `🔥 ${days} ${pluralize(days, 'dzień', 'dni')} z rzędu`
       : '🌱 zacznij dziś swoją serię',
 
+  calendar: {
+    entrySaved: 'wpis zapisany',
+  },
+
   form: {
     editingExisting: '✏️ Edytujesz istniejący wpis z tego dnia',
     newForToday: '🆕 Nowy wpis na dziś',
