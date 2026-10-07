@@ -283,15 +283,15 @@ jest tak krótki, że sprawdzamy go w prawdziwej przeglądarce (lista M poniżej
 Miesiące liczymy od 1 (jak w całym `dates.js`). Klucze to `YYYY-MM-DD`, więc porównanie „czy dzień jest po dzisiejszym”
 to zwykłe porównanie tekstów.
 
-| Funkcja                                          | Działanie                                                                                                                                |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `monthGrid(year, month)`                         | Zawsze **42 komórki** `{key, day, inMonth}`, tydzień od poniedziałku. Rzuca `RangeError` dla miesiąca spoza 1–12.                        |
-| `shiftMonth({year, month}, delta)`               | Nowy miesiąc widoku. Liczy na jednej liczbie `rok·12 + miesiąc`, więc przechodzi granicę roku i nie ma „dnia”, który mógłby przeskoczyć. |
-| `isFuture(key, today)`                           | Prawda dla dnia **po** dzisiejszym. Dziś nie jest przyszłością.                                                                          |
-| `canGoNext(view, today)`                         | Fałsz, gdy widok jest w miesiącu dzisiejszym lub późniejszym.                                                                            |
-| `describeCell(cell, {today, selected, entries})` | Cechy komórki: `isToday`, `isSelected`, `isFuture`, `hasEntry`, `inMonth` i `label` dla czytnika ekranu.                                 |
-| `createCalendarState(selected)`                  | Stan początkowy: `{open: false, viewYear, viewMonth, selected}`.                                                                         |
-| `calendarReducer(state, action, {today})`        | Następny stan. Czysta funkcja: nie zmienia stanu wejściowego.                                                                            |
+| Funkcja                                                  | Działanie                                                                                                                                                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `monthGrid(year, month)`                                 | Zawsze **42 komórki** `{key, day, inMonth}`, tydzień od poniedziałku. Rzuca `RangeError` dla miesiąca spoza 1–12.                                                                           |
+| `shiftMonth({year, month}, delta)`                       | Nowy miesiąc widoku. Liczy na jednej liczbie `rok·12 + miesiąc`, więc przechodzi granicę roku i nie ma „dnia”, który mógłby przeskoczyć.                                                    |
+| `isFuture(key, today)`                                   | Prawda dla dnia **po** dzisiejszym. Dziś nie jest przyszłością.                                                                                                                             |
+| `canGoNext(view, today)`                                 | Fałsz, gdy widok jest w miesiącu dzisiejszym lub późniejszym.                                                                                                                               |
+| `describeCell(cell, {today, selected, entries, drafts})` | Cechy komórki: `isToday`, `isSelected`, `isFuture`, `hasEntry`, `hasDraft`, `marker` (`'entry'`, `'draft'` albo `null`), `inMonth` i `label` dla czytnika ekranu. `drafts` jest opcjonalne. |
+| `createCalendarState(selected)`                          | Stan początkowy: `{open: false, viewYear, viewMonth, selected}`.                                                                                                                            |
+| `calendarReducer(state, action, {today})`                | Następny stan. Czysta funkcja: nie zmienia stanu wejściowego.                                                                                                                               |
 
 Akcje reduktora: `toggle`, `close` (dotknięcie poza panelem i Escape), `prev`, `next`, `pickDay(key)`, `goToToday`
 i `select(key)` (zewnętrzna zmiana dnia, np. „edytuj” w historii).
@@ -342,6 +342,12 @@ Numery K są używane w testach (`tests/calendar-model.test.js`), więc każde z
 - **K17.** Reduktor nie zmienia obiektu stanu, który dostaje.
 - **K20.** Nieznana akcja reduktora jest błędem programisty (rzuca wyjątek), a nie cicho pomijanym brakiem reakcji. Literówka
   w nazwie akcji nie może udawać, że wszystko działa.
+- **K21.** Dzień, który ma szkic, a nie ma wpisu, jest oznaczony jako dzień ze szkicem (`marker: 'draft'`): w kalendarzu pusta
+  kropka (sam obrys), bez kafelka. Dzień bez szkicu i bez wpisu nie ma znacznika.
+- **K22.** Gdy dzień ma i wpis, i szkic zmian, wygrywa oznaczenie wpisu (kafelek i pełna kropka, `marker: 'entry'`), a szkic
+  jest widoczny tylko w opisie dla czytnika ekranu.
+- **K23.** Opis dla czytnika ekranu uwzględnia szkic: „…, szkic niezapisany” (sam szkic) albo „…, wpis zapisany, szkic zmian”
+  (wpis i szkic). Brak przekazanych szkiców zachowuje się jak brak szkiców.
 
 **Sprawdzane ręcznie w przeglądarce (390×844)**
 
@@ -358,6 +364,60 @@ Numery K są używane w testach (`tests/calendar-model.test.js`), więc każde z
   wpis z tego dnia”, przycisk „Zapisz zmiany”). Wybór dnia bez wpisu daje pusty formularz i „Nowy wpis”.
 - **M9.** Dni z wpisem są wyraźnie widoczne w kalendarzu: kafelek w kolorze `--accent-soft` i kropka w `--accent`, także dla
   dni sąsiednich miesięcy, a wybrany dzień z wpisem ma białą kropkę na tle akcentu.
+- **M10.** Dzień ze szkicem bez wpisu ma pustą kropkę (obrys) w kolorze `--accent`, wyraźnie inną niż pełna kropka wpisu; na
+  wybranym dniu obrys jest biały. Czytelne w ośmiu motywach.
+
+#### Kolory w kalendarzu
+
+Kalendarz **nie wprowadza żadnych własnych kolorów**: wszystko pochodzi z tokenów motywu w `css/tokens.css`. Jedyny wyjątek to
+biały (`#fff`) na wybranym dniu i na jego kropce, który ma zniknąć wraz z tokenem `--on-accent` w punkcie 15.
+
+**Który stan ma jaki kolor**
+
+| Stan komórki                          | Tło                     | Cyfra                 | Znacznik                                               |
+| ------------------------------------- | ----------------------- | --------------------- | ------------------------------------------------------ |
+| Zwykły dzień                          | brak                    | `--ink`               | brak                                                   |
+| Dzień sąsiedniego miesiąca            | brak                    | `--muted`, krycie 0,4 | brak                                                   |
+| Dzień z przyszłości (nieaktywny)      | brak                    | `--muted`, krycie 0,3 | brak                                                   |
+| „Dziś”                                | brak                    | `--ink`               | obrys 1 px `--accent` (wewnątrz komórki)               |
+| Dzień z wpisem                        | kafelek `--accent-soft` | `--ink`               | pełna kropka 5 px `--accent`                           |
+| Dzień z wpisem z sąsiedniego miesiąca | kafelek `--accent-soft` | `--muted`, krycie 0,8 | pełna kropka `--accent`                                |
+| **Dzień ze szkicem, bez wpisu**       | brak                    | `--ink`               | **pusta kropka (obrys) 7 px, linia 1,5 px `--accent`** |
+| Dzień z wpisem i szkicem zmian        | kafelek `--accent-soft` | `--ink`               | pełna kropka (wpis wygrywa, zob. K22)                  |
+| Wybrany dzień                         | `--accent`              | biały                 | kropka lub obrys w bieżącym kolorze białym             |
+| Wskazanie (hover)                     | `--accent-soft`         | bez zmian             | nie dotyczy dnia wybranego                             |
+| Strzałki, ramki przycisków            | brak                    | `--ink`               | obramowanie `--border`                                 |
+| Tytuł miesiąca                        | brak                    | `--accent2`           | brak                                                   |
+| Dni tygodnia (Pn…Nd)                  | brak                    | `--muted`             | brak                                                   |
+
+**Wartości tych tokenów w ośmiu motywach**
+
+| Token                                          | 🍂 jesień jasny | 🍂 jesień ciemny | ❄️ zima jasny | ❄️ zima ciemny | 🌿 wiosna jasny | 🌿 wiosna ciemny | 🌊 lato jasny | 🌊 lato ciemny |
+| ---------------------------------------------- | --------------- | ---------------- | ------------- | -------------- | --------------- | ---------------- | ------------- | -------------- |
+| `--card` tło karty                             | `#fffaf3`       | `#2f1e16`        | `#ffffff`     | `#151f2f`      | `#fbfaf5`       | `#212b1c`        | `#ffffff`     | `#20213f`      |
+| `--ink` cyfry                                  | `#3d2418`       | `#f3e3d3`        | `#1f3b34`     | `#e4edf2`      | `#33402e`       | `#e6e9dd`        | `#163a4a`     | `#f3e3cf`      |
+| `--muted` dni spoza miesiąca i z przyszłości   | `#8f6a54`       | `#c39d81`        | `#7893a0`     | `#7f92a3`      | `#7c8a6d`       | `#93a184`        | `#5f7f8a`     | `#a29fc2`      |
+| `--accent` wybrany dzień, kropka, obrys „dziś” | `#c1592a`       | `#e2793f`        | `#2f6e52`     | `#5f9bc7`      | `#7c9473`       | `#8fae7f`        | `#2f8fd1`     | `#c9506b`      |
+| `--accent-soft` kafelek dnia z wpisem          | `#f6dcb8`       | `#43291b`        | `#dcebf0`     | `#1c2c40`      | `#e3e8d6`       | `#2c3524`        | `#d7eefb`     | `#2d2a4d`      |
+
+**Kontrast wybranych par (WCAG, liczone z powyższych wartości)**
+
+| Para (dla czego)                                | 🍂 jesień jasny | 🍂 jesień ciemny | ❄️ zima jasny | ❄️ zima ciemny | 🌿 wiosna jasny | 🌿 wiosna ciemny | 🌊 lato jasny | 🌊 lato ciemny |
+| ----------------------------------------------- | --------------- | ---------------- | ------------- | -------------- | --------------- | ---------------- | ------------- | -------------- |
+| cyfra `--ink` na karcie (dzień bez wpisu)       | 13.81           | 12.70            | 12.11         | 13.94          | 10.50           | 11.96            | 12.08         | 12.36          |
+| cyfra `--ink` na kafelku wpisu                  | 10.83           | 10.65            | 9.91          | 11.93          | 8.77            | 10.39            | 10.07         | 10.77          |
+| **obrys szkicu** `--accent` na karcie           | 4.28            | 5.34             | 6.05          | 5.52           | 3.17            | 5.98             | 3.52          | 3.59           |
+| kropka wpisu `--accent` na kafelku              | 3.35            | 4.48             | 4.95          | 4.72           | 2.65            | 5.19             | 2.93          | 3.12           |
+| biały tekst na wybranym dniu (`--accent`)       | 4.44            | 2.98             | 6.05          | 3.00           | 3.31            | 2.46             | 3.52          | 4.34           |
+| dni sąsiednich miesięcy (`--muted`, krycie 0,4) | 1.69            | 2.17             | 1.51          | 1.92           | 1.55            | 2.02             | 1.65          | 2.12           |
+| dni z przyszłości (`--muted`, krycie 0,3)       | 1.47            | 1.76             | 1.35          | 1.62           | 1.38            | 1.68             | 1.44          | 1.75           |
+
+Jak to czytać: cyfry mają duży zapas (ponad 8:1). Znaczniki są elementami graficznymi, dla których zalecane jest 3:1.
+**Obrys szkicu spełnia to we wszystkich motywach** (najniżej 3,17:1 w wiośnie jasnej), bo leży na karcie, a nie na kafelku.
+Pełna kropka na kafelku wpisu jest poniżej 3:1 w dwóch jasnych motywach (wiosna jasny 2,65:1, lato jasny 2,93:1). Dni sąsiednich
+miesięcy i przyszłości są przygaszone celowo, bo nie są aktywnym wyborem (nieaktywne dni są wyjęte z wymagań kontrastu).
+Biały tekst na wybranym dniu jest poniżej 4,5:1 w sześciu motywach (np. wiosna ciemny 2,46:1): to znany problem z punktu 15
+(`--on-accent`). **Palet nie zmieniamy bez akceptacji autorki.**
 
 #### Wynik weryfikacji (stan na 07.10.2026)
 
@@ -413,7 +473,9 @@ Numery K są używane w testach (`tests/calendar-model.test.js`), więc każde z
 - **Oznaczenie dnia z wpisem:** kafelek `--accent-soft` plus kropka `--accent`, a nie sama kropka `--gold`. Pierwotny `--gold`
   miał słaby kontrast w jasnych motywach (np. 1,96:1 w zima jasny). Użyto istniejących tokenów, palet nie zmieniano (D31).
   Pełny przegląd kontrastu, w tym kafelka w ciemnych motywach, jest w punkcie 15 razem z `--on-accent`.
-- **Dzień z szkicem** (pusta kropka) pojawi się dopiero z punktem 10.
+- **Dzień ze szkicem** ma pustą kropkę (obrys `--accent`), a nie ramkę komórki. Obrys komórki jest już zajęty przez „dziś”, a pusta
+  kropka jest wyraźnie inna niż pełna kropka wpisu (D41). Kalendarz zna szkice od początku, choć same szkice pojawią się z
+  resztą punktu 10 (do tego czasu nie ma ich w aplikacji, więc znacznika nie widać).
 - **Nawigacja strzałkami klawiatury po siatce** nie jest planowana: aplikacja jest na telefon, a Tab przechodzi po
   przyciskach.
 
@@ -526,8 +588,9 @@ Funkcje `drafts.js` (nazwy robocze):
   kafelka w kalendarzu. Import kopii ich nie dotyka.
 - **S22.** Uszkodzone albo obce dane szkiców nie wywracają aplikacji: nieprawidłowe wpisy są pomijane, a brak klucza to
   zero szkiców.
-- **S23.** (do decyzji autorki) Dzień ze szkicem bez wpisu ma w kalendarzu **pustą kropkę** (sam obrys), żeby dało się
-  znaleźć zapomniany szkic. Dzień z wpisem pozostaje z kafelkiem i pełną kropką.
+- **S23.** (zaakceptowane przez autorkę 07.10.2026, **zrobione przed resztą punktu 10**) Dzień ze szkicem bez wpisu ma w
+  kalendarzu **pustą kropkę** (sam obrys), żeby dało się znaleźć zapomniany szkic. Dzień z wpisem pozostaje z kafelkiem i pełną
+  kropką. Zachowania K21–K23, kolory w sekcji „Kolory w kalendarzu”.
 
 **Sprawdzane ręcznie w przeglądarce (390×844)**
 
@@ -659,6 +722,7 @@ Każda decyzja ma powód i odrzucone alternatywy. Status: ✅ wdrożone, 🔜 za
 | D38 | „Odrzuć szkic” z potwierdzeniem                                                                                                           | Nieodwracalne skasowanie napisanego tekstu                                                                                                                            | Bez pytania                                               | 🔜 (pkt 10, własne okno w pkt 13)           |
 | D39 | Po imporcie nietknięty formularz odświeżamy, rozgrzebany zostawiamy z ostrzeżeniem                                                        | Zapis nie może po cichu nadpisać zaimportowanego wpisu                                                                                                                | Zawsze odświeżać, nigdy nie odświeżać                     | 🔜 (pkt 10, pełna zasada w pkt 14)          |
 | D40 | Szkice poza kopią zapasową i bez automatycznego wygasania                                                                                 | Robocza kopia chwili, a tekst znika tylko z decyzji autorki                                                                                                           | Eksport szkiców, wygaszanie po N dniach                   | 🔜 (pkt 10)                                 |
+| D41 | Szkic w kalendarzu oznaczony **pustą kropką** (obrys `--accent`), wpis wygrywa, gdy są oba                                                | Pusty obrys jest czytelnie inny niż pełna kropka wpisu i ma kontrast ≥ 3:1 we wszystkich motywach; obrys komórki zajmuje „dziś”                                       | Przerywana ramka komórki, drugi kolor, ikona              | 🔜 (pkt 10, kalendarz zrobiony pierwszy)    |
 
 ## 9. Ograniczenia iOS i PWA, o których trzeba pamiętać
 
