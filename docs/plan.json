@@ -112,14 +112,15 @@
       "✅ Siatka: monthGrid(year, month) zwraca zawsze 42 komórki, tydzień od poniedziałku, klucze składane z liczb (dateKey/addDaysKey), dni sąsiednich miesięcy przygaszone, ale klikalne (kliknięcie przełącza widok na ten miesiąc). Zawsze 6 wierszy, żeby wysokość panelu nie skakała.",
       "✅ Panel rozwijany w karcie pod przyciskiem (nie pływający popover), bez z-index i przycinania. Komórki minimum 44x44 pt: przy iPhonie 14 (390 pt) kalendarz na pełną szerokość wnętrza karty daje ok. 44 pt na komórkę, więc bez dodatkowego wewnętrznego paddingu. Zrobione: komórki i strzałki mają dokładnie 44×44 pt (zmierzone), panel ma szerokość wnętrza karty (308 pt).",
       "✅ Komórki jako <button> z aria-label („25 września 2026, wpis zapisany”), aria-current=date dla dziś, aria-pressed dla wybranego; touch-action: manipulation. Cyfry dni czcionką systemową (Georgia ma cyfry nautyczne o nierównej wysokości). Zrobione: atrybuty ustawione w kodzie; nie sprawdzone czytnikiem ekranu. Cyfry w czcionce systemowej z tabular-nums.",
-      "✅ Kropka: kolor zostaje bez zmian (decyzja D31): poprawa kontrastu (obecny --gold ma 1,96:1 w zima jasny) wymaga akceptacji autorki i przeszła do punktu 15 razem z --on-accent. Dzień „dziś” jest obrysowany. Dzień z niezapisanym szkicem może mieć pustą kropkę (punkt 10).",
+      "✅ Kropka: pierwotnie bez zmian koloru (D31), potem zmieniona na prośbę autorki, patrz niżej („Poprawka po uwagach autorki”). Dzień „dziś” jest obrysowany. Dzień z niezapisanym szkicem może mieć pustą kropkę (punkt 10).",
       "✅ Decyzja zatwierdzona: dni z przyszłości są nieaktywne (wyszarzone, disabled), a strzałka › nie wychodzi poza bieżący miesiąc. Dziś nie jest przyszłością. Przeszłość zawsze dozwolona.",
       "✅ „Dziś”: jedna funkcja goToToday() w app.js (tę samą wywoła automatyczny powrót z punktu 9): ustawia dzisiejszy dzień, przełącza widok na bieżący miesiąc, zamyka panel. Reguła w reduktorze jako akcja goToToday.",
       "✅ Zamykanie panelu: po wyborze dnia, ponownym dotknięciu przycisku daty i dotknięciu poza panelem. Otwarcie zawsze pokazuje miesiąc wybranego dnia. Zrobione (Escape: reguła w testach, nie sprawdzone w przeglądarce).",
       "✅ Po zapisie, usunięciu i imporcie wpisu odświeżyć kropki także przy otwartym panelu.",
       "✅ Edge case’y do sprawdzenia: miesiące 28/29/30/31-dniowe, luty 2028 (rok przestępny), miesiąc zaczynający się w poniedziałek (offset 0) i w niedzielę (offset 6), miesiąc na 6 wierszy, przejście grudzień↔styczeń, dni zmiany czasu (29.03 i 25.10.2026), północ przy otwartej aplikacji (pierścień „dziś” się przesuwa), wpisy o niepoprawnych kluczach po imporcie (pomijać bez błędu), zmiana daty lub strefy w telefonie. Pokryte testami w 4 strefach; północ przy otwartym panelu (przesunięcie pierścienia „dziś”) wejdzie z punktem 9.",
       "✅ Weryfikacja: testy w czterech strefach z oczekiwanymi wartościami z niezależnego źródła (np. calendar z Pythona), własności pętlą, testy regresyjne dla znanych błędów, a po napisaniu kodu kontrola przez celowe psucie (toISOString, setMonth, tydzień od niedzieli, 35 zamiast 42 komórek, brak blokady przyszłości). Ręcznie: lista M1–M7 na szerokości 390 px we wszystkich 8 motywach.",
-      "✅ Podział: część czysta w js/calendar-model.js (monthGrid, shiftMonth, isFuture, canGoNext, describeCell, createCalendarState, calendarReducer), cienkie renderowanie w js/calendar.js, wpisy podawane z app.js przez setEntries (kalendarz nie czyta localStorage)."
+      "✅ Podział: część czysta w js/calendar-model.js (monthGrid, shiftMonth, isFuture, canGoNext, describeCell, createCalendarState, calendarReducer), cienkie renderowanie w js/calendar.js, wpisy podawane z app.js przez setEntries (kalendarz nie czyta localStorage).",
+      "✅ Poprawka po uwagach autorki (07.10.2026): dni z wpisem są wyraźniej oznaczone (kafelek --accent-soft i kropka --accent 5 px zamiast kropki --gold 4 px), dni sąsiednich miesięcy z wpisem mniej przygaszone, a :hover nie psuje czytelności wybranego dnia. Wczytywanie zapisanego wpisu po wybraniu dnia działa (sprawdzone w przeglądarce, punkt M8). Wygląd czeka na akceptację autorki (D31); pełny kontrast palet w punkcie 15."
     ]
   },
   {
@@ -223,7 +224,8 @@
       "Walidacja i raport: zasady z punktu 7, komunikat „Dodano X, zaktualizowano Y, bez zmian Z, pominięto W (nieprawidłowe)”. Scalanie i zapis w jednym kroku, a jeśli zapis się nie uda, nic się nie zmienia.",
       "Przed importem zapisać lokalną kopię poprzedniego stanu (osobny klucz localStorage), żeby dało się cofnąć pomyłkę.",
       "Reszta rekomendacji z punktu 6: navigator.storage.persist() i licznik „Ostatnia kopia: X dni temu”.",
-      "Walidacja i scalanie w js/backup.js jako czyste funkcje z testami na wymyślonych danych (punkt 1). Prawdziwej kopii wpisów nie dodawać do repozytorium ani do testów."
+      "Walidacja i scalanie w js/backup.js jako czyste funkcje z testami na wymyślonych danych (punkt 1). Prawdziwej kopii wpisów nie dodawać do repozytorium ani do testów.",
+      "Po imporcie przeładować formularz wybranego dnia, jeśli zaimportowano wpis z tego dnia i formularz jest nietknięty (obecnie formularz zostaje nieaktualny, co grozi nadpisaniem zaimportowanego wpisu przy zapisie). Gdy użytkowniczka coś już wpisała, pokazać komunikat zamiast nadpisywać (powiązane ze szkicami z punktu 10)."
     ]
   },
   {
@@ -237,7 +239,7 @@
       "Zmiany kolorów wprowadzać tylko po Twojej akceptacji, bo palety są Twoim wyborem (szczególnie lato ciemny, którego klimat ma zostać nietknięty). Kontrast najpierw pokazać w porównaniu przed/po.",
       "Poświata w tle z osobnych zmiennych glow1/glow2, typografia szeryfowa i zaokrąglenia jak w specyfikacji (sekcja 9).",
       "Zapamiętanie motywu w localStorage (jest); przy pierwszym uruchomieniu domyślnie jesień jasny.",
-      "Kolor kropki w kalendarzu (obecnie --gold, kontrast 1,96:1 w zima jasny; propozycja: --accent): decyzja odłożona z punktu 8 (D31), po porównaniu przed/po i Twojej akceptacji."
+      "Kolor kropki w kalendarzu: poprawiony w punkcie 8 na prośbę autorki (kafelek --accent-soft i kropka --accent). Do sprawdzenia przy przeglądzie kontrastu: czytelność kafelka --accent-soft w ciemnych motywach (subtelny)."
     ]
   },
   {

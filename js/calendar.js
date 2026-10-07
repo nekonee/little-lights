@@ -30,6 +30,7 @@ export function initCalendar({ selected, onSelectDate }) {
     if (!info.inMonth) classes.push('other-month');
     if (info.isToday) classes.push('today');
     if (info.isSelected) classes.push('selected');
+    if (info.hasEntry) classes.push('has-entry');
     return h(
       'button',
       {

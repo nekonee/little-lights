@@ -229,12 +229,18 @@ html[data-theme='zima-ciemny'] .lights-decor {
   color: var(--muted);
   opacity: 0.4;
 }
+.cal-day.has-entry {
+  background: var(--accent-soft);
+}
+.cal-day.other-month.has-entry {
+  opacity: 0.8;
+}
 .cal-day:disabled {
   color: var(--muted);
   opacity: 0.3;
   cursor: default;
 }
-.cal-day:not(:disabled):hover {
+.cal-day:not(:disabled):not(.selected):hover {
   background: var(--accent-soft);
 }
 .cal-day.today {
@@ -248,10 +254,10 @@ html[data-theme='zima-ciemny'] .lights-decor {
 .cal-day .dot {
   position: absolute;
   bottom: 5px;
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background: var(--gold);
+  background: var(--accent);
 }
 .cal-day.selected .dot {
   background: #fff;
