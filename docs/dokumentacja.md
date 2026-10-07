@@ -338,6 +338,8 @@ Numery K są używane w testach (`tests/calendar-model.test.js`), więc każde z
 - **K16.** Zewnętrzna zmiana dnia (np. „edytuj” w historii) synchronizuje wybrany dzień i widok, ale nie otwiera ani nie
   zamyka panelu. Z dniem z przyszłości jest ignorowana.
 - **K17.** Reduktor nie zmienia obiektu stanu, który dostaje.
+- **K20.** Nieznana akcja reduktora jest błędem programisty (rzuca wyjątek), a nie cicho pomijanym brakiem reakcji. Literówka
+  w nazwie akcji nie może udawać, że wszystko działa.
 
 **Sprawdzane ręcznie w przeglądarce (390×844)**
 
