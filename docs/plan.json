@@ -10,18 +10,19 @@
       "✅ Uruchamianie bez budowania: pliki są serwowane w takiej postaci, w jakiej leżą (GitHub Pages działa od razu). Lokalnie serwer w jednej komendzie, np. python3 -m http.server, i adres http://localhost:8000. Uwaga: moduły ES nie ładują się z file://, więc plik HTML nie otworzy się już dwuklikiem, jak dziś. Zrobione: npm start uruchamia serwer lokalny, opis w README.",
       "Podział odpowiedzialności: logika (daty, streak, podsumowanie miesiąca, scalanie i walidacja importu, siatka miesiąca) w czystych funkcjach bez dostępu do DOM i localStorage, a osobno cienka warstwa interfejsu, która tylko renderuje i podpina zdarzenia. Jeden stan aplikacji, funkcje render bez efektów ubocznych, delegowanie zdarzeń, brak globalnych zmiennych i handlerów inline.",
       "✅ Bezpieczny DOM: zero sklejania HTML z tekstu użytkownika (innerHTML z konkatenacją). Elementy budowane przez createElement i textContent albo przez mały pomocnik. To usuwa też ryzyko, że złośliwy plik z importu wstrzyknie kod. Zrobione: elementy powstają przez h() i textContent, w kodzie aplikacji nie ma innerHTML ani handlerów inline (sprawdzone wyszukiwaniem; zostały tylko w legacy/).",
-      "Dane: jedyny dostęp do localStorage w store.js; klucze jako stałe; parsowanie w try/catch z sensownym komunikatem; walidacja w jednym miejscu (zasady z punktu 7). Format wpisu opisany w README i oznaczony wersją w kluczu (_v1) plus funkcja migrate(), na razie pusta, żeby przyszła zmiana formatu nie wymagała przepisywania.",
+      "Dane: jedyny dostęp do localStorage w store.js; klucze jako stałe; parsowanie w try/catch z sensownym komunikatem; walidacja w jednym miejscu (zasady z punktu 7). Format wpisu opisany w README i oznaczony wersją w kluczu (_v1) plus funkcja migrate(), na razie pusta, żeby przyszła zmiana formatu nie wymagała przepisywania. W toku: store.js, stałe klucze, try/catch i walidacja importu (sanitizeEntries) są; brakuje wersjonowania z migrate().",
       "CSS: kolory tylko przez zmienne motywu (jedyny wyjątek: 5 stałych kolorów żarówek), jednostki rem, spójne nazewnictwo klas, mobile-first, bez !important i bez stylów inline. Zmiana motywu i skali tekstu z jednego miejsca.",
       "Nazewnictwo i teksty: identyfikatory w kodzie po angielsku, krótkie funkcje o jednej odpowiedzialności, brak duplikacji (np. jedno miejsce renderowania wpisu i jedno miejsce formatowania daty), stałe zamiast magicznych liczb (np. 10 minut w punkcie 9 czy 500 ms w punkcie 10). Wszystkie teksty interfejsu i komunikaty w jednym module.",
       "Komentarze tylko tam, gdzie kod sam nie wyjaśnia powodu (dziwactwa iOS, świadome decyzje). Bez komentarzy opisujących oczywiste linijki, bez zakomentowanego kodu i martwych funkcji.",
       "Kontrola jakości: // @ts-check z JSDoc dla głównych typów (Entry, Draft) daje sprawdzanie typów bez kompilatora; .editorconfig i Prettier do formatowania; ESLint opcjonalnie. Node 23 jest już zainstalowany na komputerze, ale aplikacja go do działania nie potrzebuje. To tylko narzędzia deweloperskie.",
-      "✅ Testy: wbudowany runner Node (node --test), bez zależności. Testujemy czyste funkcje: dates, streak, podsumowanie, walidację i scalanie importu, siatkę miesiąca. Uruchamiać w kilku strefach czasowych (TZ=Europe/Warsaw, America/Los_Angeles, Pacific/Kiritimati). Dane testowe wyłącznie wymyślone — prawdziwych wpisów nie kopiujemy do repozytorium. Interfejs sprawdzamy ręcznie według kryteriów „gotowe” opisanych w tym punkcie niżej. Zrobione: repozytorium założone, .gitignore wyklucza backups/ i kopia-dziennika-*.json (sprawdzone git check-ignore).",
-      "Git: folder nie jest jeszcze repozytorium (git jest zainstalowany). git init na start, .gitignore z .DS_Store, node_modules i kopia-dziennika-*.json, żeby prywatne wpisy nigdy nie trafiły do publicznego repozytorium. Commity małe, z opisem po co, nie tylko co.",
-      "README: jak uruchomić lokalnie, jak opublikować, opis struktury, opis formatu danych i kopii zapasowej, jak dodać cytat, motyw albo ikonę, znane dziwactwa iOS.",
+      "Testy: wbudowany runner Node (node --test), bez zależności. Testujemy czyste funkcje: dates, streak, podsumowanie, walidację i scalanie importu, siatkę miesiąca. Uruchamiać w kilku strefach czasowych (TZ=Europe/Warsaw, America/Los_Angeles, Pacific/Kiritimati). Dane testowe wyłącznie wymyślone — prawdziwych wpisów nie kopiujemy do repozytorium. Interfejs sprawdzamy ręcznie według kryteriów „gotowe” opisanych w tym punkcie niżej. W toku: runner, uruchamianie w 4 strefach (Warsaw, Los Angeles, Kiritimati, UTC), testy dat, streaka, podsumowania, walidacji i scalania są (53 testy). Brakuje tylko siatki miesiąca — wejdzie z punktem 8.",
+      "✅ Git: repozytorium założone (gałąź main), .gitignore z .DS_Store, node_modules, backups/, kopia-dziennika-*.json i .openchamber/ (sprawdzone git check-ignore), commity małe i z opisem po co. Prywatne wpisy nie trafią do publicznego repozytorium.",
+      "README: jak uruchomić lokalnie, jak opublikować, opis struktury, opis formatu danych i kopii zapasowej, jak dodać cytat, motyw albo ikonę, znane dziwactwa iOS. W toku: jest uruchamianie, struktura, format danych (z sekcją Daty), jak dodać cytat/motyw i znane problemy; brakuje publikacji, ikon i dziwactw iOS (dojdą z punktami 3–5 i 13).",
       "Dostępność jako standard: lang=pl, prawdziwe <label> przy polach, prawdziwe <button> zamiast div, widoczny stan focusu, kontrast wg punktu 15, aria tylko tam, gdzie potrzebna.",
       "Definition of done dla każdej funkcji: logika ma testy i przechodzą; interfejs sprawdzony w podglądzie 390×844 (iPhone 14) w kilku motywach, w tym w obu zimowych, i przy ograniczonym ruchu; brak błędów w konsoli; README zaktualizowane, jeśli funkcja zmienia strukturę albo format.",
       "Czego nie robimy bez konkretnego powodu: frameworki (React itp.), TypeScript, bundler, biblioteki interfejsu, zależności runtime. Zależności tylko deweloperskie.",
-      "Śledzenie postępu: po każdym wykonanym kroku aktualizujemy ten plik. ✅ przy numerze punktu (na początku tytułu) oznacza punkt wykonany w całości, ✅ na początku podpunktu — wykonany podpunkt. Punkt z częścią podpunktów ✅ jest w toku. Zmiany planu idą do repozytorium razem z kodem, którego dotyczą."
+      "Śledzenie postępu: po każdym wykonanym kroku aktualizujemy ten plik. ✅ przy numerze punktu (na początku tytułu) oznacza punkt wykonany w całości, ✅ na początku podpunktu — wykonany podpunkt. Punkt z częścią podpunktów ✅ jest w toku. Zmiany planu idą do repozytorium razem z kodem, którego dotyczą.",
+      "Dokumentacja decyzji: docs/dokumentacja.md opisuje, jak aplikacja działa i dlaczego tak (architektura, dane, daty, import, interfejs, rejestr decyzji D1–D27, ograniczenia iOS). Każda nowa decyzja trafia do jej rejestru razem z powodem i odrzuconymi alternatywami, a po zrobieniu punktu zmieniamy status z „planowane” na wdrożone."
     ]
   },
   {
@@ -323,6 +324,23 @@
       "✅ README: uruchamianie, testy, struktura, format danych, jak dodać cytat lub motyw, lista znanych błędów.",
       "Commity: 9a33572 (prototyp i konfiguracja), 3f35fbf (czysta logika z testami), 08a055e (interfejs, style, szkielet), fa9d586 (README i plan).",
       "Zachowane celowo, do naprawy w następnych punktach: daty w UTC (punkt 7), kalendarz przesunięty o dzień i setMonth (punkt 8), „Zapisano ✓” zamazywane od razu i inne drobiazgi (punkt 17), import nadpisujący wpisy (punkt 14), emoji 🌸 i ☀️ w liście motywów (punkt 16)."
+    ]
+  },
+  {
+    "id": 23,
+    "title": "✅ Dokumentacja projektu: jak to działa i skąd wynikają decyzje",
+    "description": "Plik docs/dokumentacja.md w markdown, żeby każdy (także autorka za pół roku) wiedział, skąd biorą się rozwiązania w kodzie. Uzupełnia README (szybki start) i specyfikację (wymagania).",
+    "priority": "normal",
+    "details": [
+      "✅ Założenia i ograniczenia projektu (jedna osoba, za darmo, iPhone 14, polski, prywatność, palety tylko za zgodą).",
+      "✅ Architektura: cztery warstwy (logika, dane, interfejs, app.js), przepływ najważniejszych akcji (start, wybór dnia, zapis, usunięcie, eksport, import).",
+      "✅ Dane: klucze localStorage, kształt wpisu, wersjonowanie, dlaczego localStorage, adres jako granica danych, prywatność kopii.",
+      "✅ Daty: zasady, historia błędu UTC, dlaczego Date.UTC i Intl w UTC, tabela funkcji.",
+      "✅ Kopia i import: reguły walidacji z uzasadnieniem, zasada scalania (obecna i docelowa), usunięcia niesynchronizowane.",
+      "✅ Interfejs: bezpieczny DOM, teksty w jednym miejscu, motywy, girlanda (znany problem), kalendarz (powody przepisania), cytaty, streak, podsumowanie.",
+      "✅ Testy i narzędzia oraz ograniczenia iOS/PWA.",
+      "✅ Rejestr decyzji D1–D27 (decyzja, powód, odrzucone alternatywy, status) i zasady aktualizowania dokumentu.",
+      "Do utrzymania na bieżąco: przy każdym kolejnym punkcie planu uzupełnić odpowiednie sekcje i zmienić status decyzji."
     ]
   }
 ]

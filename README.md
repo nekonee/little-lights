@@ -3,6 +3,7 @@
 Codzienny dziennik wdzięczności po polsku. Aplikacja jest jednoosobowa, lokalna i działa bez konta i backendu:
 wpisy zapisują się w `localStorage` przeglądarki, a kopię zapasową robi się plikiem JSON. Docelowo PWA na iPhonie.
 
+Dokumentacja (jak to działa i skąd wynikają decyzje): [`docs/dokumentacja.md`](docs/dokumentacja.md).
 Specyfikacja funkcjonalna i wizualna: [`docs/specyfikacja-dziennik-wdziecznosci.md`](docs/specyfikacja-dziennik-wdziecznosci.md).
 Plan prac z priorytetami: [`docs/plan.json`](docs/plan.json).
 
