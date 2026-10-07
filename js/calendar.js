@@ -23,14 +23,15 @@ export function initCalendar({ selected, onSelectDate }) {
   const grid = byId('calGrid');
   let state = createCalendarState(selected);
   let entries = {};
+  let drafts = {};
 
   function buildCell(cell, today) {
-    const info = describeCell(cell, { today, selected: state.selected, entries });
+    const info = describeCell(cell, { today, selected: state.selected, entries, drafts });
     const classes = ['cal-day'];
     if (!info.inMonth) classes.push('other-month');
     if (info.isToday) classes.push('today');
     if (info.isSelected) classes.push('selected');
-    if (info.hasEntry) classes.push('has-entry');
+    if (info.marker === 'entry') classes.push('has-entry');
     return h(
       'button',
       {
@@ -43,7 +44,7 @@ export function initCalendar({ selected, onSelectDate }) {
         disabled: info.isFuture,
       },
       String(info.day),
-      info.hasEntry ? h('span', { class: 'dot', 'aria-hidden': 'true' }) : null,
+      info.marker ? h('span', { class: `dot dot--${info.marker}`, 'aria-hidden': 'true' }) : null,
     );
   }
 
@@ -97,8 +98,9 @@ export function initCalendar({ selected, onSelectDate }) {
     goToToday() {
       dispatch({ type: 'goToToday' });
     },
-    setEntries(nextEntries) {
+    setEntries(nextEntries, nextDrafts = {}) {
       entries = nextEntries;
+      drafts = nextDrafts;
       render();
     },
   };

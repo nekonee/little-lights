@@ -259,8 +259,19 @@ html[data-theme='zima-ciemny'] .lights-decor {
   border-radius: 50%;
   background: var(--accent);
 }
+.cal-day .dot--draft {
+  width: 7px;
+  height: 7px;
+  bottom: 4px;
+  background: transparent;
+  border: 1.5px solid var(--accent);
+}
 .cal-day.selected .dot {
   background: #fff;
+}
+.cal-day.selected .dot--draft {
+  background: transparent;
+  border-color: #fff;
 }
 .history {
   margin-top: 36px;

@@ -421,7 +421,7 @@ Biały tekst na wybranym dniu jest poniżej 4,5:1 w sześciu motywach (np. wiosn
 
 #### Wynik weryfikacji (stan na 07.10.2026)
 
-- **Testy:** 54 testy kalendarza i w sumie 108 w projekcie przechodzą w czterech strefach czasowych. Zachowania K1–K20
+- **Testy:** 62 testy kalendarza i w sumie 116 w projekcie przechodzą w czterech strefach czasowych. Zachowania K1–K20
   mają pokrycie.
 - **Kontrola testów przez psucie kodu** (`tools/mutation-check.py`): 31 celowych usterek, m.in. stare `toISOString`,
   tydzień od niedzieli, 35 komórek, brak blokady przyszłości, brak przeniesienia roku, „dziś” po samym numerze dnia
@@ -448,6 +448,13 @@ Biały tekst na wybranym dniu jest poniżej 4,5:1 w sześciu motywach (np. wiosn
   - M9 ✅ sprawdzone w jesień jasny, zima jasny i zima ciemny (kafelek i kropka widoczne, wybrany dzień czytelny).
   - Escape nie został sprawdzony w przeglądarce (brak narzędzia do klawiatury), a reguła `close` jest w testach.
   - Nie sprawdzono na prawdziwym iPhonie.
+- **Oznaczenie dnia ze szkicem (K21–K23, M10)** sprawdzone 07.10.2026 na danych testowych: 4 dni ze szkicem (w tym jeden
+  z sąsiedniego miesiąca), jeden dzień z wpisem i szkicem zmian, jeden wybrany dzień ze szkicem. Obejrzane w 4 motywach
+  (jesień jasny, wiosna jasny, zima ciemny, lato jasny): obrys jest wyraźnie inny niż pełna kropka wpisu, a na wybranym dniu jest
+  biały. Pozostałe 4 motywy: kontrast policzony (≥ 3:1), ale wyglądu nie oglądano. Test w przeglądarce wymagał wstawienia
+  szkiców do magazynu ręcznie, bo zapis szkiców jeszcze nie istnieje.
+- **Kontrola testów przez psucie kodu** po dodaniu szkiców: 37 usterek, wszystkie wykryte (dodano m.in. szkic z pierwszeństwem
+  przed wpisem, znacznik bez szkicu, szkic o dzień dalej, rozpoznawanie przez `in` zamiast `Object.hasOwn`).
 - **Oznaczenie dni z wpisem** zmienione 07.10.2026 na prośbę autorki (D31): wcześniejsza kropka w `--gold` o średnicy 4 px
   była słabo widoczna, zwłaszcza w jasnych motywach i przy dniach sąsiednich miesięcy (całą komórkę przygaszała
   przezroczystość). Teraz dzień z wpisem ma kafelek `--accent-soft` i kropkę `--accent` (5 px), a przygaszenie dni
@@ -481,7 +488,8 @@ Biały tekst na wybranym dniu jest poniżej 4,5:1 w sześciu motywach (np. wiosn
 
 ### Szkice niezapisanych wpisów
 
-**Status:** SZKIC SPECYFIKACJI (punkt 10), czeka na akceptację autorki. Kod i testy jeszcze nie istnieją.
+**Status:** SZKIC SPECYFIKACJI (punkt 10), czeka na akceptację autorki. Zrobione i sprawdzone jest tylko oznaczenie dnia ze
+szkicem w kalendarzu (S23). Reszta (zapis, wczytanie, wskaźnik, odrzucanie szkiców) jeszcze nie istnieje.
 
 #### Po co
 
@@ -722,7 +730,7 @@ Każda decyzja ma powód i odrzucone alternatywy. Status: ✅ wdrożone, 🔜 za
 | D38 | „Odrzuć szkic” z potwierdzeniem                                                                                                           | Nieodwracalne skasowanie napisanego tekstu                                                                                                                            | Bez pytania                                               | 🔜 (pkt 10, własne okno w pkt 13)           |
 | D39 | Po imporcie nietknięty formularz odświeżamy, rozgrzebany zostawiamy z ostrzeżeniem                                                        | Zapis nie może po cichu nadpisać zaimportowanego wpisu                                                                                                                | Zawsze odświeżać, nigdy nie odświeżać                     | 🔜 (pkt 10, pełna zasada w pkt 14)          |
 | D40 | Szkice poza kopią zapasową i bez automatycznego wygasania                                                                                 | Robocza kopia chwili, a tekst znika tylko z decyzji autorki                                                                                                           | Eksport szkiców, wygaszanie po N dniach                   | 🔜 (pkt 10)                                 |
-| D41 | Szkic w kalendarzu oznaczony **pustą kropką** (obrys `--accent`), wpis wygrywa, gdy są oba                                                | Pusty obrys jest czytelnie inny niż pełna kropka wpisu i ma kontrast ≥ 3:1 we wszystkich motywach; obrys komórki zajmuje „dziś”                                       | Przerywana ramka komórki, drugi kolor, ikona              | 🔜 (pkt 10, kalendarz zrobiony pierwszy)    |
+| D41 | Szkic w kalendarzu oznaczony **pustą kropką** (obrys `--accent`), wpis wygrywa, gdy są oba                                                | Pusty obrys jest czytelnie inny niż pełna kropka wpisu i ma kontrast ≥ 3:1 we wszystkich motywach; obrys komórki zajmuje „dziś”                                       | Przerywana ramka komórki, drugi kolor, ikona              | ✅ (zrobione i sprawdzone 07.10.2026)       |
 
 ## 9. Ograniczenia iOS i PWA, o których trzeba pamiętać
 

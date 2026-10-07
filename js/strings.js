@@ -14,6 +14,8 @@ export const strings = {
 
   calendar: {
     entrySaved: 'wpis zapisany',
+    draftUnsaved: 'szkic niezapisany',
+    draftOfEntry: 'szkic zmian',
   },
 
   form: {

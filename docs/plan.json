@@ -156,7 +156,7 @@
       "Awaria zapisu szkicu (pełny magazyn) nie blokuje pisania, tylko pokazuje dyskretny komunikat.",
       "Uwaga z punktu 8: kropki w kalendarzu pochodzą z describeCell(...).hasEntry. Dzień ze szkicem (pusta kropka) wymaga nowego pola w opisie komórki i testu w tests/calendar-model.test.js.",
       "Kolejność: ten punkt idzie przed punktem 9, bo jest siatką bezpieczeństwa dla automatycznych przejść. Szkice rozwiązują też zgłoszone ograniczenie z punktu 8 i 14: po imporcie formularz wybranego dnia może być nieaktualny, więc zapis nadpisałby zaimportowany wpis.",
-      "Zrobione najpierw na prośbę autorki (07.10.2026): oznaczenie dnia ze szkicem w kalendarzu (pusta kropka, S23, K21–K23, M10, D41) wraz z dokumentacją kolorów kalendarza. Kalendarz czyta szkice z magazynu, ale same szkice (zapis, wczytanie, wskaźnik) powstaną w dalszej części punktu 10."
+      "✅ Oznaczenie dnia ze szkicem w kalendarzu zrobione najpierw, na prośbę autorki (07.10.2026): pusta kropka (S23, K21–K23, M10, D41). Dokumentacja kolorów kalendarza dopisana. 8 nowych testów (116 łącznie), 37 usterek z kontroli przez psucie kodu wykrytych, wygląd obejrzany w 4 motywach. Kalendarz czyta szkice z magazynu (store.loadDrafts); same szkice (zapis, wczytanie, wskaźnik, odrzucanie) powstaną w dalszej części punktu 10."
     ]
   },
   {

@@ -388,6 +388,80 @@ describe('describeCell', () => {
   });
 });
 
+describe('describeCell: szkice (K21–K23)', () => {
+  const base = { today: TODAY, selected: TODAY };
+  const cell = { key: '2026-10-05', day: 5, inMonth: true };
+  const entry = { date: '2026-10-05' };
+  const draft = { grateful: ['a', '', ''], updatedAt: 1 };
+
+  test('K21: dzień ze szkicem i bez wpisu ma znacznik „draft”', () => {
+    const info = describeCell(cell, { ...base, entries: {}, drafts: { '2026-10-05': draft } });
+    assert.equal(info.marker, 'draft');
+    assert.equal(info.hasDraft, true);
+    assert.equal(info.hasEntry, false);
+  });
+
+  test('K21: dzień bez szkicu i bez wpisu nie ma znacznika', () => {
+    const info = describeCell(cell, { ...base, entries: {}, drafts: { '2026-10-06': draft } });
+    assert.equal(info.marker, null);
+    assert.equal(info.hasDraft, false);
+  });
+
+  test('K21: szkic dotyczy tylko swojego dnia, bez przesunięcia o dzień', () => {
+    const drafts = { '2026-10-05': draft };
+    const markers = monthGrid(2026, 10)
+      .map((c) => describeCell(c, { ...base, entries: {}, drafts }))
+      .filter((info) => info.marker === 'draft')
+      .map((info) => info.key);
+    assert.deepEqual(markers, ['2026-10-05']);
+  });
+
+  test('K22: dzień z wpisem i szkicem zmian ma znacznik wpisu', () => {
+    const info = describeCell(cell, {
+      ...base,
+      entries: { '2026-10-05': entry },
+      drafts: { '2026-10-05': draft },
+    });
+    assert.equal(info.marker, 'entry');
+    assert.equal(info.hasEntry, true);
+    assert.equal(info.hasDraft, true);
+  });
+
+  test('K22: dzień z samym wpisem ma znacznik wpisu', () => {
+    const info = describeCell(cell, { ...base, entries: { '2026-10-05': entry }, drafts: {} });
+    assert.equal(info.marker, 'entry');
+    assert.equal(info.hasDraft, false);
+  });
+
+  test('K23: opis dla czytnika ekranu wymienia szkic', () => {
+    const context = { ...base, entries: {}, drafts: { '2026-10-05': draft } };
+    assert.equal(
+      describeCell(cell, context).label,
+      'Poniedziałek, 5 października 2026, szkic niezapisany',
+    );
+    const both = { ...context, entries: { '2026-10-05': entry } };
+    assert.equal(
+      describeCell(cell, both).label,
+      'Poniedziałek, 5 października 2026, wpis zapisany, szkic zmian',
+    );
+  });
+
+  test('K23: brak przekazanych szkiców działa jak brak szkiców', () => {
+    const info = describeCell(cell, { ...base, entries: { '2026-10-05': entry } });
+    assert.equal(info.hasDraft, false);
+    assert.equal(info.marker, 'entry');
+    assert.equal(describeCell(cell, { ...base, entries: {} }).marker, null);
+  });
+
+  test('szkic o nazwie zgodnej z właściwością obiektu nie daje fałszywego znacznika', () => {
+    const proto = describeCell(
+      { key: 'constructor', day: 1, inMonth: true },
+      { ...base, entries: {}, drafts: {} },
+    );
+    assert.equal(proto.marker, null);
+  });
+});
+
 describe('calendarReducer', () => {
   const closedState = () => createCalendarState('2026-09-30');
   const openedState = () => calendarReducer(closedState(), { type: 'toggle' }, { today: TODAY });

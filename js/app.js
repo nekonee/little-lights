@@ -7,7 +7,7 @@ import { initGarlands } from './garland.js';
 import { renderStreak, renderTodayLabel } from './header.js';
 import { initHistory } from './history.js';
 import { initQuote } from './quote.js';
-import { loadEntries, saveEntries } from './store.js';
+import { loadDrafts, loadEntries, saveEntries } from './store.js';
 import { strings } from './strings.js';
 import { initSummary } from './summary.js';
 import { initThemes } from './themes.js';
@@ -21,7 +21,7 @@ const summary = initSummary();
 
 function refreshAll() {
   const entries = loadEntries();
-  calendar.setEntries(entries);
+  calendar.setEntries(entries, loadDrafts());
   history.render(entries);
   renderStreak(entries);
   summary.refresh(entries);

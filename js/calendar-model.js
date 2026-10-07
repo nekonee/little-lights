@@ -66,11 +66,12 @@ export function canGoNext(view, today) {
 /**
  * Cechy komórki potrzebne do narysowania i opisania jej dla czytnika ekranu.
  * @param {GridCell} cell
- * @param {{today: string, selected: string, entries: Record<string, unknown>}} context
+ * `marker` mówi, co narysować pod cyfrą: 'entry' (wpis, także gdy jest też szkic zmian), 'draft' (sam szkic) albo null.
+ * @param {{today: string, selected: string, entries: Record<string, unknown>, drafts?: Record<string, unknown>}} context
  */
-export function describeCell(cell, { today, selected, entries }) {
+export function describeCell(cell, { today, selected, entries, drafts = {} }) {
   const hasEntry = Object.hasOwn(entries, cell.key);
-  const date = formatDatePL(cell.key);
+  const hasDraft = Object.hasOwn(drafts, cell.key);
   return {
     key: cell.key,
     day: cell.day,
@@ -79,8 +80,17 @@ export function describeCell(cell, { today, selected, entries }) {
     isSelected: cell.key === selected,
     isFuture: isFuture(cell.key, today),
     hasEntry,
-    label: hasEntry ? `${date}, ${strings.calendar.entrySaved}` : date,
+    hasDraft,
+    marker: hasEntry ? 'entry' : hasDraft ? 'draft' : null,
+    label: [formatDatePL(cell.key), ...spokenStatus(hasEntry, hasDraft)].join(', '),
   };
+}
+
+function spokenStatus(hasEntry, hasDraft) {
+  if (hasEntry && hasDraft) return [strings.calendar.entrySaved, strings.calendar.draftOfEntry];
+  if (hasEntry) return [strings.calendar.entrySaved];
+  if (hasDraft) return [strings.calendar.draftUnsaved];
+  return [];
 }
 
 function viewOf(key) {
