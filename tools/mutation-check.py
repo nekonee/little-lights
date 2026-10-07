@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Kontrola testów kalendarza przez psucie kodu (mutation testing „na piechotę”).
+"""Kontrola testów przez psucie kodu (mutation testing „na piechotę”).
 
-Dla każdej celowej usterki w kopii kodu (poza repozytorium) uruchamia testy kalendarza w czterech
+Dla każdej celowej usterki w kopii kodu (poza repozytorium) uruchamia wszystkie testy w czterech
 strefach czasowych. Usterka jest „wykryta”, gdy choć jeden test pada. Usterka, która przeżyje,
 oznacza słaby test albo martwy kod. Uruchomienie: python3 tools/mutation-check.py
 
@@ -18,6 +18,8 @@ SRC = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TMP = os.path.join(tempfile.mkdtemp(prefix='dziennik-mutacje-'), 'kopia')
 M = 'js/calendar-model.js'
 D = 'js/dates.js'
+J = 'js/drafts.js'
+S = 'js/draft-sync.js'
 mutants=[
  ('tydzień od niedzieli', M, "(weekdayOfFirst + DAYS_IN_WEEK - 1) % DAYS_IN_WEEK", "weekdayOfFirst"),
  ('5 wierszy zamiast 6 (35 komórek)', M, "const GRID_ROWS = 6;", "const GRID_ROWS = 5;"),
@@ -54,6 +56,31 @@ mutants=[
  ('szkic o dzień dalej', M, "const hasDraft = Object.hasOwn(drafts, cell.key);", "const hasDraft = Object.hasOwn(drafts, addDaysKey(cell.key, 1));"),
  ('opis bez szkicu', M, "if (hasDraft) return [strings.calendar.draftUnsaved];", "if (hasDraft) return [];"),
  ('opis wpisu ze szkicem bez informacji o szkicu', M, "if (hasEntry && hasDraft) return [strings.calendar.entrySaved, strings.calendar.draftOfEntry];", "if (hasEntry && hasDraft) return [strings.calendar.entrySaved];"),
+ ('szkic: pusty formularz nie usuwa szkicu', J, "if (isEmpty(formFields)) return 'remove';", ""),
+ ('szkic: formularz równy bazie tworzy szkic', J, "return fieldsEqual(formFields, baseline) ? 'remove' : 'save';", "return 'save';"),
+ ('normalizacja bez przycinania wdzięczności', J, ".map((item) => item.trim())", ".map((item) => item)"),
+ ('normalizacja bez przycinania pól tekstowych', J, "asText(fields?.[name]).trim()", "asText(fields?.[name])"),
+ ('normalizacja zostawia puste wdzięczności', J, ".map((item) => item.trim())\n    .filter(Boolean);", ".map((item) => item.trim());"),
+ ('withoutDraft zwraca kopię, gdy szkicu nie ma', J, "if (!Object.hasOwn(drafts, key)) return drafts;", ""),
+ ('szkic bez uzupełnienia do trzech pól', J, "Array.from({ length: GRATEFUL_SLOTS }, (_, index) => list[index] ?? '')", "list"),
+ ('szkic zapisuje wartości znormalizowane', J, "{ ...rawFieldsOf(rawFields), updatedAt: now }", "{ ...normalizeFields(rawFields), updatedAt: now }"),
+ ('updateDrafts nie usuwa szkicu', J, "    : withoutDraft(drafts, key);", "    : drafts;"),
+ ('formularz: zapisany wpis wygrywa ze szkicem', J, "const useDraft = hasDraft && !isEmpty(draft) && !fieldsEqual(draft, saved ?? null);", "const useDraft = false;"),
+ ('formularz: szkic równy wpisowi jest używany', J, " && !fieldsEqual(draft, saved ?? null)", ""),
+ ('formularz: pusty szkic jest używany', J, "hasDraft && !isEmpty(draft) &&", "hasDraft &&"),
+ ('formularz: nieaktualny szkic niewykryty', J, "const staleDraft = hasDraft;", "const staleDraft = false;"),
+ ('wskaźnik: Odrzuć zawsze widoczne', J, "showDiscard: hasDraft,", "showDiscard: true,"),
+ ('wskaźnik: etykieta zapisu zależy od szkicu', J, "saveLabel: hasSaved ? text.saveExisting : text.saveNew,", "saveLabel: hasDraft ? text.saveExisting : text.saveNew,"),
+ ('import: zawsze przeładowuje formularz', J, "return fieldsEqual(formFields, baseline ?? null)\n    ? { action: 'reload', warn: false }\n    : { action: 'keep', warn: true };", "return { action: 'reload', warn: false };"),
+ ('import: zmiana bez ostrzeżenia', J, "{ action: 'keep', warn: true }", "{ action: 'keep', warn: false }"),
+ ('import: brak zmiany wpisu niewykryty', J, "if (fieldsEqual(baseline ?? null, newSaved ?? null)) return { action: 'unchanged', warn: false };", ""),
+ ('sanitizeDrafts: bez sprawdzania klucza', J, "if (!isValidKey(key) || !isPlainObject(value)) continue;", "if (!isPlainObject(value)) continue;"),
+ ('sanitizeDrafts: ujemne updatedAt przechodzi', J, " && value.updatedAt > 0", ""),
+ ('draft-sync: flush zapisuje zawsze', S, "if (handle === null) return;\n      cancel();\n      persist();", "cancel();\n      persist();"),
+ ('draft-sync: schedule nie anuluje poprzedniego', S, "cancel();\n      handle = timers.set(", "handle = timers.set("),
+ ('draft-sync: flush nie anuluje timera', S, "      cancel();\n      persist();\n    },", "      persist();\n    },"),
+ ('draft-sync: cancel nic nie robi', S, "function cancel() {\n    if (handle === null) return;", "function cancel() {\n    return;"),
+ ('draft-sync: opóźnienie 0', S, "export const DRAFT_DELAY_MS = 500;", "export const DRAFT_DELAY_MS = 0;"),
  ('todayKey przez toISOString (stary błąd UTC)', D, "return dateKey(date.getFullYear(), date.getMonth() + 1, date.getDate());", "return date.toISOString().slice(0, 10);"),
  ('addDaysKey liczy w lokalnym czasie milisekundami', D, "const shifted = new Date(Date.UTC(parsed.year, parsed.month - 1, parsed.day) + days * DAY_MS);\n  return dateKey(shifted.getUTCFullYear(), shifted.getUTCMonth() + 1, shifted.getUTCDate());",
    "const shifted = new Date(parsed.year, parsed.month - 1, parsed.day);\n  shifted.setTime(shifted.getTime() + days * DAY_MS);\n  return dateKey(shifted.getFullYear(), shifted.getMonth() + 1, shifted.getDate());"),
@@ -66,7 +93,7 @@ def fresh():
     for d in ('js','tests'): shutil.copytree(f'{SRC}/{d}', f'{TMP}/{d}')
     shutil.copy(f'{SRC}/package.json', TMP)
 def run(tz):
-    r=subprocess.run(['node','--test','tests/calendar-model.test.js'],cwd=TMP,env={**os.environ,'TZ':tz},capture_output=True,text=True)
+    r=subprocess.run(['node','--test'],cwd=TMP,env={**os.environ,'TZ':tz},capture_output=True,text=True)
     m=re.search(r'ℹ fail (\d+)',r.stdout); return int(m.group(1)) if m else -1
 fresh()
 print('baza:', {tz:run(tz) for tz in TZS})

@@ -40,13 +40,14 @@ przeglądarka
        ├─ css/ (tokens, base, components)
        └─ js/app.js ── łączy moduły, trzyma jedyny stan (wybrany dzień)
             ├─ interfejs: form, calendar, history, summary, backup-panel, header, quote, themes, garland
-            ├─ logika (czyste funkcje): dates, streak-summary, backup, calendar-model, quotes
+            ├─ logika (czyste funkcje): dates, streak-summary, backup, calendar-model, drafts, quotes
+            ├─ czas zapisu szkicu: draft-sync
             └─ dostęp do danych: store.js ── localStorage
 ```
 
 ### Warstwy i dlaczego są rozdzielone
 
-1. **Logika** (`dates.js`, `streak-summary.js`, `backup.js`, `calendar-model.js`, `quotes.js`): czyste funkcje, bez DOM i bez
+1. **Logika** (`dates.js`, `streak-summary.js`, `backup.js`, `calendar-model.js`, `drafts.js`, `quotes.js`): czyste funkcje, bez DOM i bez
    `localStorage`. Dzięki temu da się je testować w Node, w kilku strefach czasowych, bez przeglądarki. To właśnie
    w tej warstwie były błędy z datami, więc tu jest najwięcej testów.
 2. **Dostęp do danych** (`store.js`): jedyne miejsce, które dotyka `localStorage`. Gdy kiedyś zmieni się sposób
@@ -73,11 +74,11 @@ przeglądarka
 
 ### Gdzie i w jakim kształcie
 
-| Klucz `localStorage`           | Zawartość                                                                                                           |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| `gratitude_journal_entries_v1` | Obiekt wpisów kluczowany dniem `YYYY-MM-DD`.                                                                        |
-| `gratitude_journal_theme`      | Nazwa wybranego motywu, np. `zima-ciemny`.                                                                          |
-| `gratitude_journal_drafts_v1`  | **(planowane, punkt 10)** Szkice niezapisanych formularzy, kluczowane dniem; osobno od wpisów, poza kopią zapasową. |
+| Klucz `localStorage`           | Zawartość                                                                                 |
+| ------------------------------ | ----------------------------------------------------------------------------------------- |
+| `gratitude_journal_entries_v1` | Obiekt wpisów kluczowany dniem `YYYY-MM-DD`.                                              |
+| `gratitude_journal_theme`      | Nazwa wybranego motywu, np. `zima-ciemny`.                                                |
+| `gratitude_journal_drafts_v1`  | Szkice niezapisanych formularzy, kluczowane dniem; osobno od wpisów, poza kopią zapasową. |
 
 Wpis:
 
@@ -421,7 +422,7 @@ Biały tekst na wybranym dniu jest poniżej 4,5:1 w sześciu motywach (np. wiosn
 
 #### Wynik weryfikacji (stan na 07.10.2026)
 
-- **Testy:** 62 testy kalendarza i w sumie 116 w projekcie przechodzą w czterech strefach czasowych. Zachowania K1–K20
+- **Testy:** 62 testy kalendarza i w sumie 181 w projekcie przechodzą w czterech strefach czasowych. Zachowania K1–K20
   mają pokrycie.
 - **Kontrola testów przez psucie kodu** (`tools/mutation-check.py`): 31 celowych usterek, m.in. stare `toISOString`,
   tydzień od niedzieli, 35 komórek, brak blokady przyszłości, brak przeniesienia roku, „dziś” po samym numerze dnia
@@ -488,8 +489,8 @@ Biały tekst na wybranym dniu jest poniżej 4,5:1 w sześciu motywach (np. wiosn
 
 ### Szkice niezapisanych wpisów
 
-**Status:** SZKIC SPECYFIKACJI (punkt 10), czeka na akceptację autorki. Zrobione i sprawdzone jest tylko oznaczenie dnia ze
-szkicem w kalendarzu (S23). Reszta (zapis, wczytanie, wskaźnik, odrzucanie szkiców) jeszcze nie istnieje.
+**Status:** zrobione (punkt 10), sprawdzone 07.10.2026 w przeglądarce Chrome (podgląd 390×844) na scenariuszach z dokumentu.
+Nie sprawdzone na prawdziwym iPhonie ani przy zabiciu aplikacji przez iOS.
 
 #### Po co
 
@@ -633,12 +634,34 @@ Funkcje `drafts.js` (nazwy robocze):
 - **Szkice nie są usuwane automatycznie ze względu na wiek.** Napisany tekst znika tylko z decyzji autorki (zapis, odrzucenie
   albo usunięcie wpisu).
 
+#### Wynik weryfikacji szkiców (stan na 07.10.2026)
+
+- **Testy:** 66 testów szkiców (`tests/drafts.test.js`, `tests/draft-sync.test.js`), razem 181 w projekcie, w czterech strefach
+  czasowych. Napisane przed kodem i najpierw czerwone, z jednego właściwego powodu (szkielet rzucał błąd).
+- **Kontrola testów przez psucie kodu:** 62 usterki łącznie, wszystkie wykryte. Pierwsze podejście do szkiców wykazało jedną
+  lukę (ujemne `updatedAt` przechodziło przez czyszczenie danych), więc dopisano test.
+- **Poprawka testu:** jeden test oczekiwał, że zapisany wpis wróci do formularza bez uzupełnienia do 3 pól. Formularz zawsze ma
+  trzy miejsca na wdzięczność, więc oczekiwanie poprawiono na pełne trzy pola (decyzja projektowa, nie obejście kodu).
+- **Scenariusz w przeglądarce (47 sprawdzeń, wszystkie przeszły),** prowadzony skryptem w prawdziwej przeglądarce na prawdziwych
+  zdarzeniach (`input`, `click`, `visibilitychange`, `pagehide`, wybór pliku): opóźniony zapis (nic przed 500 ms, szkic po),
+  przejście na inny dzień i powrót (także bez czekania na timer), odświeżenie strony, zapis przy ukryciu i `pagehide`, zapis
+  wpisu usuwa szkic (i oczekujący timer go nie wskrzesza), szkic zmian istniejącego wpisu, przywrócenie tekstu wpisu i opróżnienie
+  formularza usuwają szkic, „Odrzuć szkic”, import przy nietkniętym i rozgrzebanym formularzu, usunięcie wpisu ze szkicem,
+  uszkodzone dane szkiców, symulowana awaria zapisu, pusta kropka w kalendarzu. (Pierwsze uruchomienie dało 2 niepowodzenia,
+  które okazały się błędem w skrypcie testowym, a nie w aplikacji: skrypt zakładał, że wpis ma jedno pole wdzięczności.)
+- **Wygląd** wskaźnika i przycisku „Odrzuć szkic” obejrzany w jesień jasny i zima ciemny.
+- **Czego nie sprawdzono:** pozostałe 6 motywów dla wskaźnika (kolory z istniejących tokenów, bez własnych), prawdziwy iPhone,
+  zabicie aplikacji przez system, dwie karty jednocześnie, `confirm()` w Safari (okno systemowe, do zastąpienia w punkcie 13).
+- **Skutek uboczny w kodzie:** zmiana dnia (`showDate`) odświeża teraz całą stronę danych (`refreshAll`), bo szkic dnia, który
+  opuszczamy, mógł się właśnie zapisać i trzeba odświeżyć kropki.
+
 #### Znane ograniczenia (planowane)
 
 - Dwa jednoczesne okna na tym samym adresie (np. karta i PWA mają osobne magazyny na iOS, ale dwie karty tej samej
   przeglądarki dzielą jeden) mogą nadpisywać szkic tego samego dnia: wygrywa ostatni zapis. Szkice innych dni są bezpieczne (S9).
 - Komunikat o awarii zapisu szkicu używa tej samej linii statusu co „Zapisano ✓”. Poprawa czasu wyświetlania komunikatów jest w
-  punkcie 17.
+  punkcie 17. Przy okazji: „Zapisano ✓” dalej znika od razu po zapisie (to samo, co przed szkicami).
+- Przycisk „Odrzuć szkic” i usuwanie wpisu używają systemowego `confirm()`. Własne okno w stylu motywu jest w punkcie 13.
 
 ### Cytaty
 
@@ -723,13 +746,13 @@ Każda decyzja ma powód i odrzucone alternatywy. Status: ✅ wdrożone, 🔜 za
 | D31 | Dni z wpisem w kalendarzu: kafelek `--accent-soft` i kropka `--accent` zamiast słabej kropki `--gold`; kontrast reszty palet w punkcie 15 | Kropka `--gold` była słabo widoczna (autorka zgłosiła potrzebę lepszego oznaczenia). Użyto istniejących tokenów, bez zmiany palet. Wygląd zaakceptowany przez autorkę | Sama większa kropka, podkreślenie, pogrubienie cyfry      | ✅ (zaakceptowane przez autorkę 07.10.2026) |
 | D32 | Bez automatycznych testów przeglądarkowych (Playwright) na razie                                                                          | Ciężkie narzędzie (kilkaset MB) jak na tę skalę; reguły są w czystych funkcjach. Do ponownej oceny, gdy interfejs urośnie (punkty 9, 10)                              | Playwright od razu, atrapa DOM (jsdom)                    | ✅                                          |
 | D33 | Lokalny serwer deweloperski z `Cache-Control: no-store` (`tools/dev-server.py`, `npm start`)                                              | Zwykły `http.server` pozwalał przeglądarce trzymać stare CSS i JS, więc zmiany bywały niewidoczne mimo odświeżenia                                                    | Zwykły `python3 -m http.server`, ręczne czyszczenie cache | ✅                                          |
-| D34 | Szkice w osobnym kluczu `gratitude_journal_drafts_v1`, a nie jako pole wpisu                                                              | Szkic nie może wpływać na serię, podsumowanie, eksport ani oznaczenia w kalendarzu                                                                                    | Flaga `draft` w wpisach                                   | 🔜 (pkt 10, szkic specyfikacji)             |
-| D35 | Szkic trzyma surowe pola pozycyjne; porównania po normalizacji                                                                            | Formularz wraca taki, jaki był; różnice w spacjach nie tworzą fałszywych szkiców                                                                                      | Zapis przyciętych pól, porównanie surowe                  | 🔜 (pkt 10)                                 |
-| D36 | Pusty formularz nie jest szkicem                                                                                                          | Brak pustych szkiców; zapisany wpis zawsze do odzyskania                                                                                                              | Zapis pustego szkicu przy wpisie                          | 🔜 (pkt 10)                                 |
-| D37 | Zapis szkicu z opóźnieniem 500 ms i wymuszony przy zmianie dnia, ukryciu i `pagehide`                                                     | iOS może uśpić lub zamknąć aplikację bez ostrzeżenia                                                                                                                  | Sam timer, zapis przy każdym znaku                        | 🔜 (pkt 10)                                 |
-| D38 | „Odrzuć szkic” z potwierdzeniem                                                                                                           | Nieodwracalne skasowanie napisanego tekstu                                                                                                                            | Bez pytania                                               | 🔜 (pkt 10, własne okno w pkt 13)           |
-| D39 | Po imporcie nietknięty formularz odświeżamy, rozgrzebany zostawiamy z ostrzeżeniem                                                        | Zapis nie może po cichu nadpisać zaimportowanego wpisu                                                                                                                | Zawsze odświeżać, nigdy nie odświeżać                     | 🔜 (pkt 10, pełna zasada w pkt 14)          |
-| D40 | Szkice poza kopią zapasową i bez automatycznego wygasania                                                                                 | Robocza kopia chwili, a tekst znika tylko z decyzji autorki                                                                                                           | Eksport szkiców, wygaszanie po N dniach                   | 🔜 (pkt 10)                                 |
+| D34 | Szkice w osobnym kluczu `gratitude_journal_drafts_v1`, a nie jako pole wpisu                                                              | Szkic nie może wpływać na serię, podsumowanie, eksport ani oznaczenia w kalendarzu                                                                                    | Flaga `draft` w wpisach                                   | ✅                                          |
+| D35 | Szkic trzyma surowe pola pozycyjne; porównania po normalizacji                                                                            | Formularz wraca taki, jaki był; różnice w spacjach nie tworzą fałszywych szkiców                                                                                      | Zapis przyciętych pól, porównanie surowe                  | ✅                                          |
+| D36 | Pusty formularz nie jest szkicem                                                                                                          | Brak pustych szkiców; zapisany wpis zawsze do odzyskania                                                                                                              | Zapis pustego szkicu przy wpisie                          | ✅                                          |
+| D37 | Zapis szkicu z opóźnieniem 500 ms i wymuszony przy zmianie dnia, ukryciu i `pagehide`                                                     | iOS może uśpić lub zamknąć aplikację bez ostrzeżenia                                                                                                                  | Sam timer, zapis przy każdym znaku                        | ✅                                          |
+| D38 | „Odrzuć szkic” z potwierdzeniem                                                                                                           | Nieodwracalne skasowanie napisanego tekstu                                                                                                                            | Bez pytania                                               | ✅ (własne okno w pkt 13)                   |
+| D39 | Po imporcie nietknięty formularz odświeżamy, rozgrzebany zostawiamy z ostrzeżeniem                                                        | Zapis nie może po cichu nadpisać zaimportowanego wpisu                                                                                                                | Zawsze odświeżać, nigdy nie odświeżać                     | ✅ (pełna zasada w pkt 14)                  |
+| D40 | Szkice poza kopią zapasową i bez automatycznego wygasania                                                                                 | Robocza kopia chwili, a tekst znika tylko z decyzji autorki                                                                                                           | Eksport szkiców, wygaszanie po N dniach                   | ✅                                          |
 | D41 | Szkic w kalendarzu oznaczony **pustą kropką** (obrys `--accent`), wpis wygrywa, gdy są oba                                                | Pusty obrys jest czytelnie inny niż pełna kropka wpisu i ma kontrast ≥ 3:1 we wszystkich motywach; obrys komórki zajmuje „dziś”                                       | Przerywana ramka komórki, drugi kolor, ikona              | ✅ (zrobione i sprawdzone 07.10.2026)       |
 
 ## 9. Ograniczenia iOS i PWA, o których trzeba pamiętać

@@ -128,7 +128,7 @@
   {
     "id": 9,
     "title": "Automatyczny powrót do dzisiejszej daty przy otwarciu aplikacji",
-    "description": "PWA na iPhonie zwykle tygodniami żyje w tle, więc po powrocie potrafi pokazywać wczorajszą datę i wczorajszy formularz, a nowy wpis wylądowałby pod złym dniem. Rozwiązanie: aplikacja sama wykonuje to samo, co przycisk „Dziś” (wspólna funkcja goToToday()), w sytuacjach opisanych niżej. Bezpieczne dzięki szkicom z punktu 10. ZALEŻNOŚĆ: ten punkt powinien być realizowany po punkcie 10 (szkice), bo automatyczne przejście na inny dzień przy rozgrzebanym formularzu bez szkicu mogłoby skasować to, co autorka pisze.",
+    "description": "PWA na iPhonie zwykle tygodniami żyje w tle, więc po powrocie potrafi pokazywać wczorajszą datę i wczorajszy formularz, a nowy wpis wylądowałby pod złym dniem. Rozwiązanie: aplikacja sama wykonuje to samo, co przycisk „Dziś” (wspólna funkcja goToToday()), w sytuacjach opisanych niżej. Bezpieczne dzięki szkicom z punktu 10. ZALEŻNOŚĆ SPEŁNIONA (punkt 10 zrobiony): ten punkt wymagał wcześniejszych szkiców, bo automatyczne przejście na inny dzień przy rozgrzebanym formularzu bez szkicu mogłoby skasować to, co autorka pisze.",
     "priority": "high",
     "details": [
       "Zimny start (aplikacja uruchomiona od nowa): zawsze dziś. Jeśli istnieje niezapisany szkic z innego dnia, nad formularzem baner „Masz niezapisany szkic z 24 września — [Otwórz]”.",
@@ -137,25 +137,26 @@
       "Jedna funkcja syncToday(powód) z zapamiętanym lastKnownToday. Timer do najbliższej północy tylko przypomina o sprawdzeniu, bo iOS usypia timery w tle — prawdziwym źródłem są zdarzenia powrotu do aplikacji.",
       "Co się odświeża po zmianie dnia: data w nagłówku, wskaźnik „Nowy wpis na dziś”, kalendarz (pierścień „dziś” i miesiąc widoku), streak, domyślny miesiąc w podsumowaniu.",
       "Bez zdarzeń specjalnych, dzień liczony za każdym razem od nowa z zegara urządzenia (nie z pamięci), więc zmiana strefy czasowej albo daty w telefonie nie psuje działania.",
-      "Gotowe z punktu 8, do wykorzystania: goToToday() w app.js oraz akcja goToToday w reduktorze kalendarza (wybiera dzisiejszy dzień, ustawia widok i zamyka panel). Do dodania: publiczna funkcja kalendarza do przerysowania po zmianie dnia (pierścień „dziś” i dni przyszłości liczą się z todayKey() przy każdym rysowaniu, ale rysowanie nie jest wywoływane o północy). Już działa: goToToday nie przeładowuje formularza, gdy wybrany dzień się nie zmienia, więc nie kasuje wpisywanego tekstu."
+      "Gotowe z punktu 8, do wykorzystania: goToToday() w app.js oraz akcja goToToday w reduktorze kalendarza (wybiera dzisiejszy dzień, ustawia widok i zamyka panel). Do dodania: publiczna funkcja kalendarza do przerysowania po zmianie dnia (pierścień „dziś” i dni przyszłości liczą się z todayKey() przy każdym rysowaniu, ale rysowanie nie jest wywoływane o północy). Już działa: goToToday nie przeładowuje formularza, gdy wybrany dzień się nie zmienia, więc nie kasuje wpisywanego tekstu.",
+      "Gotowe z punktu 10: szkice (zapis przy zmianie dnia, ukryciu i pagehide), pusta kropka w kalendarzu i draftSync.flush(). Do zrobienia: baner „Masz niezapisany szkic z 24 września — [Otwórz]” przy zimnym starcie (lista szkiców: loadDrafts()) oraz wywołanie draftSync.flush() przed każdym automatycznym przejściem na dziś."
     ]
   },
   {
     "id": 10,
-    "title": "Niezapisane dane zapisywać jako szkic",
+    "title": "✅ Niezapisane dane zapisywać jako szkic",
     "description": "Nic, co wpisujesz, nie może zniknąć przy zmianie dnia, przełączeniu aplikacji albo zabiciu jej przez iOS. Niezapisany formularz ląduje w szkicu, który nie jest częścią wpisów.",
     "priority": "high",
     "details": [
-      "Etapy (każdy w osobnym commicie): 1) dokumentacja: specyfikacja S1–S23 i lista kontrolna MS1–MS8 w docs/dokumentacja.md, sekcja „Szkice niezapisanych wpisów”, decyzje D34–D40 (STATUS: szkic specyfikacji napisany, czeka na akceptację autorki, w tym decyzja o pustej kropce S23); 2) testy przed kodem w tests/drafts.test.js; 3) kod: js/drafts.js, js/draft-sync.js, store.js, form.js, app.js, index.html, css; 4) kontrola przez psucie kodu, przegląd w przeglądarce 390×844, aktualizacja planu i dokumentacji.",
-      "Osobny klucz localStorage (np. gratitude_journal_drafts_v1) z obiektem szkiców kluczowanym datą. Szkice nie wchodzą do eksportu, streaka, kropek w kalendarzu ani podsumowania miesiąca.",
-      "Zapis szkicu: przy wpisywaniu z opóźnieniem ok. 500 ms oraz od razu przy visibilitychange → hidden i pagehide (iOS może zamknąć aplikację w tle bez ostrzeżenia), przy zmianie dnia i przy powrocie do dziś (punkt 9).",
-      "Szkic powstaje tylko, gdy formularz różni się od zapisanego wpisu (po normalizacji). Gdy jest identyczny albo pusty, szkic jest usuwany (S3–S6).",
-      "Wczytanie dnia: jeśli istnieje szkic, formularz pokazuje szkic z oznaczeniem „📝 Szkic — jeszcze niezapisany” i przyciskiem „Odrzuć szkic” (wraca do zapisanego wpisu albo pustego formularza).",
-      "Kliknięcie „Zapisz wpis” usuwa szkic tego dnia. Usunięcie wpisu z historii usuwa także jego szkic.",
-      "Opcjonalnie: dzień ze szkicem oznaczony w kalendarzu pustą kropką.",
-      "Awaria zapisu szkicu (pełny magazyn) nie blokuje pisania, tylko pokazuje dyskretny komunikat.",
-      "Uwaga z punktu 8: kropki w kalendarzu pochodzą z describeCell(...).hasEntry. Dzień ze szkicem (pusta kropka) wymaga nowego pola w opisie komórki i testu w tests/calendar-model.test.js.",
-      "Kolejność: ten punkt idzie przed punktem 9, bo jest siatką bezpieczeństwa dla automatycznych przejść. Szkice rozwiązują też zgłoszone ograniczenie z punktu 8 i 14: po imporcie formularz wybranego dnia może być nieaktualny, więc zapis nadpisałby zaimportowany wpis.",
+      "Etapy (każdy w osobnym commicie): 1) ✅ dokumentacja: specyfikacja S1–S23 i lista kontrolna MS1–MS8 w docs/dokumentacja.md, decyzje D34–D41; 2) ✅ testy przed kodem: tests/drafts.test.js i tests/draft-sync.test.js (66 testów, najpierw czerwone); 3) ✅ kod: js/drafts.js, js/draft-sync.js, store.js, form.js, app.js, index.html, css; 4) ✅ weryfikacja: 181 testów w 4 strefach, 62 usterki w tools/mutation-check.py wszystkie wykryte, scenariusz w przeglądarce (47 sprawdzeń) przeszedł. Nie sprawdzono na prawdziwym iPhonie ani przy zabiciu aplikacji przez iOS (docs/dokumentacja.md, „Wynik weryfikacji szkiców”).",
+      "✅ Osobny klucz localStorage (np. gratitude_journal_drafts_v1) z obiektem szkiców kluczowanym datą. Szkice nie wchodzą do eksportu, streaka, kropek w kalendarzu ani podsumowania miesiąca.",
+      "✅ Zapis szkicu: przy wpisywaniu z opóźnieniem ok. 500 ms oraz od razu przy visibilitychange → hidden i pagehide (iOS może zamknąć aplikację w tle bez ostrzeżenia), przy zmianie dnia i przy powrocie do dziś (punkt 9).",
+      "✅ Szkic powstaje tylko, gdy formularz różni się od zapisanego wpisu (po normalizacji). Gdy jest identyczny albo pusty, szkic jest usuwany (S3–S6).",
+      "✅ Wczytanie dnia: jeśli istnieje szkic, formularz pokazuje szkic z oznaczeniem „📝 Szkic — jeszcze niezapisany” i przyciskiem „Odrzuć szkic” (wraca do zapisanego wpisu albo pustego formularza).",
+      "✅ Kliknięcie „Zapisz wpis” usuwa szkic tego dnia. Usunięcie wpisu z historii usuwa także jego szkic.",
+      "✅ Opcjonalnie: dzień ze szkicem oznaczony w kalendarzu pustą kropką.",
+      "✅ Awaria zapisu szkicu (pełny magazyn) nie blokuje pisania, tylko pokazuje dyskretny komunikat.",
+      "✅ Uwaga z punktu 8: kropki w kalendarzu pochodzą z describeCell(...).hasEntry. Dzień ze szkicem (pusta kropka) wymaga nowego pola w opisie komórki i testu w tests/calendar-model.test.js.",
+      "✅ Kolejność: ten punkt idzie przed punktem 9, bo jest siatką bezpieczeństwa dla automatycznych przejść. Szkice rozwiązują też zgłoszone ograniczenie z punktu 8 i 14: po imporcie formularz wybranego dnia może być nieaktualny, więc zapis nadpisałby zaimportowany wpis.",
       "✅ Oznaczenie dnia ze szkicem w kalendarzu zrobione najpierw, na prośbę autorki (07.10.2026): pusta kropka (S23, K21–K23, M10, D41). Dokumentacja kolorów kalendarza dopisana. 8 nowych testów (116 łącznie), 37 usterek z kontroli przez psucie kodu wykrytych, wygląd obejrzany w 4 motywach. Kalendarz czyta szkice z magazynu (store.loadDrafts); same szkice (zapis, wczytanie, wskaźnik, odrzucanie) powstaną w dalszej części punktu 10."
     ]
   },
@@ -212,7 +213,8 @@
       "color-mix() wymaga iOS 16.2+; iPhone 14 po aktualizacji to spełnia. Zostawić fallback (poświata w tle znika, reszta działa).",
       "Zastąpić okno confirm() własnym oknem w stylu motywu przy usuwaniu wpisu (z czytelną datą w treści pytania).",
       "Ekran startowy (apple-touch-startup-image i animowany ekran w aplikacji): punkt 21.",
-      "Opcjonalnie: baner „Dodaj do ekranu początkowego”, gdy strona jest otwarta w Safari, a nie zainstalowana (sprawdzenie przez navigator.standalone)."
+      "Opcjonalnie: baner „Dodaj do ekranu początkowego”, gdy strona jest otwarta w Safari, a nie zainstalowana (sprawdzenie przez navigator.standalone).",
+      "Powiązane z punktem 10: „Odrzuć szkic” używa systemowego confirm(). Zastąpić własnym oknem razem z potwierdzeniem usunięcia wpisu."
     ]
   },
   {
@@ -230,7 +232,8 @@
       "Przed importem zapisać lokalną kopię poprzedniego stanu (osobny klucz localStorage), żeby dało się cofnąć pomyłkę.",
       "Reszta rekomendacji z punktu 6: navigator.storage.persist() i licznik „Ostatnia kopia: X dni temu”.",
       "Walidacja i scalanie w js/backup.js jako czyste funkcje z testami na wymyślonych danych (punkt 1). Prawdziwej kopii wpisów nie dodawać do repozytorium ani do testów.",
-      "Po imporcie przeładować formularz wybranego dnia, jeśli zaimportowano wpis z tego dnia i formularz jest nietknięty (obecnie formularz zostaje nieaktualny, co grozi nadpisaniem zaimportowanego wpisu przy zapisie). Gdy użytkowniczka coś już wpisała, pokazać komunikat zamiast nadpisywać (powiązane ze szkicami z punktu 10)."
+      "Po imporcie przeładować formularz wybranego dnia, jeśli zaimportowano wpis z tego dnia i formularz jest nietknięty (obecnie formularz zostaje nieaktualny, co grozi nadpisaniem zaimportowanego wpisu przy zapisie). Gdy użytkowniczka coś już wpisała, pokazać komunikat zamiast nadpisywać (powiązane ze szkicami z punktu 10).",
+      "Częściowo zrobione w punkcie 10: po imporcie nietknięty formularz wybranego dnia jest odświeżany, a rozgrzebany zostaje z ostrzeżeniem (afterImport). Zostaje pełna zasada „nowszy wygrywa”, raport importu i cofnięcie."
     ]
   },
   {
@@ -268,7 +271,8 @@
       "Po usunięciu wpisu z aktualnie wybranego dnia formularz dalej pokazuje jego treść. Po usunięciu przeładować formularz dla wybranego dnia.",
       "Lista miesięcy w podsumowaniu po każdym zapisie wraca na bieżący miesiąc (populateMonthSelect ustawia sel.value = current). Zachować wybrany miesiąc, o ile nadal istnieje na liście.",
       "Losowe „kilka chwil z tego miesiąca” tasuje się na nowo przy każdym odświeżeniu, w tym po zapisie. Losować przy zmianie miesiąca albo przy otwarciu, nie po każdym zapisie.",
-      "Streak i inne miejsca liczone w UTC: punkt 7."
+      "Streak i inne miejsca liczone w UTC: punkt 7.",
+      "Powiązane z punktem 10: usunięcie wpisu z wybranego dnia odświeża już formularz (zrobione), ale komunikat „Zapisano ✓” nadal znika od razu po zapisie, a ostrzeżenie o imporcie i błąd zapisu szkicu dzielą z nim jedną linię statusu."
     ]
   },
   {

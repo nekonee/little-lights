@@ -50,6 +50,8 @@ js/
   dom.js              pomocniki: byId, h() do budowania elementów
   form.js             formularz wpisu
   calendar-model.js   reguły kalendarza: siatka, miesiące, przyszłość, reduktor (czyste)
+  drafts.js           szkice niezapisanych formularzy: porównanie, wybór, import (czyste)
+  draft-sync.js       opóźniony i wymuszony zapis szkicu (czas, bez reguł)
   calendar.js         wybór daty: rysowanie panelu i zdarzenia (cienka warstwa)
   history.js          lista poprzednich wpisów
   summary.js          karta podsumowania miesiąca

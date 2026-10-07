@@ -261,7 +261,7 @@ describe('chooseFormSource', () => {
   test('S11: bez szkicu pokazuje zapisany wpis', () => {
     const result = chooseFormSource(saved, undefined);
     assert.equal(result.source, 'saved');
-    assert.deepEqual(result.fields.grateful, ['kawa', 'spacer']);
+    assert.deepEqual(result.fields.grateful, ['kawa', 'spacer', '']);
     assert.equal(result.fields.why, 'spokój');
   });
 
@@ -456,6 +456,14 @@ describe('sanitizeDrafts', () => {
     const result = sanitizeDrafts({ [DAY]: { grateful: 'tekst', why: 'x', updatedAt: 1 } });
     assert.deepEqual(result[DAY].grateful, ['', '', '']);
     assert.equal(result[DAY].why, 'x');
+  });
+
+  test('S22: updatedAt, który nie jest dodatnią liczbą, staje się zerem', () => {
+    for (const updatedAt of [-5, 0, NaN, Infinity, '5', null, undefined]) {
+      const result = sanitizeDrafts({ [DAY]: { ...storedDraft(), updatedAt } });
+      assert.equal(result[DAY].updatedAt, 0, String(updatedAt));
+    }
+    assert.equal(sanitizeDrafts({ [DAY]: { ...storedDraft(), updatedAt: 12 } })[DAY].updatedAt, 12);
   });
 
   test('S22: pomija obce pola', () => {

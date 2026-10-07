@@ -124,6 +124,24 @@ html[data-theme='zima-ciemny'] .lights-decor {
   cursor: pointer;
   font-family: inherit;
 }
+.discard-btn {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin: -6px 0 14px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.discard-btn[hidden] {
+  display: none;
+}
 .entry-indicator {
   background: var(--accent-soft);
   border: 1px solid var(--border);

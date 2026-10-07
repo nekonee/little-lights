@@ -27,6 +27,11 @@ export const strings = {
     needOneGratitude: 'Wpisz przynajmniej jedną rzecz, za którą jesteś wdzięczna 🌱',
     saved: 'Zapisano ✓',
     saveFailed: 'Nie udało się zapisać w tej przeglądarce.',
+    draftNew: '📝 Szkic — jeszcze niezapisany',
+    draftOfExisting: '📝 Szkic zmian — wpis z tego dnia nie jest jeszcze zaktualizowany',
+    discardDraft: 'Odrzuć szkic',
+    confirmDiscard: 'Odrzucić szkic? Wpisany tekst zostanie usunięty.',
+    draftSaveFailed: 'Nie udało się zapisać szkicu w tej przeglądarce.',
   },
 
   summary: {
@@ -54,6 +59,8 @@ export const strings = {
     imported: (skipped) =>
       'Wczytano kopię zapasową ✓ (wpisy scalone z obecnymi)' +
       (skipped > 0 ? `. Pominięto nieprawidłowe wpisy: ${skipped}` : ''),
+    importKeptForm:
+      'Import zmienił wpis z tego dnia, a w formularzu masz niezapisane zmiany. Zapis nadpisze zaimportowany wpis.',
     importFailed: 'Nie udało się wczytać pliku — sprawdź, czy to poprawna kopia zapasowa.',
   },
 };

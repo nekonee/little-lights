@@ -1,4 +1,6 @@
 // Jedyne miejsce, które dotyka localStorage.
+import { sanitizeDrafts } from './drafts.js';
+
 const ENTRIES_KEY = 'gratitude_journal_entries_v1';
 const DRAFTS_KEY = 'gratitude_journal_drafts_v1';
 const THEME_KEY = 'gratitude_journal_theme';
@@ -18,14 +20,18 @@ export function saveEntries(entries) {
   localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries));
 }
 
-/** Szkice niezapisanych formularzy kluczowane dniem. Pełna obsługa szkiców: punkt 10 planu. */
+/** @returns {Record<string, any>} szkice niezapisanych formularzy kluczowane dniem, już oczyszczone */
 export function loadDrafts() {
   try {
-    const parsed = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-    return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed) ? parsed : {};
+    return sanitizeDrafts(JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}'));
   } catch {
     return {};
   }
+}
+
+/** @throws gdy przeglądarka odmówi zapisu (np. pełny magazyn) */
+export function saveDrafts(drafts) {
+  localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
 }
 
 export function loadTheme() {
