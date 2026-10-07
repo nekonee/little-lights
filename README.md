@@ -18,6 +18,8 @@ npm start        # python3 tools/dev-server.py (port 8000, bez cache'owania)
 
 Potem otwórz <http://localhost:8000>. Dane w `localStorage` są przypisane do adresu, więc `localhost:8000` ma osobny
 magazyn od strony opublikowanej w internecie i od zainstalowanej aplikacji na telefonie.
+Przy pierwszym uruchomieniu (i w każdej nowej przeglądarce) magazyn jest pusty: kalendarz nie pokaże żadnych wpisów,
+dopóki nie zaimportujesz kopii przyciskiem „Importuj kopię zapasową” na dole strony (plik `backups/kopia-…json`).
 
 ## Testy
 
