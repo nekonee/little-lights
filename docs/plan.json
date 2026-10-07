@@ -146,9 +146,10 @@
     "description": "Nic, co wpisujesz, nie może zniknąć przy zmianie dnia, przełączeniu aplikacji albo zabiciu jej przez iOS. Niezapisany formularz ląduje w szkicu, który nie jest częścią wpisów.",
     "priority": "high",
     "details": [
+      "Etapy (każdy w osobnym commicie): 1) dokumentacja: specyfikacja S1–S23 i lista kontrolna MS1–MS8 w docs/dokumentacja.md, sekcja „Szkice niezapisanych wpisów”, decyzje D34–D40 (STATUS: szkic specyfikacji napisany, czeka na akceptację autorki, w tym decyzja o pustej kropce S23); 2) testy przed kodem w tests/drafts.test.js; 3) kod: js/drafts.js, js/draft-sync.js, store.js, form.js, app.js, index.html, css; 4) kontrola przez psucie kodu, przegląd w przeglądarce 390×844, aktualizacja planu i dokumentacji.",
       "Osobny klucz localStorage (np. gratitude_journal_drafts_v1) z obiektem szkiców kluczowanym datą. Szkice nie wchodzą do eksportu, streaka, kropek w kalendarzu ani podsumowania miesiąca.",
       "Zapis szkicu: przy wpisywaniu z opóźnieniem ok. 500 ms oraz od razu przy visibilitychange → hidden i pagehide (iOS może zamknąć aplikację w tle bez ostrzeżenia), przy zmianie dnia i przy powrocie do dziś (punkt 9).",
-      "Szkic powstaje tylko, gdy formularz różni się od zapisanego wpisu. Gdy jest identyczny albo pusty, szkic jest usuwany.",
+      "Szkic powstaje tylko, gdy formularz różni się od zapisanego wpisu (po normalizacji). Gdy jest identyczny albo pusty, szkic jest usuwany (S3–S6).",
       "Wczytanie dnia: jeśli istnieje szkic, formularz pokazuje szkic z oznaczeniem „📝 Szkic — jeszcze niezapisany” i przyciskiem „Odrzuć szkic” (wraca do zapisanego wpisu albo pustego formularza).",
       "Kliknięcie „Zapisz wpis” usuwa szkic tego dnia. Usunięcie wpisu z historii usuwa także jego szkic.",
       "Opcjonalnie: dzień ze szkicem oznaczony w kalendarzu pustą kropką.",

@@ -73,10 +73,11 @@ przeglądarka
 
 ### Gdzie i w jakim kształcie
 
-| Klucz `localStorage`           | Zawartość                                    |
-| ------------------------------ | -------------------------------------------- |
-| `gratitude_journal_entries_v1` | Obiekt wpisów kluczowany dniem `YYYY-MM-DD`. |
-| `gratitude_journal_theme`      | Nazwa wybranego motywu, np. `zima-ciemny`.   |
+| Klucz `localStorage`           | Zawartość                                                                                                           |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `gratitude_journal_entries_v1` | Obiekt wpisów kluczowany dniem `YYYY-MM-DD`.                                                                        |
+| `gratitude_journal_theme`      | Nazwa wybranego motywu, np. `zima-ciemny`.                                                                          |
+| `gratitude_journal_drafts_v1`  | **(planowane, punkt 10)** Szkice niezapisanych formularzy, kluczowane dniem; osobno od wpisów, poza kopią zapasową. |
 
 Wpis:
 
@@ -416,6 +417,158 @@ Numery K są używane w testach (`tests/calendar-model.test.js`), więc każde z
 - **Nawigacja strzałkami klawiatury po siatce** nie jest planowana: aplikacja jest na telefon, a Tab przechodzi po
   przyciskach.
 
+### Szkice niezapisanych wpisów
+
+**Status:** SZKIC SPECYFIKACJI (punkt 10), czeka na akceptację autorki. Kod i testy jeszcze nie istnieją.
+
+#### Po co
+
+Dziś formularz trzyma tekst tylko w polach strony. Przełączenie na inny dzień w kalendarzu, odświeżenie, zabicie aplikacji
+przez iOS albo (po punkcie 9) automatyczny powrót do dzisiejszej daty **kasują wszystko, co nie zostało zapisane**.
+Szkic to kopia robocza formularza, która żyje w osobnym miejscu i nie jest wpisem.
+
+#### Zasada działania w jednym akapicie
+
+Aplikacja pamięta, z jakim stanem formularz został wczytany (**stan bazowy**: zapisany wpis tego dnia albo pusty formularz).
+Gdy to, co jest w polach, różni się od stanu bazowego, zapisuje szkic tego dnia. Gdy jest takie samo albo puste, szkic
+usuwa. Przy wczytaniu dnia pierwszeństwo ma szkic, potem zapisany wpis, potem pusty formularz.
+
+#### Dane
+
+| Klucz `localStorage`          | Zawartość                                                       |
+| ----------------------------- | --------------------------------------------------------------- |
+| `gratitude_journal_drafts_v1` | Obiekt szkiców kluczowany dniem `YYYY-MM-DD`, osobno od wpisów. |
+
+```json
+{
+  "2026-10-07": {
+    "grateful": ["kawa", "", "spacer"],
+    "why": "",
+    "person": "",
+    "proud": "",
+    "lesson": "",
+    "updatedAt": 1790320511748
+  }
+}
+```
+
+Szkic ma **zawsze trzy pola wdzięczności na swoich miejscach** (także puste) i wartości **surowe**, żeby formularz wrócił
+dokładnie taki, jaki był. Wpis przycina spacje i pomija puste wdzięczności, szkic nie.
+
+#### Budowa
+
+| Plik               | Rola                                                                                                                                                                                                                         |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `js/drafts.js`     | **Czysta logika, testowana w Node:** normalizacja pól, porównanie ze stanem bazowym, decyzja „zapisać czy usunąć szkic”, wybór źródła formularza, czyszczenie danych z magazynu, tekst i stan wskaźnika, reguła po imporcie. |
+| `js/draft-sync.js` | Cienka warstwa czasu: opóźnienie 500 ms, zapis natychmiast przy zmianie dnia, `visibilitychange` (ukryta) i `pagehide`. Bez własnych reguł.                                                                                  |
+| `js/store.js`      | `loadDrafts()` / `saveDrafts()`: jedyne miejsce dotykające klucza szkiców. Każdy zapis czyta aktualny magazyn i zmienia tylko szkic bieżącego dnia.                                                                          |
+| `js/form.js`       | Dochodzą: odczyt pól w postaci surowej, zdarzenie wpisywania, przycisk „Odrzuć szkic”.                                                                                                                                       |
+| `js/app.js`        | Trzyma stan bazowy wybranego dnia i spina moduły. Wybór źródła i tekst wskaźnika przenosimy do `drafts.js` (dziś są w `app.js`).                                                                                             |
+
+Funkcje `drafts.js` (nazwy robocze):
+
+| Funkcja                                                            | Działanie                                                                                          |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `normalizeFields(fields)`                                          | Przycina spacje, pomija puste wdzięczności, zachowuje kolejność. Służy tylko do porównań.          |
+| `fieldsEqual(a, b)`                                                | Czy dwa zestawy pól są takie same po normalizacji.                                                 |
+| `draftDecision(formFields, baseline)`                              | `'save'` albo `'remove'`: puste lub równe bazie → `remove`, inaczej `save`.                        |
+| `chooseFormSource(saved, draft)`                                   | `{source: 'draft' \| 'saved' \| 'empty', fields}`. Szkic równy wpisowi albo pusty jest ignorowany. |
+| `formMode({hasSaved, hasDraft, isToday})`                          | Który tekst wskaźnika i przycisku zapisu, oraz czy pokazać „Odrzuć szkic”.                         |
+| `afterImport({formFields, baseline, newSaved})`                    | `{action: 'reload' \| 'keep' \| 'unchanged', warn}`. Zob. S20.                                     |
+| `sanitizeDrafts(raw)`                                              | Czyści dane z magazynu: odrzuca złe klucze i kształty, uzupełnia do 3 pól.                         |
+| `withDraft(drafts, key, fields, now)`, `withoutDraft(drafts, key)` | Nowy obiekt szkiców, bez zmiany wejściowego.                                                       |
+
+#### Zachowania do spełnienia (S1–S23)
+
+**Co jest szkicem**
+
+- **S1.** Szkic dotyczy jednego dnia i zawiera pola formularza oraz `updatedAt`. Leży w osobnym kluczu, poza wpisami.
+- **S2.** Szkic przechowuje wartości surowe i pozycyjne (3 pola wdzięczności na swoich miejscach, nieprzycięte).
+- **S3.** Porównanie szkicu z wpisem odbywa się po normalizacji. Różnica tylko w spacjach albo w tym, które pole
+  wdzięczności zostało wypełnione, **nie tworzy szkicu**.
+- **S4.** Szkic powstaje tylko wtedy, gdy formularz różni się od stanu bazowego (wpis tego dnia, a bez wpisu: pusty formularz).
+- **S5.** Formularz bez żadnej treści nigdy nie jest szkicem, także gdy dzień ma zapisany wpis (opróżnienie pól usuwa szkic,
+  a przy ponownym wczytaniu wraca zapisany wpis).
+- **S6.** Formularz równy stanowi bazowemu usuwa szkic.
+
+**Kiedy zapisujemy**
+
+- **S7.** Podczas pisania szkic zapisuje się 500 ms po ostatnim znaku (stała `DRAFT_DELAY_MS`).
+- **S8.** Natychmiast, bez czekania: przed zmianą dnia (w tym „Dziś” i „edytuj” w historii), przy `visibilitychange` na
+  „ukryta” i przy `pagehide`.
+- **S9.** Zapis czyta aktualny magazyn i zmienia wyłącznie szkic bieżącego dnia. Szkice innych dni nigdy nie giną przy
+  zapisie.
+- **S10.** Nieudany zapis szkicu (pełny magazyn) nie blokuje pisania: pojawia się dyskretny komunikat.
+
+**Wczytanie dnia**
+
+- **S11.** Kolejność: szkic, potem zapisany wpis, potem pusty formularz.
+- **S12.** Szkic równy zapisanemu wpisowi (nieaktualny, np. po imporcie) albo pusty jest ignorowany i usuwany.
+- **S13.** Gdy formularz pokazuje szkic, wskaźnik mówi o szkicu i jest przycisk „Odrzuć szkic”. Teksty:
+  „📝 Szkic — jeszcze niezapisany” (dzień bez wpisu) oraz „📝 Szkic zmian — wpis z tego dnia nie jest jeszcze
+  zaktualizowany” (dzień z wpisem). Etykieta przycisku zapisu zależy od istnienia wpisu, jak dziś.
+- **S14.** Przejście na inny dzień i powrót przywraca wpisany tekst (to naprawia dzisiejsze ciche kasowanie).
+- **S15.** Po odświeżeniu strony i ponownym uruchomieniu aplikacji szkic wraca.
+
+**Koniec szkicu**
+
+- **S16.** „Zapisz wpis” usuwa szkic tego dnia i anuluje oczekujący zapis szkicu.
+- **S17.** Odmowa zapisu (brak wdzięczności) nie usuwa szkicu.
+- **S18.** „Odrzuć szkic” (po potwierdzeniu) usuwa szkic i wczytuje zapisany wpis albo pusty formularz.
+- **S19.** Usunięcie wpisu usuwa także szkic tego dnia i odświeża formularz, jeśli to wybrany dzień.
+
+**Import i izolacja**
+
+- **S20.** Po imporcie: formularz **nietknięty** (równy stanowi bazowemu) ładuje się ponownie z nowych danych. Formularz z
+  niezapisanym tekstem **zostaje**, a jeśli import zmienił wpis tego dnia, pokazuje się ostrzeżenie, że zapis nadpisze
+  zaimportowany wpis. To domyka ograniczenie z kalendarza (nieaktualny formularz po imporcie).
+- **S21.** Szkice nie trafiają do eksportu, serii dni, podsumowania miesiąca ani historii. Nie zmieniają pełnej kropki i
+  kafelka w kalendarzu. Import kopii ich nie dotyka.
+- **S22.** Uszkodzone albo obce dane szkiców nie wywracają aplikacji: nieprawidłowe wpisy są pomijane, a brak klucza to
+  zero szkiców.
+- **S23.** (do decyzji autorki) Dzień ze szkicem bez wpisu ma w kalendarzu **pustą kropkę** (sam obrys), żeby dało się
+  znaleźć zapomniany szkic. Dzień z wpisem pozostaje z kafelkiem i pełną kropką.
+
+**Sprawdzane ręcznie w przeglądarce (390×844)**
+
+- **MS1.** Wpisz tekst, wybierz inny dzień, wróć: tekst jest. Dla dnia bez i z zapisanym wpisem.
+- **MS2.** Wpisz tekst i odśwież stronę (bez zapisu): szkic wraca ze wskaźnikiem i przyciskiem.
+- **MS3.** Wpisz i szybko zamknij kartę: szkic zapisał się przy `pagehide`. Wywołane zdarzeniem w konsoli, bo prawdziwego
+  zabicia przez iOS nie da się tu odtworzyć.
+- **MS4.** „Zapisz wpis” usuwa wskaźnik szkicu; „Odrzuć szkic” pyta o potwierdzenie.
+- **MS5.** Import kopii przy otwartym nietkniętym formularzu odświeża go; przy wpisanym tekście zostawia i ostrzega.
+- **MS6.** W pliku eksportu nie ma szkiców; seria i podsumowanie nie liczą dni ze szkicem.
+- **MS7.** Brak błędów w konsoli, komunikat przy symulowanej awarii zapisu, wygląd wskaźnika w 8 motywach.
+- **MS8.** Nie sprawdzimy na prawdziwym iPhonie ani zabicia aplikacji przez system (zapis idzie synchronicznie przy
+  `pagehide` i `visibilitychange`, więc ryzyko jest małe, ale jest).
+
+#### Decyzje
+
+- **Osobny klucz, a nie flaga w wpisach.** Szkic nie może wpływać na serię, podsumowanie, eksport ani kafelki, więc najprościej,
+  gdy leży gdzie indziej (D34).
+- **Surowe pola pozycyjne w szkicu, znormalizowane do porównań.** Formularz wraca taki, jaki był, a drobne różnice nie
+  tworzą fałszywych szkiców (D35).
+- **Pusty formularz nie jest szkicem**, także gdy wpis istnieje. Dzięki temu nie ma „pustych szkiców”, a zapisany wpis
+  zawsze da się odzyskać przez ponowne wczytanie dnia. Cena: opróżnienie wszystkich pól bez zapisu nie przetrwa
+  odświeżenia (D36).
+- **Zapis opóźniony i wymuszony.** 500 ms oszczędza zapisy przy pisaniu, a wymuszony zapis przy zmianie dnia, ukryciu i
+  `pagehide` obejmuje przypadki, gdy iOS usypia aplikację bez ostrzeżenia (D37).
+- **Odrzucenie szkicu wymaga potwierdzenia.** Skasowanie napisanego tekstu jest nieodwracalne. Na razie systemowe
+  `confirm()`, własne okno w punkcie 13 (D38).
+- **Zapis wpisu po imporcie nie nadpisuje po cichu.** Nietknięty formularz odświeżamy, rozgrzebany zostawiamy i ostrzegamy.
+  Pełna zasada „nowszy wygrywa” zostaje w punkcie 14 (D39).
+- **Szkice nie są w kopii zapasowej.** To robocza kopia chwili, nie dane do archiwizacji. Utrata magazynu oznacza też utratę
+  szkiców, co jest akceptowalne (D40).
+- **Szkice nie są usuwane automatycznie ze względu na wiek.** Napisany tekst znika tylko z decyzji autorki (zapis, odrzucenie
+  albo usunięcie wpisu).
+
+#### Znane ograniczenia (planowane)
+
+- Dwa jednoczesne okna na tym samym adresie (np. karta i PWA mają osobne magazyny na iOS, ale dwie karty tej samej
+  przeglądarki dzielą jeden) mogą nadpisywać szkic tego samego dnia: wygrywa ostatni zapis. Szkice innych dni są bezpieczne (S9).
+- Komunikat o awarii zapisu szkicu używa tej samej linii statusu co „Zapisano ✓”. Poprawa czasu wyświetlania komunikatów jest w
+  punkcie 17.
+
 ### Cytaty
 
 Pula krótkich, **oryginalnych sentencji bez przypisania do autorów** (`js/quotes.js`). Powód: nie przypisujemy
@@ -464,41 +617,48 @@ zepsułaby liczenie w obiekcie (jest na to test).
 
 Każda decyzja ma powód i odrzucone alternatywy. Status: ✅ wdrożone, 🔜 zaplanowane, 🔧 robocza (do zmiany).
 
-| #   | Decyzja                                                                                                                                   | Powód                                                                                                                                                           | Odrzucone alternatywy                                     | Status                                                                          |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| D1  | **PWA**, nie aplikacja natywna                                                                                                            | Darmowa, prototyp już istnieje, brak konta deweloperskiego (to płatne)                                                                                          | Aplikacja natywna (koszt, App Store)                      | 🔜                                                                              |
-| D2  | Bez frameworka, bundlera i TypeScriptu: moduły ES, zwykły CSS                                                                             | Mała aplikacja; mniej narzędzi = mniej do utrzymania; hosting statyczny działa bez budowania                                                                    | React/Vite/TS                                             | ✅                                                                              |
-| D3  | Własny kalendarz, bez biblioteki                                                                                                          | Jeden plik wyboru daty, 8 motywów, praca offline, pełna kontrola nad dostępnością                                                                               | Gotowa biblioteka kalendarza                              | ✅                                                                              |
-| D4  | Dzień jako tekst `YYYY-MM-DD` w czasie **lokalnym**, wszędzie, także w JSON                                                               | Zgodność z istniejącą kopią; koniec błędu UTC; tekst łatwo sortować i porównywać                                                                                | Znacznik czasu, ISO z `Z`, obiekty `Date` jako stan       | ✅                                                                              |
-| D5  | Rachunek na dniach przez `Date.UTC`                                                                                                       | Odporność na zmianę czasu (doby 23 h i 25 h)                                                                                                                    | `setDate` na lokalnym `Date`, dodawanie milisekund        | ✅                                                                              |
-| D6  | Miesiące od 1 w API dat                                                                                                                   | Zgodność z zapisem w kluczu; mniej pomyłek o jeden                                                                                                              | Miesiące od 0 jak w JS                                    | ✅                                                                              |
-| D7  | Format dat przez `Intl` (`pl-PL`, UTC), zawsze wielką literą                                                                              | Poprawna odmiana bez własnych tabel; spójny wygląd                                                                                                              | Własne tablice nazw, język z urządzenia                   | ✅                                                                              |
-| D8  | Format kopii zostaje **JSON**, ten sam co w `localStorage`                                                                                | Prostota, zgodność ze starymi kopiami, jeden format do utrzymania                                                                                               | CSV, własny format, backend                               | ✅                                                                              |
-| D9  | Import zawsze **pomija** niepoprawne wpisy zamiast przerywać                                                                              | Jeden zły wpis nie blokuje odzyskania reszty                                                                                                                    | Odrzucenie całego pliku                                   | ✅                                                                              |
-| D10 | Przy imporcie wygrywa **nowszy** wpis (większy `savedAt`)                                                                                 | Stara kopia nie nadpisze świeżej pracy                                                                                                                          | Zawsze wygrywa plik, zawsze wygrywa obecny                | 🔜 (pkt 14)                                                                     |
-| D11 | Usunięcia nie są synchronizowane                                                                                                          | Prostota formatu; nagrobki skomplikowałyby kopię                                                                                                                | Znaczniki usunięcia, historia zmian                       | ✅ (do opisania w aplikacji)                                                    |
-| D12 | Niezapisane dane zapisywane jako **szkic** w osobnym kluczu                                                                               | Nic nie ma zniknąć przy zmianie dnia, przełączeniu aplikacji ani zabiciu jej przez iOS; szkic nie psuje serii ani eksportu                                      | Zapis jako zwykły wpis, brak zapisu                       | 🔜 (pkt 10)                                                                     |
-| D13 | Zimny start zawsze pokazuje dziś; z tła wracamy do dziś po ≥ 10 min albo zmianie dnia; północ przy pisaniu **nie przerywa** pisania       | PWA na iPhonie miesiącami żyje w tle; nowy wpis nie może wylądować pod wczorajszą datą. Krótkie przełączenie aplikacji nie może kasować tego, co się pisze      | Zawsze resetować; nigdy nie resetować                     | 🔜 (pkt 9)                                                                      |
-| D14 | Dni z przyszłości w kalendarzu są nieaktywne                                                                                              | Dziennik opisuje to, co było. Planowanie z wyprzedzeniem nie ma sensu i tylko zwiększa ryzyko pomyłki (zatwierdzone przez autorkę)                              | Dozwolone                                                 | ✅                                                                              |
-| D15 | Ikona to prawdziwe PNG z pełnym, kwadratowym tłem, w kilku zabezpieczeniach naraz                                                         | iOS czyta ikonę raz przy instalacji, ignoruje SVG, a przezroczystość wypełnia czernią                                                                           | SVG, przezroczyste rogi                                   | 🔜 (pkt 3)                                                                      |
-| D16 | Ekran startowy w dwóch warstwach: statyczny `apple-touch-startup-image` + animowany ekran w aplikacji                                     | iOS pozwala tylko na statyczny obraz systemowy; animację robimy sami, płynnie przejmując ten sam kolor                                                          | Sam obraz statyczny; brak ekranu                          | 🔜 (pkt 21, niski priorytet)                                                    |
-| D17 | Animujemy tylko `transform` i `opacity`                                                                                                   | Przemalowywanie gradientów i filtry SVG są kosztowne na iOS                                                                                                     | Animacja gradientu, `feGaussianBlur`                      | 🔜 (pkt 11, 21)                                                                 |
-| D18 | `prefers-reduced-motion`: bez migotania i ruchu                                                                                           | Dostępność, oszczędność baterii                                                                                                                                 | Zawsze animować                                           | 🔜                                                                              |
-| D19 | Emoji pór roku: 🍂 ❄️ 🌿 🌊, jedno źródło prawdy                                                                                          | Wybór autorki (🌸 i ☀️ uznane za zbyt oczywiste)                                                                                                                | Dwie wersje emoji w różnych miejscach                     | 🔜 (pkt 16)                                                                     |
-| D20 | Zmiany palet tylko po akceptacji autorki; kontrast pokazujemy przed/po                                                                    | Palety są jej decyzją estetyczną                                                                                                                                | Samodzielne poprawki                                      | 🔜 (pkt 15)                                                                     |
-| D21 | Service worker ma niski priorytet; strategia **sieć najpierw**, potem cache                                                               | Wpisy i tak są lokalne; cache-first mógłby długo pokazywać starą wersję                                                                                         | Cache-first                                               | 🔜 (pkt 19)                                                                     |
-| D22 | Eksport przez Share Sheet (`navigator.share` z plikiem), a pobranie linkiem tylko jako zapasowe                                           | Na iOS zwykłe pobieranie zachowuje się inaczej niż na komputerze                                                                                                | Tylko pobieranie linkiem                                  | 🔜 (pkt 14)                                                                     |
-| D23 | Prywatne kopie poza repozytorium (`.gitignore`)                                                                                           | Wpisy są prywatne, a repozytorium może być publiczne                                                                                                            | Trzymanie kopii w repo                                    | ✅                                                                              |
-| D24 | Teksty interfejsu w `strings.js`, logika bez DOM, jeden dostęp do danych                                                                  | Czytelność, testowalność, jeden punkt zmiany                                                                                                                    | Teksty i logika rozproszone po modułach                   | ✅                                                                              |
-| D25 | Bez `innerHTML` z tekstem użytkownika                                                                                                     | Bezpieczeństwo importu, brak ucieczek znaków                                                                                                                    | Sklejanie HTML                                            | ✅                                                                              |
-| D26 | Osoby w podsumowaniu liczone w `Map`                                                                                                      | Imię `constructor` w zwykłym obiekcie psuło liczenie                                                                                                            | Zwykły obiekt                                             | ✅                                                                              |
-| D27 | Cytaty bez autorów                                                                                                                        | Nie przypisujemy realnym osobom nie ich słów                                                                                                                    | Cytaty „celebrytów”                                       | ✅                                                                              |
-| D28 | Stan kalendarza to liczby `rok` i `miesiąc`, bez obiektu `Date` i bez dnia                                                                | `setMonth` na 29.–31. przeskakuje o dwa miesiące; „dzień widoku” nie jest do niczego potrzebny                                                                  | Trzymanie `Date` i poprawianie dnia przed `setMonth`      | ✅                                                                              |
-| D29 | Reguły kalendarza w czystym module (`calendar-model.js`) z reduktorem stanu, a DOM tylko rysuje                                           | Reguły da się sprawdzić w Node w kilku strefach, a nie ręcznie w przeglądarce; DOM zostaje zbyt krótki, żeby się psuć                                           | Logika wymieszana z DOM, atrapa DOM w testach             | ✅                                                                              |
-| D30 | Panel kalendarza rozwija się w karcie, a nie pływa                                                                                        | Bez `z-index` i przycinania, lepiej z klawiaturą ekranową i safe area                                                                                           | Popover                                                   | ✅                                                                              |
-| D31 | Dni z wpisem w kalendarzu: kafelek `--accent-soft` i kropka `--accent` zamiast słabej kropki `--gold`; kontrast reszty palet w punkcie 15 | Kropka `--gold` była słabo widoczna (autorka zgłosiła potrzebę lepszego oznaczenia). Użyto istniejących tokenów, bez zmiany palet. Wygląd do akceptacji autorki | Sama większa kropka, podkreślenie, pogrubienie cyfry      | 🔧 (działanie potwierdzone, wygląd kafelka czeka na wprost wyrażoną akceptację) |
-| D32 | Bez automatycznych testów przeglądarkowych (Playwright) na razie                                                                          | Ciężkie narzędzie (kilkaset MB) jak na tę skalę; reguły są w czystych funkcjach. Do ponownej oceny, gdy interfejs urośnie (punkty 9, 10)                        | Playwright od razu, atrapa DOM (jsdom)                    | ✅                                                                              |
-| D33 | Lokalny serwer deweloperski z `Cache-Control: no-store` (`tools/dev-server.py`, `npm start`)                                              | Zwykły `http.server` pozwalał przeglądarce trzymać stare CSS i JS, więc zmiany bywały niewidoczne mimo odświeżenia                                              | Zwykły `python3 -m http.server`, ręczne czyszczenie cache | ✅                                                                              |
+| #   | Decyzja                                                                                                                                   | Powód                                                                                                                                                                 | Odrzucone alternatywy                                     | Status                                      |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------- |
+| D1  | **PWA**, nie aplikacja natywna                                                                                                            | Darmowa, prototyp już istnieje, brak konta deweloperskiego (to płatne)                                                                                                | Aplikacja natywna (koszt, App Store)                      | 🔜                                          |
+| D2  | Bez frameworka, bundlera i TypeScriptu: moduły ES, zwykły CSS                                                                             | Mała aplikacja; mniej narzędzi = mniej do utrzymania; hosting statyczny działa bez budowania                                                                          | React/Vite/TS                                             | ✅                                          |
+| D3  | Własny kalendarz, bez biblioteki                                                                                                          | Jeden plik wyboru daty, 8 motywów, praca offline, pełna kontrola nad dostępnością                                                                                     | Gotowa biblioteka kalendarza                              | ✅                                          |
+| D4  | Dzień jako tekst `YYYY-MM-DD` w czasie **lokalnym**, wszędzie, także w JSON                                                               | Zgodność z istniejącą kopią; koniec błędu UTC; tekst łatwo sortować i porównywać                                                                                      | Znacznik czasu, ISO z `Z`, obiekty `Date` jako stan       | ✅                                          |
+| D5  | Rachunek na dniach przez `Date.UTC`                                                                                                       | Odporność na zmianę czasu (doby 23 h i 25 h)                                                                                                                          | `setDate` na lokalnym `Date`, dodawanie milisekund        | ✅                                          |
+| D6  | Miesiące od 1 w API dat                                                                                                                   | Zgodność z zapisem w kluczu; mniej pomyłek o jeden                                                                                                                    | Miesiące od 0 jak w JS                                    | ✅                                          |
+| D7  | Format dat przez `Intl` (`pl-PL`, UTC), zawsze wielką literą                                                                              | Poprawna odmiana bez własnych tabel; spójny wygląd                                                                                                                    | Własne tablice nazw, język z urządzenia                   | ✅                                          |
+| D8  | Format kopii zostaje **JSON**, ten sam co w `localStorage`                                                                                | Prostota, zgodność ze starymi kopiami, jeden format do utrzymania                                                                                                     | CSV, własny format, backend                               | ✅                                          |
+| D9  | Import zawsze **pomija** niepoprawne wpisy zamiast przerywać                                                                              | Jeden zły wpis nie blokuje odzyskania reszty                                                                                                                          | Odrzucenie całego pliku                                   | ✅                                          |
+| D10 | Przy imporcie wygrywa **nowszy** wpis (większy `savedAt`)                                                                                 | Stara kopia nie nadpisze świeżej pracy                                                                                                                                | Zawsze wygrywa plik, zawsze wygrywa obecny                | 🔜 (pkt 14)                                 |
+| D11 | Usunięcia nie są synchronizowane                                                                                                          | Prostota formatu; nagrobki skomplikowałyby kopię                                                                                                                      | Znaczniki usunięcia, historia zmian                       | ✅ (do opisania w aplikacji)                |
+| D12 | Niezapisane dane zapisywane jako **szkic** w osobnym kluczu                                                                               | Nic nie ma zniknąć przy zmianie dnia, przełączeniu aplikacji ani zabiciu jej przez iOS; szkic nie psuje serii ani eksportu                                            | Zapis jako zwykły wpis, brak zapisu                       | 🔜 (pkt 10)                                 |
+| D13 | Zimny start zawsze pokazuje dziś; z tła wracamy do dziś po ≥ 10 min albo zmianie dnia; północ przy pisaniu **nie przerywa** pisania       | PWA na iPhonie miesiącami żyje w tle; nowy wpis nie może wylądować pod wczorajszą datą. Krótkie przełączenie aplikacji nie może kasować tego, co się pisze            | Zawsze resetować; nigdy nie resetować                     | 🔜 (pkt 9)                                  |
+| D14 | Dni z przyszłości w kalendarzu są nieaktywne                                                                                              | Dziennik opisuje to, co było. Planowanie z wyprzedzeniem nie ma sensu i tylko zwiększa ryzyko pomyłki (zatwierdzone przez autorkę)                                    | Dozwolone                                                 | ✅                                          |
+| D15 | Ikona to prawdziwe PNG z pełnym, kwadratowym tłem, w kilku zabezpieczeniach naraz                                                         | iOS czyta ikonę raz przy instalacji, ignoruje SVG, a przezroczystość wypełnia czernią                                                                                 | SVG, przezroczyste rogi                                   | 🔜 (pkt 3)                                  |
+| D16 | Ekran startowy w dwóch warstwach: statyczny `apple-touch-startup-image` + animowany ekran w aplikacji                                     | iOS pozwala tylko na statyczny obraz systemowy; animację robimy sami, płynnie przejmując ten sam kolor                                                                | Sam obraz statyczny; brak ekranu                          | 🔜 (pkt 21, niski priorytet)                |
+| D17 | Animujemy tylko `transform` i `opacity`                                                                                                   | Przemalowywanie gradientów i filtry SVG są kosztowne na iOS                                                                                                           | Animacja gradientu, `feGaussianBlur`                      | 🔜 (pkt 11, 21)                             |
+| D18 | `prefers-reduced-motion`: bez migotania i ruchu                                                                                           | Dostępność, oszczędność baterii                                                                                                                                       | Zawsze animować                                           | 🔜                                          |
+| D19 | Emoji pór roku: 🍂 ❄️ 🌿 🌊, jedno źródło prawdy                                                                                          | Wybór autorki (🌸 i ☀️ uznane za zbyt oczywiste)                                                                                                                      | Dwie wersje emoji w różnych miejscach                     | 🔜 (pkt 16)                                 |
+| D20 | Zmiany palet tylko po akceptacji autorki; kontrast pokazujemy przed/po                                                                    | Palety są jej decyzją estetyczną                                                                                                                                      | Samodzielne poprawki                                      | 🔜 (pkt 15)                                 |
+| D21 | Service worker ma niski priorytet; strategia **sieć najpierw**, potem cache                                                               | Wpisy i tak są lokalne; cache-first mógłby długo pokazywać starą wersję                                                                                               | Cache-first                                               | 🔜 (pkt 19)                                 |
+| D22 | Eksport przez Share Sheet (`navigator.share` z plikiem), a pobranie linkiem tylko jako zapasowe                                           | Na iOS zwykłe pobieranie zachowuje się inaczej niż na komputerze                                                                                                      | Tylko pobieranie linkiem                                  | 🔜 (pkt 14)                                 |
+| D23 | Prywatne kopie poza repozytorium (`.gitignore`)                                                                                           | Wpisy są prywatne, a repozytorium może być publiczne                                                                                                                  | Trzymanie kopii w repo                                    | ✅                                          |
+| D24 | Teksty interfejsu w `strings.js`, logika bez DOM, jeden dostęp do danych                                                                  | Czytelność, testowalność, jeden punkt zmiany                                                                                                                          | Teksty i logika rozproszone po modułach                   | ✅                                          |
+| D25 | Bez `innerHTML` z tekstem użytkownika                                                                                                     | Bezpieczeństwo importu, brak ucieczek znaków                                                                                                                          | Sklejanie HTML                                            | ✅                                          |
+| D26 | Osoby w podsumowaniu liczone w `Map`                                                                                                      | Imię `constructor` w zwykłym obiekcie psuło liczenie                                                                                                                  | Zwykły obiekt                                             | ✅                                          |
+| D27 | Cytaty bez autorów                                                                                                                        | Nie przypisujemy realnym osobom nie ich słów                                                                                                                          | Cytaty „celebrytów”                                       | ✅                                          |
+| D28 | Stan kalendarza to liczby `rok` i `miesiąc`, bez obiektu `Date` i bez dnia                                                                | `setMonth` na 29.–31. przeskakuje o dwa miesiące; „dzień widoku” nie jest do niczego potrzebny                                                                        | Trzymanie `Date` i poprawianie dnia przed `setMonth`      | ✅                                          |
+| D29 | Reguły kalendarza w czystym module (`calendar-model.js`) z reduktorem stanu, a DOM tylko rysuje                                           | Reguły da się sprawdzić w Node w kilku strefach, a nie ręcznie w przeglądarce; DOM zostaje zbyt krótki, żeby się psuć                                                 | Logika wymieszana z DOM, atrapa DOM w testach             | ✅                                          |
+| D30 | Panel kalendarza rozwija się w karcie, a nie pływa                                                                                        | Bez `z-index` i przycinania, lepiej z klawiaturą ekranową i safe area                                                                                                 | Popover                                                   | ✅                                          |
+| D31 | Dni z wpisem w kalendarzu: kafelek `--accent-soft` i kropka `--accent` zamiast słabej kropki `--gold`; kontrast reszty palet w punkcie 15 | Kropka `--gold` była słabo widoczna (autorka zgłosiła potrzebę lepszego oznaczenia). Użyto istniejących tokenów, bez zmiany palet. Wygląd zaakceptowany przez autorkę | Sama większa kropka, podkreślenie, pogrubienie cyfry      | ✅ (zaakceptowane przez autorkę 07.10.2026) |
+| D32 | Bez automatycznych testów przeglądarkowych (Playwright) na razie                                                                          | Ciężkie narzędzie (kilkaset MB) jak na tę skalę; reguły są w czystych funkcjach. Do ponownej oceny, gdy interfejs urośnie (punkty 9, 10)                              | Playwright od razu, atrapa DOM (jsdom)                    | ✅                                          |
+| D33 | Lokalny serwer deweloperski z `Cache-Control: no-store` (`tools/dev-server.py`, `npm start`)                                              | Zwykły `http.server` pozwalał przeglądarce trzymać stare CSS i JS, więc zmiany bywały niewidoczne mimo odświeżenia                                                    | Zwykły `python3 -m http.server`, ręczne czyszczenie cache | ✅                                          |
+| D34 | Szkice w osobnym kluczu `gratitude_journal_drafts_v1`, a nie jako pole wpisu                                                              | Szkic nie może wpływać na serię, podsumowanie, eksport ani oznaczenia w kalendarzu                                                                                    | Flaga `draft` w wpisach                                   | 🔜 (pkt 10, szkic specyfikacji)             |
+| D35 | Szkic trzyma surowe pola pozycyjne; porównania po normalizacji                                                                            | Formularz wraca taki, jaki był; różnice w spacjach nie tworzą fałszywych szkiców                                                                                      | Zapis przyciętych pól, porównanie surowe                  | 🔜 (pkt 10)                                 |
+| D36 | Pusty formularz nie jest szkicem                                                                                                          | Brak pustych szkiców; zapisany wpis zawsze do odzyskania                                                                                                              | Zapis pustego szkicu przy wpisie                          | 🔜 (pkt 10)                                 |
+| D37 | Zapis szkicu z opóźnieniem 500 ms i wymuszony przy zmianie dnia, ukryciu i `pagehide`                                                     | iOS może uśpić lub zamknąć aplikację bez ostrzeżenia                                                                                                                  | Sam timer, zapis przy każdym znaku                        | 🔜 (pkt 10)                                 |
+| D38 | „Odrzuć szkic” z potwierdzeniem                                                                                                           | Nieodwracalne skasowanie napisanego tekstu                                                                                                                            | Bez pytania                                               | 🔜 (pkt 10, własne okno w pkt 13)           |
+| D39 | Po imporcie nietknięty formularz odświeżamy, rozgrzebany zostawiamy z ostrzeżeniem                                                        | Zapis nie może po cichu nadpisać zaimportowanego wpisu                                                                                                                | Zawsze odświeżać, nigdy nie odświeżać                     | 🔜 (pkt 10, pełna zasada w pkt 14)          |
+| D40 | Szkice poza kopią zapasową i bez automatycznego wygasania                                                                                 | Robocza kopia chwili, a tekst znika tylko z decyzji autorki                                                                                                           | Eksport szkiców, wygaszanie po N dniach                   | 🔜 (pkt 10)                                 |
 
 ## 9. Ograniczenia iOS i PWA, o których trzeba pamiętać
 
