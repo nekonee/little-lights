@@ -13,7 +13,7 @@ Aplikacja używa modułów ES, które nie ładują się z `file://`, więc nie d
 Potrzebny jest prosty serwer:
 
 ```sh
-npm start        # python3 -m http.server 8000
+npm start        # python3 tools/dev-server.py (port 8000, bez cache'owania)
 ```
 
 Potem otwórz <http://localhost:8000>. Dane w `localStorage` są przypisane do adresu, więc `localhost:8000` ma osobny
@@ -47,7 +47,8 @@ js/
   store.js            jedyne miejsce dotykające localStorage
   dom.js              pomocniki: byId, h() do budowania elementów
   form.js             formularz wpisu
-  calendar.js         wybór daty i kalendarz miesięczny
+  calendar-model.js   reguły kalendarza: siatka, miesiące, przyszłość, reduktor (czyste)
+  calendar.js         wybór daty: rysowanie panelu i zdarzenia (cienka warstwa)
   history.js          lista poprzednich wpisów
   summary.js          karta podsumowania miesiąca
   backup-panel.js     przyciski eksportu i importu
@@ -56,6 +57,7 @@ js/
   themes.js           wybór motywu, emoji pory roku
   garland.js          girlanda światełek w motywach zimowych
 tests/                testy logiki (node --test), dane wymyślone
+tools/                narzędzia deweloperskie: serwer bez cache'u, kontrola testów przez psucie kodu
 assets/               favicon (docelowo ikony i ekran startowy)
 docs/                 specyfikacja i plan prac
 legacy/               prototyp w jednym pliku HTML — punkt odniesienia
@@ -112,7 +114,6 @@ wyłącznie wymyślonych danych.
 Refaktoryzacja do modułów (krok 0 z punktu 1 planu) zachowała działanie prototypu, także jego znane błędy. Błąd dat w UTC
 jest już naprawiony (punkt 7), a pozostałe mają swoje punkty w `docs/plan.json`:
 
-- w kalendarzu `setMonth` przeskakuje miesiące, gdy dziś jest 29.–31. (punkt 8),
 - komunikat „Zapisano ✓” jest od razu zamazywany, po usunięciu wpisu formularz nie odświeża się, a lista miesięcy w
   podsumowaniu wraca na bieżący miesiąc (punkt 17),
 - import nadpisuje wpisy bez sprawdzania, który jest nowszy (punkt 14),

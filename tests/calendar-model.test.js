@@ -192,7 +192,11 @@ describe('monthGrid: kształt siatki', () => {
       ['2026', 1],
       [NaN, 1],
     ]) {
-      assert.throws(() => monthGrid(year, month), RangeError, `${year} / ${month}`);
+      assert.throws(
+        () => monthGrid(year, month),
+        { name: 'RangeError', message: /Niepoprawny miesiąc kalendarza/ },
+        `${year} / ${month}`,
+      );
     }
   });
 });
@@ -569,6 +573,28 @@ describe('calendarReducer', () => {
     for (const action of actions) {
       assert.doesNotThrow(() => reduce(frozen, action), action.type);
       assert.deepEqual(frozen, snapshot, action.type);
+    }
+  });
+
+  test('K6: stan ma wyłącznie pola open, viewYear, viewMonth i selected, czyli nie zawiera dnia widoku', () => {
+    // To odróżnia model od starego kalendarza, w którym ukryty dzień powodował przeskoki miesięcy (setMonth).
+    const expectedKeys = ['open', 'selected', 'viewMonth', 'viewYear'];
+    let state = closedState();
+    const actions = [
+      { type: 'toggle' },
+      { type: 'prev' },
+      { type: 'prev' },
+      { type: 'next' },
+      { type: 'pickDay', key: '2026-08-31' },
+      { type: 'select', key: '2026-09-12' },
+      { type: 'close' },
+      { type: 'goToToday' },
+      { type: 'pickDay', key: '2026-10-08' },
+    ];
+    assert.deepEqual(Object.keys(state).sort(), expectedKeys);
+    for (const action of actions) {
+      state = reduce(state, action);
+      assert.deepEqual(Object.keys(state).sort(), expectedKeys, action.type);
     }
   });
 

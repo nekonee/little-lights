@@ -5,7 +5,7 @@
   "description": "Dziennik wdzięczności — lokalna aplikacja PWA (bez backendu)",
   "type": "module",
   "scripts": {
-    "start": "python3 -m http.server 8000",
+    "start": "python3 tools/dev-server.py",
     "test": "node --test"
   }
 }
