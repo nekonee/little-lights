@@ -250,17 +250,117 @@ szerokości w pikselach, zwisające łuki Béziera, liczba żarówek zależna od
 
 ### Kalendarz wyboru daty
 
-Aktualny komponent to nadal kod z prototypu z naprawionymi kluczami dat (punkt 7). **Do napisania od zera w punkcie 8.**
-Powody przepisania zamiast łatania:
+**Status:** specyfikacja gotowa, testy i kod w trakcie (punkt 8). Obecny komponent to jeszcze kod z prototypu z
+naprawionymi kluczami dat (punkt 7).
 
-- `setMonth(±1)` na 29.–31. dniu miesiąca przeskakuje o dwa miesiące. Plan: stan jako liczby `viewYear`/`viewMonth`
-  i nawigacja ręczna, bez `setMonth`.
-- komponent trzyma obiekty `Date` jako stan, co jest źródłem błędów z czasem,
-- komórki to `div`, a powinny być `button` (dostępność, cele dotykowe ≥ 44 pt),
-- popover pływający zamiast panelu rozwijanego w karcie.
+#### Dlaczego piszemy go od zera, a nie łatamy
 
-Własny kod, bez biblioteki: jedna aplikacja, jeden plik wyboru daty, praca offline, osiem motywów i znane
-wymagania. Biblioteka dodałaby zależność i walkę z jej stylami w każdym z ośmiu motywów.
+- `setMonth(±1)` na 29.–31. dniu miesiąca przeskakuje o dwa miesiące (31 stycznia + 1 miesiąc = 3 marca).
+- Stanem jest obiekt `Date`, a razem z nim ukryty „dzień”, który powoduje takie błędy.
+- Komórki to `div`, a powinny być `button` (dostępność, cele dotykowe ≥ 44 pt).
+- Popover pływa nad formularzem, zamiast rozwijać się w karcie.
+- Komponent sam czyta `localStorage` w trakcie renderowania, więc nie da się go sprawdzić bez przeglądarki.
+
+Własny kod, bez biblioteki: jedna aplikacja, jeden wybór daty, praca offline, osiem motywów i znane wymagania.
+Biblioteka dodałaby zależność i walkę z jej stylami w każdym z ośmiu motywów.
+
+#### Budowa: model w czystych funkcjach, interfejs cienki
+
+| Plik                   | Rola                                                                                                                                                                   |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `js/calendar-model.js` | **Czysta logika, w całości testowana w Node:** siatka miesiąca, przesuwanie miesiąca, opis komórki, reguły „przyszłość” i reduktor stanu. Bez DOM, bez `localStorage`. |
+| `js/calendar.js`       | Cienka warstwa: rysuje stan z reduktora, podpina zdarzenia i przekazuje wybór do `app.js`. Nie ma własnych reguł.                                                      |
+| `js/app.js`            | Trzyma wybrany dzień, daje kalendarzowi wpisy (`setEntries`) i ma jedną funkcję `goToToday()`, której użyje też automatyczny powrót do dziś (punkt 9).                 |
+
+Powód podziału: błędy kalendarza są błędami **reguł** (który dzień, który miesiąc, co wolno kliknąć), a nie rysowania.
+Reguły w czystych funkcjach da się sprawdzić w kilku strefach czasowych w ułamku sekundy. Kod DOM, który zostaje,
+jest tak krótki, że sprawdzamy go w prawdziwej przeglądarce (lista M poniżej).
+
+#### Model (`js/calendar-model.js`)
+
+Miesiące liczymy od 1 (jak w całym `dates.js`). Klucze to `YYYY-MM-DD`, więc porównanie „czy dzień jest po dzisiejszym”
+to zwykłe porównanie tekstów.
+
+| Funkcja                                          | Działanie                                                                                                                                |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `monthGrid(year, month)`                         | Zawsze **42 komórki** `{key, day, inMonth}`, tydzień od poniedziałku. Rzuca `RangeError` dla miesiąca spoza 1–12.                        |
+| `shiftMonth({year, month}, delta)`               | Nowy miesiąc widoku. Liczy na jednej liczbie `rok·12 + miesiąc`, więc przechodzi granicę roku i nie ma „dnia”, który mógłby przeskoczyć. |
+| `isFuture(key, today)`                           | Prawda dla dnia **po** dzisiejszym. Dziś nie jest przyszłością.                                                                          |
+| `canGoNext(view, today)`                         | Fałsz, gdy widok jest w miesiącu dzisiejszym lub późniejszym.                                                                            |
+| `describeCell(cell, {today, selected, entries})` | Cechy komórki: `isToday`, `isSelected`, `isFuture`, `hasEntry`, `inMonth` i `label` dla czytnika ekranu.                                 |
+| `createCalendarState(selected)`                  | Stan początkowy: `{open: false, viewYear, viewMonth, selected}`.                                                                         |
+| `calendarReducer(state, action, {today})`        | Następny stan. Czysta funkcja: nie zmienia stanu wejściowego.                                                                            |
+
+Akcje reduktora: `toggle`, `close` (dotknięcie poza panelem i Escape), `prev`, `next`, `pickDay(key)`, `goToToday`
+i `select(key)` (zewnętrzna zmiana dnia, np. „edytuj” w historii).
+
+Stan **nie zawiera dnia widoku**, tylko rok i miesiąc jako liczby. To jest sedno naprawy `setMonth`.
+
+#### Zachowania, które musi spełniać kalendarz
+
+Numery K są używane w testach (`tests/calendar-model.test.js`), więc każde zachowanie ma pokrycie.
+
+**Siatka**
+
+- **K1.** Siatka ma zawsze 6 wierszy po 7 komórek (42), także gdy miesiąc mieści się w 5. Wysokość panelu nie skacze.
+- **K2.** Tydzień zaczyna się od poniedziałku: pierwsza komórka to zawsze poniedziałek.
+- **K3.** Pierwszy dzień miesiąca leży w kolumnie swojego dnia tygodnia (w tym przesunięcia skrajne 0 i 6).
+- **K4.** Komórki to kolejne dni bez dziur i powtórzeń. Dni „w miesiącu” to dokładnie 1…N, gdzie N to 28, 29 (rok
+  przestępny), 30 lub 31.
+- **K5.** Dni sąsiednich miesięcy uzupełniają siatkę, także przez granicę roku (grudzień ↔ styczeń).
+- **K19.** Niepoprawny miesiąc (spoza 1–12 lub nie liczba całkowita) kończy się błędem, a nie cichą złą siatką.
+
+**Nawigacja**
+
+- **K6.** Przesunięcie miesiąca działa z każdego miesiąca w obie strony i przechodzi granicę roku. Przesunięcie o +1
+  i potem o −1 wraca dokładnie na miejsce.
+- **K8.** Strzałka „dalej” jest wyłączona w bieżącym miesiącu i włączona we wcześniejszych. Kliknięcie wyłączonej nic nie
+  zmienia. Wstecz można iść bez ograniczeń.
+- **K18.** Przesuwanie miesięcy nie zmienia wybranego dnia.
+
+**Dni i ich cechy**
+
+- **K7.** „Dziś” to dzień lokalny (o 00:30 lokalnie jest już nowy dzień). Dziś nie jest przyszłością, jutro jest.
+- **K9.** Cechy komórki są przypisane dokładnie do jej dnia: tylko jedna komórka jest „dziś”, tylko jedna „wybrana”,
+  kropkę mają tylko dni z wpisem, bez przesunięć o dzień. Dni sąsiednich miesięcy są oznaczone jako nienależące do widoku.
+- **K10.** Opis dla czytnika ekranu ma postać „Piątek, 25 września 2026” albo „Piątek, 25 września 2026, wpis zapisany”.
+
+**Otwieranie, zamykanie i wybór**
+
+- **K11.** Otwarcie panelu zawsze pokazuje miesiąc **wybranego dnia**, także po wcześniejszym przewijaniu miesięcy.
+- **K12.** Panel zamyka się po ponownym dotknięciu przycisku daty, po dotknięciu poza panelem i po Escape. Zamknięcie
+  nie zmienia wybranego dnia ani widoku.
+- **K13.** Wybór dnia ustawia go jako wybrany i zamyka panel. Dla dnia z sąsiedniego miesiąca przełącza też widok na jego
+  miesiąc.
+- **K14.** Wybór dnia z przyszłości albo niepoprawnego klucza jest ignorowany (stan bez zmian).
+- **K15.** „Dziś” z dowolnego miejsca (przeszły miesiąc, otwarty lub zamknięty panel) wybiera dzisiejszy dzień, ustawia
+  widok na bieżący miesiąc i zamyka panel.
+- **K16.** Zewnętrzna zmiana dnia (np. „edytuj” w historii) synchronizuje wybrany dzień i widok, ale nie otwiera ani nie
+  zamyka panelu. Z dniem z przyszłości jest ignorowana.
+- **K17.** Reduktor nie zmienia obiektu stanu, który dostaje.
+
+**Sprawdzane ręcznie w przeglądarce (390×844)**
+
+- **M1.** Komórki i strzałki są prawdziwymi `<button>` o rozmiarze co najmniej 44×44 pt (mierzone).
+- **M2.** Przycisk daty ma `aria-expanded` i `aria-controls`. Komórki mają `aria-label`, `aria-current="date"` dla dziś,
+  `aria-pressed` dla wybranego i `disabled` dla przyszłości.
+- **M3.** Panel rozwija się w karcie (nie pływa), formularz zjeżdża w dół i wraca po zamknięciu.
+- **M4.** Po zapisie, usunięciu i imporcie kropki odświeżają się także przy otwartym panelu.
+- **M5.** Wygląd w ośmiu motywach: czytelność cyfr, „dziś” obrysowane, wybrany dzień wyraźny, dni sąsiednich miesięcy
+  i przyszłości przygaszone. Szczególnie oba zimowe.
+- **M6.** Cyfry w czcionce systemowej z `tabular-nums`, bez nierównych cyfr Georgii.
+- **M7.** Brak błędów w konsoli, brak przewijania poziomego, panel mieści się na szerokości 390 px.
+
+#### Decyzje projektowe
+
+- **Dni z przyszłości są nieaktywne** (zatwierdzone przez autorkę: dziennik pisze się o tym, co było, więc planowanie
+  z wyprzedzeniem nie ma sensu). To jedna reguła w `isFuture`.
+- **Panel jest rozwijany w karcie**, a nie pływający: bez `z-index`, przycinania i kłopotów z klawiaturą ekranową.
+- **Kolor kropki zostaje bez zmian.** Obecny `--gold` ma słaby kontrast w jasnych motywach (np. 1,96:1 w zima jasny),
+  ale zmiana kolorów to decyzja autorki. Wrócimy do tego w punkcie 15 razem z `--on-accent`, z porównaniem przed/po.
+- **Dzień z szkicem** (pusta kropka) pojawi się dopiero z punktem 10.
+- **Nawigacja strzałkami klawiatury po siatce** nie jest planowana: aplikacja jest na telefon, a Tab przechodzi po
+  przyciskach.
 
 ### Cytaty
 
@@ -286,6 +386,17 @@ zepsułaby liczenie w obiekcie (jest na to test).
 - **Testy logiki są uruchamiane w kilku strefach czasowych:** `Europe/Warsaw`, `America/Los_Angeles`,
   `Pacific/Kiritimati` (UTC+14), `UTC`. Błędy dat ujawniają się tylko w niektórych strefach, więc jedna strefa
   nie wystarczy. Testy tworzą czas przez `new Date(rok, miesiąc, dzień, godzina)` (lokalnie), nie przez tekst z `Z`.
+- **Jak piszemy testy, żeby naprawdę coś sprawdzały** (zasady przyjęte przy kalendarzu, obowiązują dalej):
+  1. **Oczekiwane wartości pochodzą z zewnątrz, nie z testowanego kodu.** Daty i układy siatek wpisujemy ręcznie
+     po sprawdzeniu w niezależnym źródle (np. moduł `calendar` w Pythonie), a nie liczymy tym samym algorytmem.
+  2. **Własności sprawdzamy pętlą po wielu miesiącach i latach** (zawsze 42 komórki, pierwsza to poniedziałek,
+     kolejne dni różnią się o jeden), z niezależnym wyliczeniem dnia tygodnia przez `Date.UTC`.
+  3. **Każdy znany błąd ma test regresyjny**, który przy starym kodzie by nie przeszedł.
+  4. **Testujemy granice, nie tylko środek**: dziś kontra jutro, bieżący miesiąc kontra poprzedni.
+  5. **Test musi dać się oblać.** Po napisaniu kodu psujemy go celowo (`toISOString`, `setMonth`, tydzień od niedzieli,
+     35 zamiast 42 komórek, brak blokady przyszłości itd.) na kopii poza repozytorium i sprawdzamy, że testy to
+     wykrywają. Test, który przy zepsutym kodzie przechodzi, jest do poprawy.
+  6. Każdy test kalendarza wskazuje numer zachowania K z tej dokumentacji.
 - **Przypadki brzegowe dat w testach:** 00:30 i 23:30 lokalnie, 31 stycznia, 29 lutego 2028, zmiana czasu 29.03.2026
   i 25.10.2026, granica roku.
 - **Interfejs sprawdzamy ręcznie** w podglądzie 390×844 (iPhone 14), w kilku motywach (zawsze także w obu
@@ -299,35 +410,40 @@ zepsułaby liczenie w obiekcie (jest na to test).
 
 Każda decyzja ma powód i odrzucone alternatywy. Status: ✅ wdrożone, 🔜 zaplanowane, 🔧 robocza (do zmiany).
 
-| #   | Decyzja                                                                                                                             | Powód                                                                                                                                                      | Odrzucone alternatywy                               | Status                                                           |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------- |
-| D1  | **PWA**, nie aplikacja natywna                                                                                                      | Darmowa, prototyp już istnieje, brak konta deweloperskiego (to płatne)                                                                                     | Aplikacja natywna (koszt, App Store)                | 🔜                                                               |
-| D2  | Bez frameworka, bundlera i TypeScriptu: moduły ES, zwykły CSS                                                                       | Mała aplikacja; mniej narzędzi = mniej do utrzymania; hosting statyczny działa bez budowania                                                               | React/Vite/TS                                       | ✅                                                               |
-| D3  | Własny kalendarz, bez biblioteki                                                                                                    | Jeden plik wyboru daty, 8 motywów, praca offline, pełna kontrola nad dostępnością                                                                          | Gotowa biblioteka kalendarza                        | 🔜 (pkt 8)                                                       |
-| D4  | Dzień jako tekst `YYYY-MM-DD` w czasie **lokalnym**, wszędzie, także w JSON                                                         | Zgodność z istniejącą kopią; koniec błędu UTC; tekst łatwo sortować i porównywać                                                                           | Znacznik czasu, ISO z `Z`, obiekty `Date` jako stan | ✅                                                               |
-| D5  | Rachunek na dniach przez `Date.UTC`                                                                                                 | Odporność na zmianę czasu (doby 23 h i 25 h)                                                                                                               | `setDate` na lokalnym `Date`, dodawanie milisekund  | ✅                                                               |
-| D6  | Miesiące od 1 w API dat                                                                                                             | Zgodność z zapisem w kluczu; mniej pomyłek o jeden                                                                                                         | Miesiące od 0 jak w JS                              | ✅                                                               |
-| D7  | Format dat przez `Intl` (`pl-PL`, UTC), zawsze wielką literą                                                                        | Poprawna odmiana bez własnych tabel; spójny wygląd                                                                                                         | Własne tablice nazw, język z urządzenia             | ✅                                                               |
-| D8  | Format kopii zostaje **JSON**, ten sam co w `localStorage`                                                                          | Prostota, zgodność ze starymi kopiami, jeden format do utrzymania                                                                                          | CSV, własny format, backend                         | ✅                                                               |
-| D9  | Import zawsze **pomija** niepoprawne wpisy zamiast przerywać                                                                        | Jeden zły wpis nie blokuje odzyskania reszty                                                                                                               | Odrzucenie całego pliku                             | ✅                                                               |
-| D10 | Przy imporcie wygrywa **nowszy** wpis (większy `savedAt`)                                                                           | Stara kopia nie nadpisze świeżej pracy                                                                                                                     | Zawsze wygrywa plik, zawsze wygrywa obecny          | 🔜 (pkt 14)                                                      |
-| D11 | Usunięcia nie są synchronizowane                                                                                                    | Prostota formatu; nagrobki skomplikowałyby kopię                                                                                                           | Znaczniki usunięcia, historia zmian                 | ✅ (do opisania w aplikacji)                                     |
-| D12 | Niezapisane dane zapisywane jako **szkic** w osobnym kluczu                                                                         | Nic nie ma zniknąć przy zmianie dnia, przełączeniu aplikacji ani zabiciu jej przez iOS; szkic nie psuje serii ani eksportu                                 | Zapis jako zwykły wpis, brak zapisu                 | 🔜 (pkt 10)                                                      |
-| D13 | Zimny start zawsze pokazuje dziś; z tła wracamy do dziś po ≥ 10 min albo zmianie dnia; północ przy pisaniu **nie przerywa** pisania | PWA na iPhonie miesiącami żyje w tle; nowy wpis nie może wylądować pod wczorajszą datą. Krótkie przełączenie aplikacji nie może kasować tego, co się pisze | Zawsze resetować; nigdy nie resetować               | 🔜 (pkt 9)                                                       |
-| D14 | Dni z przyszłości w kalendarzu domyślnie nieaktywne                                                                                 | Zapobiega pomyłkom                                                                                                                                         | Dozwolone                                           | 🔧 (do zmiany, jeśli będzie potrzeba planowania z wyprzedzeniem) |
-| D15 | Ikona to prawdziwe PNG z pełnym, kwadratowym tłem, w kilku zabezpieczeniach naraz                                                   | iOS czyta ikonę raz przy instalacji, ignoruje SVG, a przezroczystość wypełnia czernią                                                                      | SVG, przezroczyste rogi                             | 🔜 (pkt 3)                                                       |
-| D16 | Ekran startowy w dwóch warstwach: statyczny `apple-touch-startup-image` + animowany ekran w aplikacji                               | iOS pozwala tylko na statyczny obraz systemowy; animację robimy sami, płynnie przejmując ten sam kolor                                                     | Sam obraz statyczny; brak ekranu                    | 🔜 (pkt 21, niski priorytet)                                     |
-| D17 | Animujemy tylko `transform` i `opacity`                                                                                             | Przemalowywanie gradientów i filtry SVG są kosztowne na iOS                                                                                                | Animacja gradientu, `feGaussianBlur`                | 🔜 (pkt 11, 21)                                                  |
-| D18 | `prefers-reduced-motion`: bez migotania i ruchu                                                                                     | Dostępność, oszczędność baterii                                                                                                                            | Zawsze animować                                     | 🔜                                                               |
-| D19 | Emoji pór roku: 🍂 ❄️ 🌿 🌊, jedno źródło prawdy                                                                                    | Wybór autorki (🌸 i ☀️ uznane za zbyt oczywiste)                                                                                                           | Dwie wersje emoji w różnych miejscach               | 🔜 (pkt 16)                                                      |
-| D20 | Zmiany palet tylko po akceptacji autorki; kontrast pokazujemy przed/po                                                              | Palety są jej decyzją estetyczną                                                                                                                           | Samodzielne poprawki                                | 🔜 (pkt 15)                                                      |
-| D21 | Service worker ma niski priorytet; strategia **sieć najpierw**, potem cache                                                         | Wpisy i tak są lokalne; cache-first mógłby długo pokazywać starą wersję                                                                                    | Cache-first                                         | 🔜 (pkt 19)                                                      |
-| D22 | Eksport przez Share Sheet (`navigator.share` z plikiem), a pobranie linkiem tylko jako zapasowe                                     | Na iOS zwykłe pobieranie zachowuje się inaczej niż na komputerze                                                                                           | Tylko pobieranie linkiem                            | 🔜 (pkt 14)                                                      |
-| D23 | Prywatne kopie poza repozytorium (`.gitignore`)                                                                                     | Wpisy są prywatne, a repozytorium może być publiczne                                                                                                       | Trzymanie kopii w repo                              | ✅                                                               |
-| D24 | Teksty interfejsu w `strings.js`, logika bez DOM, jeden dostęp do danych                                                            | Czytelność, testowalność, jeden punkt zmiany                                                                                                               | Teksty i logika rozproszone po modułach             | ✅                                                               |
-| D25 | Bez `innerHTML` z tekstem użytkownika                                                                                               | Bezpieczeństwo importu, brak ucieczek znaków                                                                                                               | Sklejanie HTML                                      | ✅                                                               |
-| D26 | Osoby w podsumowaniu liczone w `Map`                                                                                                | Imię `constructor` w zwykłym obiekcie psuło liczenie                                                                                                       | Zwykły obiekt                                       | ✅                                                               |
-| D27 | Cytaty bez autorów                                                                                                                  | Nie przypisujemy realnym osobom nie ich słów                                                                                                               | Cytaty „celebrytów”                                 | ✅                                                               |
+| #   | Decyzja                                                                                                                             | Powód                                                                                                                                                      | Odrzucone alternatywy                                | Status                          |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------- |
+| D1  | **PWA**, nie aplikacja natywna                                                                                                      | Darmowa, prototyp już istnieje, brak konta deweloperskiego (to płatne)                                                                                     | Aplikacja natywna (koszt, App Store)                 | 🔜                              |
+| D2  | Bez frameworka, bundlera i TypeScriptu: moduły ES, zwykły CSS                                                                       | Mała aplikacja; mniej narzędzi = mniej do utrzymania; hosting statyczny działa bez budowania                                                               | React/Vite/TS                                        | ✅                              |
+| D3  | Własny kalendarz, bez biblioteki                                                                                                    | Jeden plik wyboru daty, 8 motywów, praca offline, pełna kontrola nad dostępnością                                                                          | Gotowa biblioteka kalendarza                         | 🔜 (pkt 8, specyfikacja gotowa) |
+| D4  | Dzień jako tekst `YYYY-MM-DD` w czasie **lokalnym**, wszędzie, także w JSON                                                         | Zgodność z istniejącą kopią; koniec błędu UTC; tekst łatwo sortować i porównywać                                                                           | Znacznik czasu, ISO z `Z`, obiekty `Date` jako stan  | ✅                              |
+| D5  | Rachunek na dniach przez `Date.UTC`                                                                                                 | Odporność na zmianę czasu (doby 23 h i 25 h)                                                                                                               | `setDate` na lokalnym `Date`, dodawanie milisekund   | ✅                              |
+| D6  | Miesiące od 1 w API dat                                                                                                             | Zgodność z zapisem w kluczu; mniej pomyłek o jeden                                                                                                         | Miesiące od 0 jak w JS                               | ✅                              |
+| D7  | Format dat przez `Intl` (`pl-PL`, UTC), zawsze wielką literą                                                                        | Poprawna odmiana bez własnych tabel; spójny wygląd                                                                                                         | Własne tablice nazw, język z urządzenia              | ✅                              |
+| D8  | Format kopii zostaje **JSON**, ten sam co w `localStorage`                                                                          | Prostota, zgodność ze starymi kopiami, jeden format do utrzymania                                                                                          | CSV, własny format, backend                          | ✅                              |
+| D9  | Import zawsze **pomija** niepoprawne wpisy zamiast przerywać                                                                        | Jeden zły wpis nie blokuje odzyskania reszty                                                                                                               | Odrzucenie całego pliku                              | ✅                              |
+| D10 | Przy imporcie wygrywa **nowszy** wpis (większy `savedAt`)                                                                           | Stara kopia nie nadpisze świeżej pracy                                                                                                                     | Zawsze wygrywa plik, zawsze wygrywa obecny           | 🔜 (pkt 14)                     |
+| D11 | Usunięcia nie są synchronizowane                                                                                                    | Prostota formatu; nagrobki skomplikowałyby kopię                                                                                                           | Znaczniki usunięcia, historia zmian                  | ✅ (do opisania w aplikacji)    |
+| D12 | Niezapisane dane zapisywane jako **szkic** w osobnym kluczu                                                                         | Nic nie ma zniknąć przy zmianie dnia, przełączeniu aplikacji ani zabiciu jej przez iOS; szkic nie psuje serii ani eksportu                                 | Zapis jako zwykły wpis, brak zapisu                  | 🔜 (pkt 10)                     |
+| D13 | Zimny start zawsze pokazuje dziś; z tła wracamy do dziś po ≥ 10 min albo zmianie dnia; północ przy pisaniu **nie przerywa** pisania | PWA na iPhonie miesiącami żyje w tle; nowy wpis nie może wylądować pod wczorajszą datą. Krótkie przełączenie aplikacji nie może kasować tego, co się pisze | Zawsze resetować; nigdy nie resetować                | 🔜 (pkt 9)                      |
+| D14 | Dni z przyszłości w kalendarzu są nieaktywne                                                                                        | Dziennik opisuje to, co było. Planowanie z wyprzedzeniem nie ma sensu i tylko zwiększa ryzyko pomyłki (zatwierdzone przez autorkę)                         | Dozwolone                                            | 🔜 (pkt 8)                      |
+| D15 | Ikona to prawdziwe PNG z pełnym, kwadratowym tłem, w kilku zabezpieczeniach naraz                                                   | iOS czyta ikonę raz przy instalacji, ignoruje SVG, a przezroczystość wypełnia czernią                                                                      | SVG, przezroczyste rogi                              | 🔜 (pkt 3)                      |
+| D16 | Ekran startowy w dwóch warstwach: statyczny `apple-touch-startup-image` + animowany ekran w aplikacji                               | iOS pozwala tylko na statyczny obraz systemowy; animację robimy sami, płynnie przejmując ten sam kolor                                                     | Sam obraz statyczny; brak ekranu                     | 🔜 (pkt 21, niski priorytet)    |
+| D17 | Animujemy tylko `transform` i `opacity`                                                                                             | Przemalowywanie gradientów i filtry SVG są kosztowne na iOS                                                                                                | Animacja gradientu, `feGaussianBlur`                 | 🔜 (pkt 11, 21)                 |
+| D18 | `prefers-reduced-motion`: bez migotania i ruchu                                                                                     | Dostępność, oszczędność baterii                                                                                                                            | Zawsze animować                                      | 🔜                              |
+| D19 | Emoji pór roku: 🍂 ❄️ 🌿 🌊, jedno źródło prawdy                                                                                    | Wybór autorki (🌸 i ☀️ uznane za zbyt oczywiste)                                                                                                           | Dwie wersje emoji w różnych miejscach                | 🔜 (pkt 16)                     |
+| D20 | Zmiany palet tylko po akceptacji autorki; kontrast pokazujemy przed/po                                                              | Palety są jej decyzją estetyczną                                                                                                                           | Samodzielne poprawki                                 | 🔜 (pkt 15)                     |
+| D21 | Service worker ma niski priorytet; strategia **sieć najpierw**, potem cache                                                         | Wpisy i tak są lokalne; cache-first mógłby długo pokazywać starą wersję                                                                                    | Cache-first                                          | 🔜 (pkt 19)                     |
+| D22 | Eksport przez Share Sheet (`navigator.share` z plikiem), a pobranie linkiem tylko jako zapasowe                                     | Na iOS zwykłe pobieranie zachowuje się inaczej niż na komputerze                                                                                           | Tylko pobieranie linkiem                             | 🔜 (pkt 14)                     |
+| D23 | Prywatne kopie poza repozytorium (`.gitignore`)                                                                                     | Wpisy są prywatne, a repozytorium może być publiczne                                                                                                       | Trzymanie kopii w repo                               | ✅                              |
+| D24 | Teksty interfejsu w `strings.js`, logika bez DOM, jeden dostęp do danych                                                            | Czytelność, testowalność, jeden punkt zmiany                                                                                                               | Teksty i logika rozproszone po modułach              | ✅                              |
+| D25 | Bez `innerHTML` z tekstem użytkownika                                                                                               | Bezpieczeństwo importu, brak ucieczek znaków                                                                                                               | Sklejanie HTML                                       | ✅                              |
+| D26 | Osoby w podsumowaniu liczone w `Map`                                                                                                | Imię `constructor` w zwykłym obiekcie psuło liczenie                                                                                                       | Zwykły obiekt                                        | ✅                              |
+| D27 | Cytaty bez autorów                                                                                                                  | Nie przypisujemy realnym osobom nie ich słów                                                                                                               | Cytaty „celebrytów”                                  | ✅                              |
+| D28 | Stan kalendarza to liczby `rok` i `miesiąc`, bez obiektu `Date` i bez dnia                                                          | `setMonth` na 29.–31. przeskakuje o dwa miesiące; „dzień widoku” nie jest do niczego potrzebny                                                             | Trzymanie `Date` i poprawianie dnia przed `setMonth` | 🔜 (pkt 8)                      |
+| D29 | Reguły kalendarza w czystym module (`calendar-model.js`) z reduktorem stanu, a DOM tylko rysuje                                     | Reguły da się sprawdzić w Node w kilku strefach, a nie ręcznie w przeglądarce; DOM zostaje zbyt krótki, żeby się psuć                                      | Logika wymieszana z DOM, atrapa DOM w testach        | 🔜 (pkt 8)                      |
+| D30 | Panel kalendarza rozwija się w karcie, a nie pływa                                                                                  | Bez `z-index` i przycinania, lepiej z klawiaturą ekranową i safe area                                                                                      | Popover                                              | 🔜 (pkt 8)                      |
+| D31 | Kolor kropki w kalendarzu na razie bez zmian; poprawa kontrastu w punkcie 15                                                        | Zmiana kolorów wymaga akceptacji autorki po porównaniu przed/po (D20)                                                                                      | Natychmiastowa zmiana `--gold` na `--accent`         | 🔜 (pkt 15)                     |
+| D32 | Bez automatycznych testów przeglądarkowych (Playwright) na razie                                                                    | Ciężkie narzędzie (kilkaset MB) jak na tę skalę; reguły są w czystych funkcjach. Do ponownej oceny, gdy interfejs urośnie (punkty 9, 10)                   | Playwright od razu, atrapa DOM (jsdom)               | ✅                              |
 
 ## 9. Ograniczenia iOS i PWA, o których trzeba pamiętać
 
