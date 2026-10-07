@@ -38,9 +38,9 @@ css/
   components.css      komponenty: karty, kalendarz, historia, girlanda…
 js/
   app.js              start aplikacji, stan (wybrana data), łączenie modułów
-  dates.js            klucze dni, formatowanie dat po polsku          (czyste)
+  dates.js            klucze dni i miesięcy, rachunek na dniach, daty po polsku (czyste)
   streak-summary.js   streak i podsumowanie miesiąca                  (czyste)
-  backup.js           serializacja, parsowanie i scalanie kopii       (czyste)
+  backup.js           serializacja, parsowanie, walidacja i scalanie kopii (czyste)
   quotes.js           pula cytatów                                    (dane)
   strings.js          teksty interfejsu tworzone w JS
   store.js            jedyne miejsce dotykające localStorage
@@ -86,6 +86,17 @@ Kluczem jest dzień `YYYY-MM-DD`:
 `grateful` ma od 1 do 3 niepustych tekstów, `savedAt` to czas ostatniego zapisu w milisekundach (epoch). Format nie
 zmienia się bez zachowania zgodności wstecz przy imporcie.
 
+### Daty
+
+- **Dzień** to tekst `YYYY-MM-DD` w czasie lokalnym urządzenia, **miesiąc** to `YYYY-MM`. Miesiące w kluczach i w
+  `js/dates.js` liczymy od 1 (styczeń = 1).
+- Nie używamy `toISOString()` do dat, bo zamienia czas lokalny na UTC i przesuwa dzień (w Polsce między 0:00 a 2:00).
+  Rachunek na dniach (`addDaysKey`) idzie przez `Date.UTC`, więc nie psuje go zmiana czasu ani doba 25-godzinna.
+- Wyświetlanie: `formatDatePL` daje „Piątek, 25 września 2026”, `formatMonthPL` daje „Wrzesień 2026”. Zawsze wielka litera.
+- **Import** sprawdza wpisy (`sanitizeEntries`): klucz musi być prawdziwym dniem (`2026-02-31` odpada) i wygrywa z polem
+  `date`, `grateful` ma 1–3 niepuste teksty, `savedAt` to liczba (inaczej 0). Reszta jest pomijana, a aplikacja podaje ich
+  liczbę.
+
 Kopie zapasowe (`kopia-dziennika-*.json`) zawierają prywatne wpisy i są wyłączone z repozytorium. Do testów używamy
 wyłącznie wymyślonych danych.
 
@@ -97,11 +108,10 @@ wyłącznie wymyślonych danych.
 
 ## Znane problemy (do naprawy zgodnie z planem)
 
-Refaktoryzacja do modułów (krok 0 z punktu 1 planu) zachowuje działanie prototypu, także jego znane błędy. Każdy ma
-swój punkt w `docs/plan.json`:
+Refaktoryzacja do modułów (krok 0 z punktu 1 planu) zachowała działanie prototypu, także jego znane błędy. Błąd dat w UTC
+jest już naprawiony (punkt 7), a pozostałe mają swoje punkty w `docs/plan.json`:
 
-- klucze dni liczone w UTC zamiast w czasie lokalnym (punkt 7),
-- kalendarz pokazuje kropki, „dziś” i wybrany dzień o jeden dzień za późno, a `setMonth` przeskakuje miesiące (punkt 8),
+- w kalendarzu `setMonth` przeskakuje miesiące, gdy dziś jest 29.–31. (punkt 8),
 - komunikat „Zapisano ✓” jest od razu zamazywany, po usunięciu wpisu formularz nie odświeża się, a lista miesięcy w
   podsumowaniu wraca na bieżący miesiąc (punkt 17),
 - import nadpisuje wpisy bez sprawdzania, który jest nowszy (punkt 14),

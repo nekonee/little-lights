@@ -83,18 +83,18 @@
   },
   {
     "id": 7,
-    "title": "Jednolity format dat i czas lokalny w całej aplikacji",
+    "title": "✅ Jednolity format dat i czas lokalny w całej aplikacji",
     "description": "Fundament dla kalendarza, powrotu do dzisiejszej daty i streaka. Obecny kod liczy dni przez toISOString() (czas UTC), przez co w Polsce daty przesuwają się o dzień, a przy północy wpis trafia pod zły dzień.",
     "priority": "high",
     "details": [
-      "Jedna zasada: dzień to tekst YYYY-MM-DD w czasie lokalnym urządzenia (bez strefy czasowej), a moment zapisu (savedAt) to liczba milisekund epoch. Tak wygląda już obecna kopia zapasowa, więc format pliku JSON się nie zmienia.",
-      "Jeden zestaw funkcji pomocniczych, oparty na liczbach rok/miesiąc/dzień: dateKey(y,m,d), todayKey() (z getFullYear/getMonth/getDate), parseKey(key), addDaysKey(key,n) liczone przez Date.UTC (odporne na zmianę czasu), isValidKey(key), formatDatePL(key).",
-      "Zakaz toISOString() i slice(0,10) do dat. Zamienić wszystkie użycia: todayKey, todayKeyFor, streak, lista miesięcy, nazwa pliku eksportu, budowanie siatki kalendarza.",
-      "Jeden format wyświetlania wszędzie: długi zapis po polsku „piątek, 25 września 2026” (przycisk daty, wskaźnik edycji, karty historii zamiast surowego 2026-09-25), miesiące jako „wrzesień 2026”. Używać Intl z jawnym pl-PL, nie języka urządzenia.",
-      "Streak liczony po kluczach dat: cofamy się przez addDaysKey(-1), a jeśli dziś nie ma wpisu, zaczynamy od wczoraj.",
-      "Walidacja przy imporcie: klucz pasuje do ^\\d{4}-\\d{2}-\\d{2}$ i jest prawdziwą datą (2026-02-31 odrzucone); pole date w wpisie musi równać się kluczowi (klucz wygrywa); savedAt to liczba (inaczej 0); grateful to tablica tekstów (maks. 3).",
-      "Testy tych funkcji z różnymi strefami: TZ=Europe/Warsaw, America/Los_Angeles, Pacific/Kiritimati; przypadki: 00:30 lokalnie, 31 stycznia, 29 lutego 2028, zmiana czasu 29.03.2026 i 25.10.2026 (doba 25-godzinna psuje liczenie przez milisekundy).",
-      "Kod w js/dates.js jako czyste funkcje bez DOM i localStorage, z testami w tests/ (punkt 1)."
+      "✅ Jedna zasada: dzień to tekst YYYY-MM-DD w czasie lokalnym urządzenia (bez strefy czasowej), a moment zapisu (savedAt) to liczba milisekund epoch. Tak wygląda już obecna kopia zapasowa, więc format pliku JSON się nie zmienia.",
+      "✅ Jeden zestaw funkcji pomocniczych w js/dates.js, oparty na liczbach rok/miesiąc/dzień: dateKey, monthKey, todayKey, keyFromLocalDate, parseKey, isValidKey, monthOf, addDaysKey (przez Date.UTC, odporne na zmianę czasu), formatDatePL, formatMonthPL. Miesiące w kluczach i w API liczone od 1 (styczeń = 1).",
+      "✅ Zakaz toISOString() i slice(0,10) do dat. Zamienić wszystkie użycia: todayKey, todayKeyFor, streak, lista miesięcy, nazwa pliku eksportu, budowanie siatki kalendarza. Zrobione: w js/ nie ma już toISOString() ani slice do dat. Kalendarz ma tylko podmienione klucze, resztę przepisuje punkt 8. Skutek uboczny: kropki, „dziś” i wybrany dzień w kalendarzu przestały wypadać o dzień obok.",
+      "✅ Jeden format wyświetlania wszędzie: długi zapis po polsku z wielką literą, „Piątek, 25 września 2026” (nagłówek, przycisk daty, karty historii, pytanie przy usuwaniu), miesiące jako „Wrzesień 2026”. Intl z jawnym pl-PL i timeZone UTC.",
+      "✅ Streak liczony po kluczach dat: cofamy się przez addDaysKey(-1), a jeśli dziś nie ma wpisu, zaczynamy od wczoraj.",
+      "✅ Walidacja przy imporcie (sanitizeEntries w js/backup.js): klucz pasuje do ^\\d{4}-\\d{2}-\\d{2}$ i jest prawdziwą datą, pole date musi równać się kluczowi (klucz wygrywa), savedAt to liczba (inaczej 0), grateful to 1–3 niepuste teksty. Niepoprawne wpisy są pomijane, a aplikacja pokazuje ich liczbę. Pełny raport „dodano X, zaktualizowano Y…” to punkt 14. Prawdziwa kopia z 25–27.09 przechodzi bez żadnej zmiany.",
+      "✅ Testy tych funkcji z różnymi strefami: TZ=Europe/Warsaw, America/Los_Angeles, Pacific/Kiritimati; przypadki: 00:30 lokalnie, 31 stycznia, 29 lutego 2028, zmiana czasu 29.03.2026 i 25.10.2026 (doba 25-godzinna psuje liczenie przez milisekundy). Zrobione: 53 testy przechodzą w Europe/Warsaw, America/Los_Angeles, Pacific/Kiritimati i UTC, w tym 00:30 lokalnie, 31 stycznia, 29 lutego 2028, zmiana czasu i granica roku.",
+      "✅ Kod w js/dates.js jako czyste funkcje bez DOM i localStorage, z testami w tests/ (punkt 1)."
     ]
   },
   {
@@ -103,6 +103,7 @@
     "description": "Obecny kalendarz jest do wyrzucenia w całości (renderCalendarGrid, selectDate, przyciski ‹ ›, calendarViewDate, popover). Główna przyczyna błędów: klucze dni liczone przez toISOString() w UTC, więc kropki, podświetlenie „dziś” i kliknięcie wypadają o dzień obok, a wpis mógłby się zapisać pod złą datą. Drugi błąd: setMonth(±1) na 31. dniu przeskakuje o dwa miesiące. Piszemy własny komponent, bez biblioteki, na funkcjach z punktu 7.",
     "priority": "high",
     "details": [
+      "STATUS: klucze dni w kalendarzu są już lokalne (punkt 7), więc przesunięcie o dzień zniknęło. Zostaje do zrobienia przepisanie komponentu: setMonth, 6 wierszy, przyszłość, przyciski, a11y itd.",
       "Zakres od zera: przycisk z datą i przycisk „Dziś”, panel z siatką miesiąca, nawigacja między miesiącami, kropki pod dniami z wpisem, podświetlenie wybranego dnia i „dziś”, wczytanie wpisu albo pustego formularza po kliknięciu dnia.",
       "Stan: selectedDate jako tekst YYYY-MM-DD oraz osobno viewYear i viewMonth jako liczby. Zero obiektów Date trzymanych jako stan.",
       "Nawigacja miesięcy na liczbach: viewMonth−−, a przy <0 ustawić 11 i viewYear−− (analogicznie do przodu). Nigdy setMonth.",

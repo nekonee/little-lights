@@ -1,4 +1,4 @@
-import { keyFromDate } from './dates.js';
+import { addDaysKey, monthOf, parseKey, todayKey } from './dates.js';
 
 const TOP_PEOPLE_LIMIT = 3;
 const HIGHLIGHTS_LIMIT = 3;
@@ -9,19 +9,19 @@ const HIGHLIGHTS_LIMIT = 3;
  */
 export function computeStreak(entries, now = new Date()) {
   const dates = new Set(Object.keys(entries));
-  const cursor = new Date(now);
-  if (!dates.has(keyFromDate(cursor))) cursor.setDate(cursor.getDate() - 1);
+  let day = todayKey(now);
+  if (!dates.has(day)) day = addDaysKey(day, -1);
   let count = 0;
-  while (dates.has(keyFromDate(cursor))) {
+  while (dates.has(day)) {
     count++;
-    cursor.setDate(cursor.getDate() - 1);
+    day = addDaysKey(day, -1);
   }
   return count;
 }
 
-/** Miesiące (YYYY-MM) z wpisami plus bieżący, od najnowszego. */
+/** Miesiące (YYYY-MM) z wpisami plus bieżący, od najnowszego. Wpisy z niepoprawnym kluczem są pomijane. */
 export function listMonths(entries, currentMonth) {
-  const months = new Set(Object.keys(entries).map((date) => date.slice(0, 7)));
+  const months = new Set(Object.keys(entries).map(monthOf).filter(Boolean));
   months.add(currentMonth);
   return Array.from(months).sort().reverse();
 }
@@ -31,7 +31,7 @@ function longestRunOfDays(sortedDates) {
   let run = 0;
   let previousDay = null;
   for (const date of sortedDates) {
-    const day = parseInt(date.slice(8, 10), 10);
+    const { day } = parseKey(date);
     run = previousDay !== null && day === previousDay + 1 ? run + 1 : 1;
     longest = Math.max(longest, run);
     previousDay = day;
@@ -61,7 +61,7 @@ function pickHighlights(entries, dates, random) {
  */
 export function summarizeMonth(entries, month, random = Math.random) {
   const dates = Object.keys(entries)
-    .filter((date) => date.startsWith(month))
+    .filter((date) => monthOf(date) === month)
     .sort();
   if (!dates.length) return null;
   return {

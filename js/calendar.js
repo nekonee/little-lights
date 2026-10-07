@@ -1,5 +1,5 @@
 import { byId, h } from './dom.js';
-import { formatMonthLabel, keyFromDate, todayKey } from './dates.js';
+import { formatMonthPL, keyFromLocalDate, monthKey, parseKey, todayKey } from './dates.js';
 import { loadEntries } from './store.js';
 
 const GRID_CELLS = 42;
@@ -17,7 +17,7 @@ export function initCalendar({ getSelectedDate, onSelectDate }) {
   let viewDate = new Date();
 
   function buildCell(cellDate, entries) {
-    const cellKey = keyFromDate(cellDate);
+    const cellKey = keyFromLocalDate(cellDate);
     const classes = ['cal-day'];
     if (cellDate.getMonth() !== viewDate.getMonth()) classes.push('other-month');
     if (cellKey === todayKey()) classes.push('today');
@@ -34,7 +34,7 @@ export function initCalendar({ getSelectedDate, onSelectDate }) {
     const entries = loadEntries();
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
-    monthLabel.textContent = formatMonthLabel(viewDate);
+    monthLabel.textContent = formatMonthPL(monthKey(year, month + 1));
 
     const mondayFirstOffset = (new Date(year, month, 1).getDay() + 6) % 7;
     const gridStart = new Date(year, month, 1 - mondayFirstOffset);
@@ -81,8 +81,9 @@ export function initCalendar({ getSelectedDate, onSelectDate }) {
     setLabel(text) {
       triggerLabel.textContent = text;
     },
-    showMonthOf(dateKey) {
-      viewDate = new Date(dateKey + 'T00:00:00');
+    showMonthOf(key) {
+      const { year, month, day } = parseKey(key);
+      viewDate = new Date(year, month - 1, day);
     },
   };
 }

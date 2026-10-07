@@ -1,6 +1,6 @@
 import { initBackupPanel } from './backup-panel.js';
 import { initCalendar } from './calendar.js';
-import { formatDateLabel, todayKey } from './dates.js';
+import { formatDatePL, todayKey } from './dates.js';
 import { initForm } from './form.js';
 import { initGarlands } from './garland.js';
 import { renderStreak, renderTodayLabel } from './header.js';
@@ -33,7 +33,7 @@ function loadFormForDate() {
   if (existing) form.fill(existing);
   else form.clear();
 
-  calendar.setLabel(formatDateLabel(state.selectedDate));
+  calendar.setLabel(formatDatePL(state.selectedDate));
   const isToday = state.selectedDate === todayKey();
   form.setMode({
     indicatorText: existing
@@ -78,7 +78,7 @@ function editEntry(date) {
 }
 
 function deleteEntry(date) {
-  if (!confirm(strings.history.confirmDelete(date))) return;
+  if (!confirm(strings.history.confirmDelete(formatDatePL(date)))) return;
   const entries = loadEntries();
   delete entries[date];
   saveEntries(entries);

@@ -1,5 +1,5 @@
 import { byId, h } from './dom.js';
-import { formatMonthKey, todayKey } from './dates.js';
+import { formatMonthPL, monthOf, todayKey } from './dates.js';
 import { strings } from './strings.js';
 import { listMonths, summarizeMonth } from './streak-summary.js';
 
@@ -42,9 +42,9 @@ export function initSummary() {
   let entries = {};
 
   function renderMonthOptions() {
-    const currentMonth = todayKey().slice(0, 7);
+    const currentMonth = monthOf(todayKey());
     const options = listMonths(entries, currentMonth).map((month) =>
-      h('option', { value: month }, formatMonthKey(month)),
+      h('option', { value: month }, formatMonthPL(month)),
     );
     monthSelect.replaceChildren(...options);
     monthSelect.value = currentMonth;

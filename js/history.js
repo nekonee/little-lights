@@ -1,3 +1,4 @@
+import { formatDatePL } from './dates.js';
 import { byId, h } from './dom.js';
 import { strings } from './strings.js';
 
@@ -20,7 +21,7 @@ function buildEntryCard(date, entry) {
       h('button', { class: 'edit', dataset: { date } }, strings.history.edit),
       h('button', { class: 'del', dataset: { date } }, strings.history.remove),
     ),
-    h('div', { class: 'd' }, strings.history.datePrefix + date),
+    h('div', { class: 'd' }, strings.history.datePrefix + formatDatePL(date)),
     h('ul', {}, ...(entry.grateful || []).map((text) => h('li', {}, text))),
     extra ? h('div', { class: 'extra' }, extra) : null,
   );

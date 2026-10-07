@@ -40,12 +40,14 @@ export const strings = {
     lesson: 'Lekcja: ',
     edit: 'edytuj',
     remove: 'usuń',
-    confirmDelete: (date) => `Usunąć wpis z ${date}?`,
+    confirmDelete: (dateLabel) => `Usunąć wpis?\n${dateLabel}`,
   },
 
   backup: {
     exported: 'Pobrano kopię zapasową ✓',
-    imported: 'Wczytano kopię zapasową ✓ (wpisy scalone z obecnymi)',
+    imported: (skipped) =>
+      'Wczytano kopię zapasową ✓ (wpisy scalone z obecnymi)' +
+      (skipped > 0 ? `. Pominięto nieprawidłowe wpisy: ${skipped}` : ''),
     importFailed: 'Nie udało się wczytać pliku — sprawdź, czy to poprawna kopia zapasowa.',
   },
 };

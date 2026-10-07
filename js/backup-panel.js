@@ -1,4 +1,10 @@
-import { backupFilename, mergeEntries, parseBackup, serializeEntries } from './backup.js';
+import {
+  backupFilename,
+  mergeEntries,
+  parseBackup,
+  sanitizeEntries,
+  serializeEntries,
+} from './backup.js';
 import { todayKey } from './dates.js';
 import { byId } from './dom.js';
 import { strings } from './strings.js';
@@ -30,14 +36,17 @@ export function initBackupPanel({ onImported }) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
+      let skipped;
       try {
-        saveEntries(mergeEntries(loadEntries(), parseBackup(reader.result)));
+        const result = sanitizeEntries(parseBackup(reader.result));
+        skipped = result.skipped;
+        saveEntries(mergeEntries(loadEntries(), result.entries));
       } catch {
         status.textContent = strings.backup.importFailed;
         return;
       }
       onImported();
-      status.textContent = strings.backup.imported;
+      status.textContent = strings.backup.imported(skipped);
     };
     reader.readAsText(file);
     fileInput.value = '';

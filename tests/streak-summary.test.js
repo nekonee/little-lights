@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { computeStreak, listMonths, summarizeMonth } from '../js/streak-summary.js';
 
-const NOON = new Date('2026-09-27T12:00:00Z');
+const NOON = new Date(2026, 8, 27, 12);
 
 function entriesFor(dates, overrides = {}) {
   return Object.fromEntries(
@@ -30,6 +30,18 @@ describe('computeStreak', () => {
     assert.equal(computeStreak(entries, NOON), 2);
   });
 
+  test('seria przechodzi przez zmianę czasu i granicę roku', () => {
+    const autumn = entriesFor(['2026-10-24', '2026-10-25', '2026-10-26']);
+    assert.equal(computeStreak(autumn, new Date(2026, 9, 26, 12)), 3);
+    const newYear = entriesFor(['2026-12-31', '2027-01-01']);
+    assert.equal(computeStreak(newYear, new Date(2027, 0, 1, 0, 30)), 2);
+  });
+
+  test('tuż po północy dzień jest już nowy, więc wczorajszy wpis liczy się jako wczoraj', () => {
+    const entries = entriesFor(['2026-09-26', '2026-09-27']);
+    assert.equal(computeStreak(entries, new Date(2026, 8, 28, 0, 30)), 2);
+  });
+
   test('brak wpisu dziś i wczoraj zeruje serię', () => {
     const entries = entriesFor(['2026-09-20']);
     assert.equal(computeStreak(entries, NOON), 0);
@@ -40,6 +52,11 @@ describe('listMonths', () => {
   test('zawiera miesiące z wpisami i bieżący, od najnowszego', () => {
     const entries = entriesFor(['2026-07-01', '2026-09-10', '2026-07-20']);
     assert.deepEqual(listMonths(entries, '2026-10'), ['2026-10', '2026-09', '2026-07']);
+  });
+
+  test('pomija wpisy z niepoprawnym kluczem', () => {
+    const entries = entriesFor(['2026-07-01', '2026-02-31']);
+    assert.deepEqual(listMonths(entries, '2026-09'), ['2026-09', '2026-07']);
   });
 
   test('bieżący miesiąc jest dostępny nawet bez wpisów', () => {
