@@ -3,9 +3,10 @@
 Codzienny dziennik wdzięczności po polsku. Aplikacja jest jednoosobowa, lokalna i działa bez konta i backendu:
 wpisy zapisują się w `localStorage` przeglądarki, a kopię zapasową robi się plikiem JSON. Docelowo PWA na iPhonie.
 
-Dokumentacja (jak to działa i skąd wynikają decyzje): [`docs/dokumentacja.md`](docs/dokumentacja.md).
-Specyfikacja funkcjonalna i wizualna: [`docs/specyfikacja-dziennik-wdziecznosci.md`](docs/specyfikacja-dziennik-wdziecznosci.md).
-Plan prac z priorytetami: [`docs/plan.json`](docs/plan.json).
+- [`docs/dokumentacja.md`](docs/dokumentacja.md): jak to działa i skąd wynikają decyzje (w tym format danych i zasady dat).
+- [`docs/dziennik-zmian.md`](docs/dziennik-zmian.md): co i kiedy się zmieniło.
+- [`docs/plan.json`](docs/plan.json): plan prac z priorytetami.
+- [`docs/specyfikacja-dziennik-wdziecznosci.md`](docs/specyfikacja-dziennik-wdziecznosci.md): wymagania i wygląd.
 
 ## Uruchamianie lokalnie
 
@@ -28,8 +29,8 @@ npm test         # node --test (Node 20+), bez zależności
 TZ=America/Los_Angeles npm test   # to samo w innej strefie czasowej
 ```
 
-Testy obejmują logikę bez DOM: daty, streak, podsumowanie miesiąca, kopię zapasową. Interfejs sprawdzamy ręcznie
-(podgląd 390×844, czyli iPhone 14, kilka motywów).
+Testy obejmują logikę bez DOM: daty, serię, podsumowanie, kopię zapasową, kalendarz i szkice. Interfejs sprawdzamy ręcznie
+(podgląd 390×844, czyli iPhone 14, kilka motywów). `python3 tools/mutation-check.py` sprawdza, czy testy wykrywają celowo zepsuty kod.
 
 ## Struktura
 
@@ -63,7 +64,7 @@ js/
 tests/                testy logiki (node --test), dane wymyślone
 tools/                narzędzia deweloperskie: serwer bez cache'u, kontrola testów przez psucie kodu
 assets/               favicon (docelowo ikony i ekran startowy)
-docs/                 specyfikacja i plan prac
+docs/                 dokumentacja, dziennik zmian, plan, specyfikacja
 legacy/               prototyp w jednym pliku HTML — punkt odniesienia
 backups/              prywatne kopie wpisów, poza repozytorium (.gitignore)
 ```
@@ -71,54 +72,8 @@ backups/              prywatne kopie wpisów, poza repozytorium (.gitignore)
 Zasady: logika w czystych funkcjach bez DOM i `localStorage`, warstwa interfejsu tylko renderuje i podpina zdarzenia,
 elementy powstają przez `h()` / `textContent` (nigdy przez sklejanie HTML z tekstu), kolory tylko przez zmienne motywu.
 
-## Format danych
-
-Wpisy leżą w jednym obiekcie pod kluczem `gratitude_journal_entries_v1` i mają ten sam kształt w pliku kopii zapasowej.
-Kluczem jest dzień `YYYY-MM-DD`:
-
-```json
-{
-  "2026-09-25": {
-    "date": "2026-09-25",
-    "grateful": ["…", "…", "…"],
-    "why": "",
-    "person": "",
-    "proud": "",
-    "lesson": "",
-    "savedAt": 1790320511748
-  }
-}
-```
-
-`grateful` ma od 1 do 3 niepustych tekstów, `savedAt` to czas ostatniego zapisu w milisekundach (epoch). Format nie
-zmienia się bez zachowania zgodności wstecz przy imporcie.
-
-### Daty
-
-- **Dzień** to tekst `YYYY-MM-DD` w czasie lokalnym urządzenia, **miesiąc** to `YYYY-MM`. Miesiące w kluczach i w
-  `js/dates.js` liczymy od 1 (styczeń = 1).
-- Nie używamy `toISOString()` do dat, bo zamienia czas lokalny na UTC i przesuwa dzień (w Polsce między 0:00 a 2:00).
-  Rachunek na dniach (`addDaysKey`) idzie przez `Date.UTC`, więc nie psuje go zmiana czasu ani doba 25-godzinna.
-- Wyświetlanie: `formatDatePL` daje „Piątek, 25 września 2026”, `formatMonthPL` daje „Wrzesień 2026”. Zawsze wielka litera.
-- **Import** sprawdza wpisy (`sanitizeEntries`): klucz musi być prawdziwym dniem (`2026-02-31` odpada) i wygrywa z polem
-  `date`, `grateful` ma 1–3 niepuste teksty, `savedAt` to liczba (inaczej 0). Reszta jest pomijana, a aplikacja podaje ich
-  liczbę.
-
-Kopie zapasowe (`kopia-dziennika-*.json`) zawierają prywatne wpisy i są wyłączone z repozytorium. Do testów używamy
-wyłącznie wymyślonych danych.
-
 ## Jak dodać…
 
 - **Cytat:** dopisz tekst w `js/quotes.js`. Bez autora, bo to oryginalne sentencje.
 - **Motyw:** dodaj zestaw zmiennych w `css/tokens.css`, opcję w `#themeSelect` w `index.html` i emoji pory roku w
   `js/themes.js`.
-
-## Znane problemy (do naprawy zgodnie z planem)
-
-Refaktoryzacja do modułów (krok 0 z punktu 1 planu) zachowała działanie prototypu, także jego znane błędy. Błąd dat w UTC
-jest już naprawiony (punkt 7), a pozostałe mają swoje punkty w `docs/plan.json`:
-
-- komunikat „Zapisano ✓” jest od razu zamazywany, po usunięciu wpisu formularz nie odświeża się, a lista miesięcy w
-  podsumowaniu wraca na bieżący miesiąc (punkt 17),
-- import nadpisuje wpisy bez sprawdzania, który jest nowszy (punkt 14),
-- w liście motywów wiosna ma 🌸, a lato ☀️, zamiast 🌿 i 🌊 (punkt 16).

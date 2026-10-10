@@ -21,9 +21,9 @@
       "Dostępność jako standard: lang=pl, prawdziwe <label> przy polach, prawdziwe <button> zamiast div, widoczny stan focusu, kontrast wg punktu 15, aria tylko tam, gdzie potrzebna. W toku: lang=pl, prawdziwe <button> i aria w kalendarzu są; brakuje powiązania <label for> z polami formularza, widocznego focusu i kontrastu (punkt 15).",
       "Definition of done dla każdej funkcji: logika ma testy i przechodzą; interfejs sprawdzony w podglądzie 390×844 (iPhone 14) w kilku motywach, w tym w obu zimowych, i przy ograniczonym ruchu; brak błędów w konsoli; README zaktualizowane, jeśli funkcja zmienia strukturę albo format.",
       "Czego nie robimy bez konkretnego powodu: frameworki (React itp.), TypeScript, bundler, biblioteki interfejsu, zależności runtime. Zależności tylko deweloperskie.",
-      "Śledzenie postępu: po każdym wykonanym kroku aktualizujemy ten plik. ✅ przy numerze punktu (na początku tytułu) oznacza punkt wykonany w całości, ✅ na początku podpunktu — wykonany podpunkt. Punkt z częścią podpunktów ✅ jest w toku. Zmiany planu idą do repozytorium razem z kodem, którego dotyczą.",
-      "Dokumentacja decyzji: docs/dokumentacja.md opisuje, jak aplikacja działa i dlaczego tak (architektura, dane, daty, import, interfejs, rejestr decyzji D1–D27, ograniczenia iOS). Każda nowa decyzja trafia do jej rejestru razem z powodem i odrzuconymi alternatywami, a po zrobieniu punktu zmieniamy status z „planowane” na wdrożone.",
-      "Obowiązujący sposób pracy nad każdym punktem (sprawdzony przy punkcie 8): 1) dokumentacja z numerowanymi zachowaniami, 2) testy przed kodem, najpierw czerwone z właściwego powodu, z wartościami z niezależnego źródła i testami regresyjnymi, 3) kod, 4) kontrola testów przez celowe psucie kodu (tools/mutation-check.py), 5) sprawdzenie w przeglądarce 390×844 w ośmiu motywach, 6) aktualizacja planu (✅), README i docs/dokumentacja.md. Uruchamianie do testów ręcznych: npm start, potem http://localhost:8000.",
+      "Śledzenie postępu: po każdym wykonanym kroku aktualizujemy ten plik. ✅ przy numerze punktu (na początku tytułu) oznacza punkt wykonany w całości, ✅ na początku podpunktu — wykonany podpunkt. Punkt z częścią podpunktów ✅ jest w toku. Zmiany planu idą do repozytorium razem z kodem, którego dotyczą. Co zostało zrobione i jak sprawdzone, trafia do docs/dziennik-zmian.md.",
+      "Dokumentacja: docs/dokumentacja.md opisuje krótko stan obecny i powody decyzji (D1–D42), docs/dziennik-zmian.md zawiera historię zmian i wyniki sprawdzeń. Nowa decyzja = kolejne D w dokumentacji. Wyników testów i liczb nie wpisujemy do dokumentacji, tylko do dziennika zmian.",
+      "Obowiązujący sposób pracy nad każdym punktem (sprawdzony przy punkcie 8): 1) dokumentacja z numerowanymi zachowaniami, 2) testy przed kodem, najpierw czerwone z właściwego powodu, z wartościami z niezależnego źródła i testami regresyjnymi, 3) kod, 4) kontrola testów przez celowe psucie kodu (tools/mutation-check.py), 5) sprawdzenie w przeglądarce 390×844 w ośmiu motywach, 6) aktualizacja planu (✅), dokumentacji (tylko stan obecny) i dziennika zmian (wynik). Uruchamianie do testów ręcznych: npm start, potem http://localhost:8000.",
       "Proponowana kolejność dalszych prac: 10 (szkice) → 9 (powrót do dziś) → 11 (girlanda) → 17 (drobne błędy, szybkie zwycięstwa) → 14 (eksport/import, nowszy wygrywa) → 2, 3, 4, 5, 6 (PWA, hosting, instalacja, przeniesienie wpisów) → 12, 13, 15, 16 → 19, 20, 21, 18. Hosting (adres) trzeba wybrać przed pierwszym wpisem w PWA. Kolejność można zmienić, jeśli autorka chce zacząć codziennie używać aplikacji na telefonie wcześniej (wtedy 2–6 przed 11)."
     ]
   },
@@ -106,7 +106,7 @@
     "description": "Obecny kalendarz jest do wyrzucenia w całości (renderCalendarGrid, selectDate, przyciski ‹ ›, calendarViewDate, popover). Główna przyczyna błędów: klucze dni liczone przez toISOString() w UTC, więc kropki, podświetlenie „dziś” i kliknięcie wypadają o dzień obok, a wpis mógłby się zapisać pod złą datą. Drugi błąd: setMonth(±1) na 31. dniu przeskakuje o dwa miesiące. Piszemy własny komponent, bez biblioteki, na funkcjach z punktu 7.",
     "priority": "high",
     "details": [
-      "✅ Etapy (każdy w osobnym commicie): 1) ✅ dokumentacja: specyfikacja zachowań K1–K20 i lista kontrolna M1–M9 w docs/dokumentacja.md, decyzje D28–D32; 2) ✅ testy napisane przed kodem w tests/calendar-model.test.js (najpierw czerwone, bo js/calendar-model.js był szkieletem rzucającym błąd); 3) ✅ kod: js/calendar-model.js, przepisany js/calendar.js, zmiany w app.js, index.html i css/components.css; 4) ✅ weryfikacja: 108 testów w 4 strefach, 31 celowych usterek (tools/mutation-check.py) wszystkie wykryte, ręczny przegląd 390×844 we wszystkich 8 motywach. Znane ograniczenia i rzeczy niesprawdzone (VoiceOver, Escape, prawdziwy iPhone): docs/dokumentacja.md, sekcja „Kalendarz wyboru daty”. STATUS: klucze dni w kalendarzu są lokalne (punkt 7), więc przesunięcie o dzień zniknęło.",
+      "✅ Etapy (każdy w osobnym commicie): 1) ✅ dokumentacja: specyfikacja zachowań K1–K23 i krótka lista ręcznych sprawdzeń w docs/dokumentacja.md, decyzje D28–D32; 2) ✅ testy napisane przed kodem w tests/calendar-model.test.js (najpierw czerwone, bo js/calendar-model.js był szkieletem rzucającym błąd); 3) ✅ kod: js/calendar-model.js, przepisany js/calendar.js, zmiany w app.js, index.html i css/components.css; 4) ✅ weryfikacja: 108 testów w 4 strefach, 31 celowych usterek (tools/mutation-check.py) wszystkie wykryte, ręczny przegląd 390×844 we wszystkich 8 motywach. Wyniki i rzeczy niesprawdzone (VoiceOver, Escape, prawdziwy iPhone): docs/dziennik-zmian.md. STATUS: klucze dni w kalendarzu są lokalne (punkt 7), więc przesunięcie o dzień zniknęło.",
       "✅ Zakres od zera: przycisk z datą i przycisk „Dziś”, panel z siatką miesiąca, nawigacja między miesiącami, kropki pod dniami z wpisem, podświetlenie wybranego dnia i „dziś”, wczytanie wpisu albo pustego formularza po kliknięciu dnia.",
       "✅ Stan: selectedDate jako tekst YYYY-MM-DD oraz osobno viewYear i viewMonth jako liczby (miesiąc 1–12). Zero obiektów Date trzymanych jako stan. Całość jako czysty reduktor calendarReducer(state, action, {today}) w js/calendar-model.js.",
       "✅ Nawigacja miesięcy na liczbach: shiftMonth liczy na jednej liczbie rok·12+miesiąc, więc przechodzi granicę roku bez żadnych wyjątków. Nigdy setMonth.",
@@ -119,7 +119,7 @@
       "✅ Zamykanie panelu: po wyborze dnia, ponownym dotknięciu przycisku daty i dotknięciu poza panelem. Otwarcie zawsze pokazuje miesiąc wybranego dnia. Zrobione (Escape: reguła w testach, nie sprawdzone w przeglądarce).",
       "✅ Po zapisie, usunięciu i imporcie wpisu odświeżyć kropki także przy otwartym panelu.",
       "✅ Edge case’y do sprawdzenia: miesiące 28/29/30/31-dniowe, luty 2028 (rok przestępny), miesiąc zaczynający się w poniedziałek (offset 0) i w niedzielę (offset 6), miesiąc na 6 wierszy, przejście grudzień↔styczeń, dni zmiany czasu (29.03 i 25.10.2026), północ przy otwartej aplikacji (pierścień „dziś” się przesuwa), wpisy o niepoprawnych kluczach po imporcie (pomijać bez błędu), zmiana daty lub strefy w telefonie. Pokryte testami w 4 strefach; północ przy otwartym panelu (przesunięcie pierścienia „dziś”) wejdzie z punktem 9.",
-      "✅ Weryfikacja: testy w czterech strefach z oczekiwanymi wartościami z niezależnego źródła (np. calendar z Pythona), własności pętlą, testy regresyjne dla znanych błędów, a po napisaniu kodu kontrola przez celowe psucie (toISOString, setMonth, tydzień od niedzieli, 35 zamiast 42 komórek, brak blokady przyszłości). Ręcznie: lista M1–M7 na szerokości 390 px we wszystkich 8 motywach.",
+      "✅ Weryfikacja: testy w czterech strefach z oczekiwanymi wartościami z niezależnego źródła (np. calendar z Pythona), własności pętlą, testy regresyjne dla znanych błędów, a po napisaniu kodu kontrola przez celowe psucie (toISOString, setMonth, tydzień od niedzieli, 35 zamiast 42 komórek, brak blokady przyszłości). Ręcznie: krótka lista sprawdzeń na szerokości 390 px we wszystkich 8 motywach.",
       "✅ Podział: część czysta w js/calendar-model.js (monthGrid, shiftMonth, isFuture, canGoNext, describeCell, createCalendarState, calendarReducer), cienkie renderowanie w js/calendar.js, wpisy podawane z app.js przez setEntries (kalendarz nie czyta localStorage).",
       "✅ Poprawka po uwagach autorki (07.10.2026): dni z wpisem są wyraźniej oznaczone (kafelek --accent-soft i kropka --accent 5 px zamiast kropki --gold 4 px), dni sąsiednich miesięcy z wpisem mniej przygaszone, a :hover nie psuje czytelności wybranego dnia. Wczytywanie zapisanego wpisu po wybraniu dnia działa (sprawdzone w przeglądarce, punkt M8). Wygląd czeka na akceptację autorki (D31); pełny kontrast palet w punkcie 15.",
       "✅ Potwierdzone przez autorkę w przeglądarce Brave na komputerze (07.10.2026): kalendarz działa, a dni z wpisem widać po zaimportowaniu kopii. Wygląd kafelka dnia z wpisem (D31) czeka jeszcze na wprost wyrażoną akceptację."
@@ -147,7 +147,7 @@
     "description": "Nic, co wpisujesz, nie może zniknąć przy zmianie dnia, przełączeniu aplikacji albo zabiciu jej przez iOS. Niezapisany formularz ląduje w szkicu, który nie jest częścią wpisów.",
     "priority": "high",
     "details": [
-      "Etapy (każdy w osobnym commicie): 1) ✅ dokumentacja: specyfikacja S1–S23 i lista kontrolna MS1–MS8 w docs/dokumentacja.md, decyzje D34–D41; 2) ✅ testy przed kodem: tests/drafts.test.js i tests/draft-sync.test.js (66 testów, najpierw czerwone); 3) ✅ kod: js/drafts.js, js/draft-sync.js, store.js, form.js, app.js, index.html, css; 4) ✅ weryfikacja: 181 testów w 4 strefach, 62 usterki w tools/mutation-check.py wszystkie wykryte, scenariusz w przeglądarce (47 sprawdzeń) przeszedł. Nie sprawdzono na prawdziwym iPhonie ani przy zabiciu aplikacji przez iOS (docs/dokumentacja.md, „Wynik weryfikacji szkiców”).",
+      "Etapy (każdy w osobnym commicie): 1) ✅ dokumentacja: specyfikacja S1–S23, „Szkice niezapisanych wpisów” w docs/dokumentacja.md, decyzje D34–D41; 2) ✅ testy przed kodem: tests/drafts.test.js i tests/draft-sync.test.js (66 testów, najpierw czerwone); 3) ✅ kod: js/drafts.js, js/draft-sync.js, store.js, form.js, app.js, index.html, css; 4) ✅ weryfikacja: 181 testów w 4 strefach, 62 usterki w tools/mutation-check.py wszystkie wykryte, scenariusz w przeglądarce (47 sprawdzeń) przeszedł. Nie sprawdzono na prawdziwym iPhonie ani przy zabiciu aplikacji przez iOS (docs/dziennik-zmian.md).",
       "✅ Osobny klucz localStorage (np. gratitude_journal_drafts_v1) z obiektem szkiców kluczowanym datą. Szkice nie wchodzą do eksportu, streaka, kropek w kalendarzu ani podsumowania miesiąca.",
       "✅ Zapis szkicu: przy wpisywaniu z opóźnieniem ok. 500 ms oraz od razu przy visibilitychange → hidden i pagehide (iOS może zamknąć aplikację w tle bez ostrzeżenia), przy zmianie dnia i przy powrocie do dziś (punkt 9).",
       "✅ Szkic powstaje tylko, gdy formularz różni się od zapisanego wpisu (po normalizacji). Gdy jest identyczny albo pusty, szkic jest usuwany (S3–S6).",
@@ -344,7 +344,7 @@
   {
     "id": 23,
     "title": "✅ Dokumentacja projektu: jak to działa i skąd wynikają decyzje",
-    "description": "Plik docs/dokumentacja.md w markdown, żeby każdy (także autorka za pół roku) wiedział, skąd biorą się rozwiązania w kodzie. Uzupełnia README (szybki start) i specyfikację (wymagania).",
+    "description": "Plik docs/dokumentacja.md w markdown, żeby każdy (także autorka za pół roku) wiedział, skąd biorą się rozwiązania w kodzie. Uzupełnia README (szybki start) i specyfikację (wymagania). Od punktu 24 opisuje tylko stan obecny.",
     "priority": "normal",
     "details": [
       "✅ Założenia i ograniczenia projektu (jedna osoba, za darmo, iPhone 14, polski, prywatność, palety tylko za zgodą).",
@@ -356,6 +356,18 @@
       "✅ Testy i narzędzia oraz ograniczenia iOS/PWA.",
       "✅ Rejestr decyzji D1–D27 (decyzja, powód, odrzucone alternatywy, status) i zasady aktualizowania dokumentu.",
       "Do utrzymania na bieżąco: przy każdym kolejnym punkcie planu uzupełnić odpowiednie sekcje i zmienić status decyzji."
+    ]
+  },
+  {
+    "id": 24,
+    "title": "✅ Przepisanie dokumentacji i dziennik zmian",
+    "description": "Dokumentacja urosła do 800 linii, bo trafiały do niej wyniki sprawdzeń, liczby testów i statusy, które się dezaktualizowały. Projekt został wstrzymany na czas porządków.",
+    "priority": "normal",
+    "details": [
+      "✅ docs/dokumentacja.md przepisana od zera (ok. 340 linii): tylko stan obecny i powody decyzji; zachowania K1–K23 i S1–S23 zostały, bo odwołują się do nich testy.",
+      "✅ docs/dziennik-zmian.md: historia od 30.09.2026 z wynikami sprawdzeń, w formacie data → Dodano / Zmieniono / Naprawiono / Sprawdzono / Nie sprawdzono.",
+      "✅ README skrócony (bez duplikatów), odwołania w planie poprawione, decyzja D42.",
+      "Zasada na dalej: dokumentacja bez liczb i statusów; po każdym punkcie wpis w dzienniku zmian."
     ]
   }
 ]
