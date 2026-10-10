@@ -127,18 +127,19 @@
   },
   {
     "id": 9,
-    "title": "Automatyczny powrót do dzisiejszej daty przy otwarciu aplikacji",
+    "title": "✅ Automatyczny powrót do dzisiejszej daty przy otwarciu aplikacji",
     "description": "PWA na iPhonie zwykle tygodniami żyje w tle, więc po powrocie potrafi pokazywać wczorajszą datę i wczorajszy formularz, a nowy wpis wylądowałby pod złym dniem. Rozwiązanie: aplikacja sama wykonuje to samo, co przycisk „Dziś” (wspólna funkcja goToToday()), w sytuacjach opisanych niżej. Bezpieczne dzięki szkicom z punktu 10. ZALEŻNOŚĆ SPEŁNIONA (punkt 10 zrobiony): ten punkt wymagał wcześniejszych szkiców, bo automatyczne przejście na inny dzień przy rozgrzebanym formularzu bez szkicu mogłoby skasować to, co autorka pisze.",
     "priority": "high",
     "details": [
-      "Zimny start (aplikacja uruchomiona od nowa): zawsze dziś. Jeśli istnieje niezapisany szkic z innego dnia, nad formularzem baner „Masz niezapisany szkic z 24 września — [Otwórz]”.",
-      "Powrót z tła (visibilitychange → visible oraz pageshow po bfcache): jeśli aplikacja była w tle co najmniej 10 minut albo zmienił się dzień kalendarzowy, wróć do dziś. Krótkie przełączenie do innej aplikacji nie rusza tego, co piszesz. Próg 10 minut to stała do zmiany.",
-      "Północ przy otwartej aplikacji: gdy formularz jest nietknięty, po cichu przejść na nowy dzień. Gdy w tej chwili piszesz (niezapisane zmiany), nie przerywać — po zapisie pokazać „Jest już nowy dzień — [Przejdź do dziś]”, a wpis zostaje pod dniem, w którym go zaczęłaś.",
-      "Jedna funkcja syncToday(powód) z zapamiętanym lastKnownToday. Timer do najbliższej północy tylko przypomina o sprawdzeniu, bo iOS usypia timery w tle — prawdziwym źródłem są zdarzenia powrotu do aplikacji.",
-      "Co się odświeża po zmianie dnia: data w nagłówku, wskaźnik „Nowy wpis na dziś”, kalendarz (pierścień „dziś” i miesiąc widoku), streak, domyślny miesiąc w podsumowaniu.",
-      "Bez zdarzeń specjalnych, dzień liczony za każdym razem od nowa z zegara urządzenia (nie z pamięci), więc zmiana strefy czasowej albo daty w telefonie nie psuje działania.",
-      "Gotowe z punktu 8, do wykorzystania: goToToday() w app.js oraz akcja goToToday w reduktorze kalendarza (wybiera dzisiejszy dzień, ustawia widok i zamyka panel). Do dodania: publiczna funkcja kalendarza do przerysowania po zmianie dnia (pierścień „dziś” i dni przyszłości liczą się z todayKey() przy każdym rysowaniu, ale rysowanie nie jest wywoływane o północy). Już działa: goToToday nie przeładowuje formularza, gdy wybrany dzień się nie zmienia, więc nie kasuje wpisywanego tekstu.",
-      "Gotowe z punktu 10: szkice (zapis przy zmianie dnia, ukryciu i pagehide), pusta kropka w kalendarzu i draftSync.flush(). Do zrobienia: baner „Masz niezapisany szkic z 24 września — [Otwórz]” przy zimnym starcie (lista szkiców: loadDrafts()) oraz wywołanie draftSync.flush() przed każdym automatycznym przejściem na dziś."
+      "Etapy: 1) ✅ zachowania T1–T12 na początku tests/today-sync.test.js, krótka sekcja „Powrót do dziś” w docs/dokumentacja.md; 2) ✅ testy przed kodem (czerwone, 24 testy); 3) ✅ kod: js/today-sync.js (logika), js/notice.js (baner), zmiany w app.js, calendar.js, index.html, css; 4) ✅ weryfikacja: testy w 4 strefach, kontrola przez psucie kodu, scenariusz w przeglądarce tools/scenarios/powrot-do-dzis.html (39 sprawdzeń). Wyniki: docs/dziennik-zmian.md.",
+      "✅ Zimny start (aplikacja uruchomiona od nowa): zawsze dziś. Jeśli istnieje niezapisany szkic z innego dnia, nad formularzem baner „Masz niezapisany szkic z 24 września — [Otwórz]”.",
+      "✅ Powrót z tła (visibilitychange → visible oraz pageshow po bfcache): jeśli aplikacja była w tle co najmniej 10 minut albo zmienił się dzień kalendarzowy, wróć do dziś. Krótkie przełączenie do innej aplikacji nie rusza tego, co piszesz. Próg 10 minut to stała do zmiany.",
+      "✅ Północ przy otwartej aplikacji: gdy formularz jest nietknięty, po cichu przejść na nowy dzień. Gdy w tej chwili piszesz (niezapisane zmiany), nie przerywać — od razu pokazać baner „Jest już nowy dzień — [Przejdź do dziś]” (zmiana względem planu: baner od razu, nie po zapisie, D43), a wpis zostaje pod dniem, w którym go zaczęłaś.",
+      "✅ Jedna funkcja syncToday(powód) z zapamiętanym lastKnownToday. Timer do najbliższej północy tylko przypomina o sprawdzeniu, bo iOS usypia timery w tle — prawdziwym źródłem są zdarzenia powrotu do aplikacji.",
+      "✅ Co się odświeża po zmianie dnia: data w nagłówku, wskaźnik „Nowy wpis na dziś”, kalendarz (pierścień „dziś” i miesiąc widoku), streak, domyślny miesiąc w podsumowaniu.",
+      "✅ Bez zdarzeń specjalnych, dzień liczony za każdym razem od nowa z zegara urządzenia (nie z pamięci), więc zmiana strefy czasowej albo daty w telefonie nie psuje działania.",
+      "✅ Gotowe z punktu 8, do wykorzystania: goToToday() w app.js oraz akcja goToToday w reduktorze kalendarza (wybiera dzisiejszy dzień, ustawia widok i zamyka panel). Do dodania: publiczna funkcja kalendarza do przerysowania po zmianie dnia (pierścień „dziś” i dni przyszłości liczą się z todayKey() przy każdym rysowaniu, ale rysowanie nie jest wywoływane o północy). Już działa: goToToday nie przeładowuje formularza, gdy wybrany dzień się nie zmienia, więc nie kasuje wpisywanego tekstu.",
+      "✅ Gotowe z punktu 10: szkice (zapis przy zmianie dnia, ukryciu i pagehide), pusta kropka w kalendarzu i draftSync.flush(). Do zrobienia: baner „Masz niezapisany szkic z 24 września — [Otwórz]” przy zimnym starcie (lista szkiców: loadDrafts()) oraz wywołanie draftSync.flush() przed każdym automatycznym przejściem na dziś."
     ]
   },
   {
@@ -157,7 +158,8 @@
       "✅ Awaria zapisu szkicu (pełny magazyn) nie blokuje pisania, tylko pokazuje dyskretny komunikat.",
       "✅ Uwaga z punktu 8: kropki w kalendarzu pochodzą z describeCell(...).hasEntry. Dzień ze szkicem (pusta kropka) wymaga nowego pola w opisie komórki i testu w tests/calendar-model.test.js.",
       "✅ Kolejność: ten punkt idzie przed punktem 9, bo jest siatką bezpieczeństwa dla automatycznych przejść. Szkice rozwiązują też zgłoszone ograniczenie z punktu 8 i 14: po imporcie formularz wybranego dnia może być nieaktualny, więc zapis nadpisałby zaimportowany wpis.",
-      "✅ Oznaczenie dnia ze szkicem w kalendarzu zrobione najpierw, na prośbę autorki (07.10.2026): pusta kropka (S23, K21–K23, M10, D41). Dokumentacja kolorów kalendarza dopisana. 8 nowych testów (116 łącznie), 37 usterek z kontroli przez psucie kodu wykrytych, wygląd obejrzany w 4 motywach. Kalendarz czyta szkice z magazynu (store.loadDrafts); same szkice (zapis, wczytanie, wskaźnik, odrzucanie) powstaną w dalszej części punktu 10."
+      "✅ Oznaczenie dnia ze szkicem w kalendarzu zrobione najpierw, na prośbę autorki (07.10.2026): pusta kropka (S23, K21–K23, M10, D41). Dokumentacja kolorów kalendarza dopisana. 8 nowych testów (116 łącznie), 37 usterek z kontroli przez psucie kodu wykrytych, wygląd obejrzany w 4 motywach. Kalendarz czyta szkice z magazynu (store.loadDrafts); same szkice (zapis, wczytanie, wskaźnik, odrzucanie) powstaną w dalszej części punktu 10.",
+      "Powiązane: baner „Masz niezapisany szkic z dnia … [Otwórz]” zrobiony w punkcie 9."
     ]
   },
   {

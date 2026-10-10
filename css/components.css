@@ -124,6 +124,36 @@ html[data-theme='zima-ciemny'] .lights-decor {
   cursor: pointer;
   font-family: inherit;
 }
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent2);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.notice[hidden] {
+  display: none;
+}
+.notice button {
+  min-height: 44px;
+  margin-left: auto;
+  padding: 8px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
 .discard-btn {
   display: block;
   width: 100%;

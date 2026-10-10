@@ -20,6 +20,7 @@ M = 'js/calendar-model.js'
 D = 'js/dates.js'
 J = 'js/drafts.js'
 S = 'js/draft-sync.js'
+T = 'js/today-sync.js'
 mutants=[
  ('tydzień od niedzieli', M, "(weekdayOfFirst + DAYS_IN_WEEK - 1) % DAYS_IN_WEEK", "weekdayOfFirst"),
  ('5 wierszy zamiast 6 (35 komórek)', M, "const GRID_ROWS = 6;", "const GRID_ROWS = 5;"),
@@ -81,6 +82,24 @@ mutants=[
  ('draft-sync: flush nie anuluje timera', S, "      cancel();\n      persist();\n    },", "      persist();\n    },"),
  ('draft-sync: cancel nic nie robi', S, "function cancel() {\n    if (handle === null) return;", "function cancel() {\n    return;"),
  ('draft-sync: opóźnienie 0', S, "export const DRAFT_DELAY_MS = 500;", "export const DRAFT_DELAY_MS = 0;"),
+ ('powrót: próg 10 minut liczony jako większy (>)', T, "const longAway = awayMs >= RETURN_THRESHOLD_MS;", "const longAway = awayMs > RETURN_THRESHOLD_MS;"),
+ ('powrót: próg 1 minuta', T, "export const RETURN_THRESHOLD_MS = 10 * 60 * 1000;", "export const RETURN_THRESHOLD_MS = 60 * 1000;"),
+ ('powrót: długa przerwa nie wraca na dziś', T, "if ((dayChanged || longAway) && selectedDate !== today) action = 'goToToday';", "if (dayChanged && selectedDate !== today) action = 'goToToday';"),
+ ('powrót: zmiana dnia nie wraca na dziś', T, "if ((dayChanged || longAway) && selectedDate !== today) action = 'goToToday';", "if (longAway && selectedDate !== today) action = 'goToToday';"),
+ ('powrót: przejście także na dziś, gdy już dziś', T, "&& selectedDate !== today) action = 'goToToday';", ") action = 'goToToday';"),
+ ('powrót: rozgrzebany formularz blokuje powrót', T, "if ((dayChanged || longAway) && selectedDate !== today) action = 'goToToday';", "if ((dayChanged || longAway) && selectedDate !== today && !formDirty) action = 'goToToday';"),
+ ('północ: rozgrzebany formularz też przechodzi', T, "action = formDirty ? 'offerToday' : 'goToToday';", "action = 'goToToday';"),
+ ('północ: rozgrzebany formularz nic nie proponuje', T, "action = formDirty ? 'offerToday' : 'goToToday';", "action = formDirty ? 'none' : 'goToToday';"),
+ ('północ: przejście także z innego dnia', T, "} else if (dayChanged && selectedDate === lastKnownToday) {", "} else if (dayChanged) {"),
+ ('etykiety nie odświeżają się', T, "return { action, refreshLabels: dayChanged };", "return { action, refreshLabels: false };"),
+ ('nieskończony czas w tle liczony jako 0', T, "Number.isFinite(hiddenMs) ? hiddenMs : 0", "hiddenMs ?? 0"),
+ ('nieznany powód ignorowany', T, "if (reason !== 'return' && reason !== 'tick') {", "if (false) {"),
+ ('północ: czas do północy o dzień za krótki', T, "now.getDate() + 1);", "now.getDate());"),
+ ('baner: szkic wybranego dnia też się liczy', T, "if (key === selectedDate) continue;", ""),
+ ('baner: pusty szkic się liczy', T, "if (draftDecision(draft, entries[key] ?? null) !== 'save') continue;", ""),
+ ('baner: szkic równy wpisowi się liczy', T, "entries[key] ?? null", "null"),
+ ('baner: wybiera najstarszy szkic', T, "updatedAt > best.updatedAt ||", "updatedAt < best.updatedAt ||"),
+ ('baner: remis rozstrzyga wcześniejszy dzień', T, "key > best.key", "key < best.key"),
  ('todayKey przez toISOString (stary błąd UTC)', D, "return dateKey(date.getFullYear(), date.getMonth() + 1, date.getDate());", "return date.toISOString().slice(0, 10);"),
  ('addDaysKey liczy w lokalnym czasie milisekundami', D, "const shifted = new Date(Date.UTC(parsed.year, parsed.month - 1, parsed.day) + days * DAY_MS);\n  return dateKey(shifted.getUTCFullYear(), shifted.getUTCMonth() + 1, shifted.getUTCDate());",
    "const shifted = new Date(parsed.year, parsed.month - 1, parsed.day);\n  shifted.setTime(shifted.getTime() + days * DAY_MS);\n  return dateKey(shifted.getFullYear(), shifted.getMonth() + 1, shifted.getDate());"),

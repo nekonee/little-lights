@@ -18,6 +18,13 @@ export const strings = {
     draftOfEntry: 'szkic zmian',
   },
 
+  notice: {
+    newDay: '🌅 Jest już nowy dzień.',
+    goToToday: 'Przejdź do dziś',
+    otherDraft: (dateLabel) => `📝 Masz niezapisany szkic z dnia ${dateLabel}.`,
+    openDraft: 'Otwórz',
+  },
+
   form: {
     editingExisting: '✏️ Edytujesz istniejący wpis z tego dnia',
     newForToday: '🆕 Nowy wpis na dziś',

@@ -98,6 +98,10 @@ export function initCalendar({ selected, onSelectDate }) {
     goToToday() {
       dispatch({ type: 'goToToday' });
     },
+    /** Przerysowanie bez zmiany stanu, np. gdy zmienił się dzień i „dziś” wskazuje inną komórkę. */
+    refresh() {
+      render();
+    },
     setEntries(nextEntries, nextDrafts = {}) {
       entries = nextEntries;
       drafts = nextDrafts;

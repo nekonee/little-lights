@@ -8,6 +8,41 @@ Format wpisu: data, krótki tytuł, potem sekcje (tylko te, które są potrzebne
 
 ---
 
+## 2026-10-10: Powrót do dzisiejszej daty (pkt 9)
+
+**Wyjaśnienie.** Zimny start (odświeżenie strony) już wcześniej zawsze otwierał „dziś”. Brakowało powrotu do aplikacji, która
+żyje w tle, i obsługi północy.
+
+**Dodano**
+
+- Powrót z tła (`visibilitychange`, `pageshow` po bfcache): po co najmniej 10 minutach albo po zmianie dnia aplikacja przechodzi
+  na dziś, także przy rozgrzebanym formularzu (szkic zapisuje się przy ukryciu).
+- Timer do północy: nietknięty formularz przechodzi po cichu na nowy dzień, a przy pisaniu pojawia się baner
+  „🌅 Jest już nowy dzień. [Przejdź do dziś]” (zamiast przerywać).
+- Baner „📝 Masz niezapisany szkic z dnia … [Otwórz]” przy starcie i po powrocie na dziś.
+- Po zmianie dnia odświeżają się: data w nagłówku, wskaźnik „Nowy wpis na dziś”, pierścień „dziś” w kalendarzu, seria, podsumowanie.
+- Moduły `today-sync.js` (czysta logika), `notice.js` (baner), `calendar.refresh()`.
+- Scenariusz w przeglądarce `tools/scenarios/powrot-do-dzis.html` (zachowuje i przywraca `localStorage`).
+
+**Zmieniono**
+
+- Baner o nowym dniu pojawia się od razu, a nie po zapisie, jak było w planie (D43).
+
+**Sprawdzono**
+
+- 24 nowe testy (najpierw czerwone), razem 205 w czterech strefach, w tym czas do północy w dniach zmiany czasu.
+- Kontrola przez psucie kodu: 80 usterek (18 nowych), wszystkie wykryte. Wykryła lukę w teście (`Infinity` jako czas w tle)
+  i zbędny `Math.max` w kodzie, który usunięto.
+- Scenariusz w przeglądarce, 39 sprawdzeń: zimny start, baner, powrót po 5 i 11 minutach, powrót po zmianie dnia, północ przy
+  nietkniętym i rozgrzebanym formularzu, północ przy wybranym innym dniu, `pageshow`, przycisk „Dziś”. Wykrył lukę: po
+  „Przejdź do dziś” nie było propozycji szkicu ze starego dnia (naprawione).
+- Wygląd baneru w jesień jasny i zima ciemny.
+
+**Nie sprawdzono**
+
+- Prawdziwego iPhone'a, prawdziwego powrotu z tła ani północy (zegar i timery były podmienione w ramce testowej),
+  pozostałych 6 motywów dla baneru.
+
 ## 2026-10-10: Przepisana dokumentacja i dziennik zmian
 
 **Zmieniono**

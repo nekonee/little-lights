@@ -26,8 +26,8 @@ Zwykłe pliki statyczne (`index.html`, CSS, moduły ES), bez budowania.
 index.html
 ├─ css/        tokens (motywy), base, components
 └─ js/app.js   łączy moduły i trzyma stan wybranego dnia
-   ├─ interfejs:      form, calendar, history, summary, backup-panel, header, quote, themes, garland
-   ├─ logika (czysta): dates, streak-summary, backup, calendar-model, drafts, quotes
+   ├─ interfejs:      form, calendar, notice, history, summary, backup-panel, header, quote, themes, garland
+   ├─ logika (czysta): dates, streak-summary, backup, calendar-model, drafts, today-sync, quotes
    ├─ czas:           draft-sync
    └─ dane:           store.js ── localStorage
 ```
@@ -200,7 +200,24 @@ Pełna lista **S1–S23** jest na początku [`tests/drafts.test.js`](../tests/dr
 
 Szkice nie są w kopii zapasowej i nie wygasają same: tekst znika tylko przez zapis, odrzucenie albo usunięcie wpisu.
 
-## 8. Interfejs
+## 8. Powrót do dziś
+
+PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczorajszą datę, a nowy wpis trafiłby pod zły dzień.
+
+- **Zimny start:** zawsze dziś. Gdy jest szkic z innego dnia, baner „📝 Masz niezapisany szkic z dnia … [Otwórz]”.
+- **Powrót z tła** (`visibilitychange`, `pageshow` po bfcache): po co najmniej 10 minutach albo po zmianie dnia przechodzimy na dziś,
+  także przy rozgrzebanym formularzu, bo szkic zapisał się przy ukryciu aplikacji (potem baner o tym szkicu). Krótkie przełączenie nic nie rusza.
+- **Północ przy otwartej aplikacji:** jeśli była wybrana „dziś” i formularz jest nietknięty, po cichu przechodzimy na nowy dzień.
+  Gdy właśnie piszesz, nie przerywamy: baner „🌅 Jest już nowy dzień. [Przejdź do dziś]”, a tekst zostaje pod starym dniem.
+  Jeśli wybrany był inny dzień, wybór zostaje.
+- Po zmianie dnia odświeżają się data w nagłówku, wskaźnik „Nowy wpis na dziś”, pierścień „dziś” w kalendarzu, seria i podsumowanie.
+- Dzień liczymy za każdym razem od nowa z zegara urządzenia. Timer do północy tylko przypomina (iOS usypia timery w tle),
+  a źródłem są zdarzenia powrotu.
+
+**Budowa.** `today-sync.js`: czysta logika (`decideSync`, `msUntilNextDay`, `findOtherDraft`), zachowania T1–T12 są na początku
+[`tests/today-sync.test.js`](../tests/today-sync.test.js). `notice.js`: baner. `app.js`: `syncToday`, zdarzenia i timer.
+
+## 9. Interfejs
 
 - **Bezpieczny DOM.** Elementy powstają przez `h()` z `dom.js`, teksty jako węzły tekstowe. Bez `innerHTML` z tekstem
   użytkownika, więc `<b>` w polu wyświetla się jako zwykły tekst, a plik kopii nie wstrzyknie kodu.
@@ -214,16 +231,17 @@ Szkice nie są w kopii zapasowej i nie wygasają same: tekst znika tylko przez z
 - **Seria dni:** liczona wstecz po kluczach dni od dziś, a gdy dziś nie ma wpisu, od wczoraj, żeby nie spadała do zera przed napisaniem.
 - **Podsumowanie miesiąca:** liczba wpisów, najdłuższa seria, do 3 osób, 3 losowe chwile. Osoby liczone w `Map`, bo imię „constructor” psuło zwykły obiekt.
 
-## 9. Testy i narzędzia
+## 10. Testy i narzędzia
 
 - `npm start`: serwer `tools/dev-server.py` z `Cache-Control: no-store` (moduły ES nie działają z `file://`, a zwykły serwer pozwalał przeglądarce trzymać stare pliki). `npm test`: `node --test`, bez zależności.
 - Testy idą w czterech strefach: `Europe/Warsaw`, `America/Los_Angeles`, `Pacific/Kiritimati`, `UTC`. Czas w testach powstaje lokalnie (`new Date(rok, m, d, h)`).
 - Zasady testów: oczekiwane wartości z niezależnego źródła (nie liczone testowanym kodem), własności sprawdzane pętlą po wielu latach, test regresyjny dla każdego znanego błędu, granice zamiast samego środka, numer zachowania (K, S) w nazwie testu.
 - **Test musi dać się oblać:** `python3 tools/mutation-check.py` psuje kod na kopii (stare `toISOString`, tydzień od niedzieli, brak blokady przyszłości…) i sprawdza, że testy to wykrywają. Usterka, która przeżyje, to słaby test.
-- Interfejs (DOM) nie ma testów automatycznych: sprawdzamy go ręcznie w podglądzie 390×844 w kilku motywach (zawsze też zimowych). Playwright odłożony jako zbyt ciężki na tę skalę.
+- Interfejs (DOM) nie ma testów automatycznych: sprawdzamy go ręcznie w podglądzie 390×844 w kilku motywach (zawsze też zimowych).
+  Scenariusze w prawdziwej przeglądarce są w `tools/scenarios/` (otwiera się je po `npm start`, zachowują i przywracają `localStorage`). Playwright odłożony jako zbyt ciężki na tę skalę.
 - Prettier i `.editorconfig`. `legacy/` to prototyp do porównań, nie część aplikacji.
 
-## 10. iOS i PWA
+## 11. iOS i PWA
 
 - **Osobny magazyn danych** zainstalowanej aplikacji (patrz „Adres decyduje o danych”).
 - **Ikona i ekran startowy są czytane raz, przy instalacji.** Zmiana = usunąć aplikację i dodać ponownie; podbijamy wersję w nazwie pliku.
@@ -233,17 +251,16 @@ Szkice nie są w kopii zapasowej i nie wygasają same: tekst znika tylko przez z
 - **Pola poniżej 16 px powodują zoom** po dotknięciu; dziś mają ok. 15 px _(plan, pkt 12)_.
 - **Safe area i notch** wymagają `viewport-fit=cover` i `env(safe-area-inset-*)` _(plan, pkt 13)_.
 
-## 11. Znane ograniczenia
+## 12. Znane ograniczenia
 
 - Import nadpisuje wpis z tej samej daty bez porównania `savedAt` _(pkt 14)_.
-- Data w nagłówku i pierścień „dziś” nie odświeżają się o północy _(pkt 9)_.
 - „Zapisano ✓” znika od razu po zapisie; ostrzeżenia i błędy szkicu dzielą z nim jedną linię statusu _(pkt 17)_.
 - Systemowe `confirm()` przy usuwaniu wpisu i odrzucaniu szkicu _(pkt 13)_.
 - Wpis z datą z przyszłości widać w historii, ale „edytuj” nic nie robi (K16).
 - Dwie karty tej samej przeglądarki mogą nadpisać szkic tego samego dnia (wygrywa ostatni zapis).
-- Nic nie sprawdzono na prawdziwym iPhonie ani czytnikiem ekranu.
+- Powrót do dziś sprawdzono w Chrome z podmienionym zegarem. Nic nie sprawdzono na prawdziwym iPhonie ani czytnikiem ekranu.
 
-## 12. Decyzje
+## 13. Decyzje
 
 `(plan, pkt N)` = jeszcze niezrobione.
 
@@ -259,7 +276,7 @@ Szkice nie są w kopii zapasowej i nie wygasają same: tekst znika tylko przez z
 - **D10 Import: wygrywa nowszy wpis (`savedAt`).** Stara kopia nie nadpisze świeżej pracy. _(plan, pkt 14)_
 - **D11 Usunięcia nie są synchronizowane.** Prostota formatu; znaczniki usunięcia komplikowałyby kopię.
 - **D12 Niezapisane dane trafiają do szkicu.** Nic nie ma zniknąć przy zmianie dnia, w tle ani przy zabiciu aplikacji.
-- **D13 Powrót do dziś: zimny start zawsze dziś, z tła po ≥ 10 min lub zmianie dnia, północ w trakcie pisania nie przerywa.** PWA miesiącami żyje w tle, a nowy wpis nie może trafić pod wczorajszą datę. _(plan, pkt 9)_
+- **D13 Powrót do dziś: zimny start zawsze dziś, z tła po ≥ 10 min lub zmianie dnia, północ w trakcie pisania nie przerywa.** PWA miesiącami żyje w tle, a nowy wpis nie może trafić pod wczorajszą datę.
 - **D14 Dni z przyszłości są nieaktywne.** Dziennik opisuje to, co było (zatwierdzone przez autorkę).
 - **D15 Ikona jako PNG z pełnym kwadratowym tłem.** iOS czyta ją raz, ignoruje SVG, a przezroczystość wypełnia czernią. _(plan, pkt 3)_
 - **D16 Ekran startowy w dwóch warstwach** (statyczny obraz systemowy + animowany ekran w aplikacji). iOS pozwala tylko na statyczny. _(plan, pkt 21)_
@@ -289,8 +306,10 @@ Szkice nie są w kopii zapasowej i nie wygasają same: tekst znika tylko przez z
 - **D40 Szkice poza kopią zapasową i bez wygasania.** To robocza kopia chwili; tekst znika tylko z decyzji autorki.
 - **D41 Szkic w kalendarzu to pusta kropka, wpis wygrywa.** Wyraźnie inna niż pełna kropka, kontrast ≥ 3:1; obrys komórki zajmuje „dziś”.
 - **D42 Dokumentacja opisuje tylko stan obecny, historia w dzienniku zmian.** Krótszy dokument jest aktualny i czytelny.
+- **D43 Północ w trakcie pisania: baner z propozycją przejścia od razu, nie po zapisie.** Nie przerywa pisania, a od razu widać, że to już nowy dzień.
+- **D44 Baner szkicu z innego dnia tylko przy starcie i po powrocie na dziś, nie przy każdej nawigacji.** Żeby nie był natrętny; pusta kropka w kalendarzu przypomina cały czas.
 
-## 13. Konwencje
+## 14. Konwencje
 
 - Komentarze tylko tam, gdzie kod sam nie tłumaczy powodu. Stałe zamiast magicznych liczb. Dostępność jako standard (`lang="pl"`, `<label>`, `<button>`, kontrast).
 - Commity małe, z opisem „po co”. Jeden punkt planu w osobnym commicie.

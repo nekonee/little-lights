@@ -88,7 +88,7 @@ describe('decideSync: powrót z tła', () => {
   });
 
   test('T9: nieznany albo ujemny czas w tle liczy się jak zero', () => {
-    for (const hiddenMs of [undefined, null, NaN, -5 * MINUTE, -Infinity]) {
+    for (const hiddenMs of [undefined, null, NaN, -5 * MINUTE, -Infinity, Infinity]) {
       assert.equal(sync({ selectedDate: YESTERDAY, hiddenMs }).action, 'none', String(hiddenMs));
     }
   });

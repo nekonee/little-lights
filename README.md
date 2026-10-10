@@ -53,6 +53,8 @@ js/
   calendar-model.js   reguły kalendarza: siatka, miesiące, przyszłość, reduktor (czyste)
   drafts.js           szkice niezapisanych formularzy: porównanie, wybór, import (czyste)
   draft-sync.js       opóźniony i wymuszony zapis szkicu (czas, bez reguł)
+  today-sync.js       powrót do dziś: decyzje po powrocie z tła i o północy  (czyste)
+  notice.js           baner nad formularzem
   calendar.js         wybór daty: rysowanie panelu i zdarzenia (cienka warstwa)
   history.js          lista poprzednich wpisów
   summary.js          karta podsumowania miesiąca
@@ -62,7 +64,7 @@ js/
   themes.js           wybór motywu, emoji pory roku
   garland.js          girlanda światełek w motywach zimowych
 tests/                testy logiki (node --test), dane wymyślone
-tools/                narzędzia deweloperskie: serwer bez cache'u, kontrola testów przez psucie kodu
+tools/                serwer bez cache'u, kontrola testów przez psucie kodu, scenariusze w przeglądarce
 assets/               favicon (docelowo ikony i ekran startowy)
 docs/                 dokumentacja, dziennik zmian, plan, specyfikacja
 legacy/               prototyp w jednym pliku HTML — punkt odniesienia
