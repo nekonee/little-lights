@@ -225,8 +225,15 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - **Motywy.** Osiem (4 pory roku × jasny/ciemny) jako zmienne CSS w `tokens.css`, przełączane przez `data-theme`.
   Kolory w CSS tylko jako zmienne motywu (wyjątek: 5 stałych kolorów żarówek). Domyślny: jesień jasny, wybór zapamiętany.
 - **Emoji pór roku:** 🍂 ❄️ 🌿 🌊, jedno źródło prawdy (`SEASON_EMOJI`). Lista motywów i historia jeszcze używają starych _(plan, pkt 16)_.
-- **Girlanda** (motywy zimowe): SVG z `garland.js`, każda instancja z innym ziarnem. Na wąskim ekranie żarówki są
-  rozciągnięte (`viewBox` 640 + `preserveAspectRatio="none"`) _(plan, pkt 11)_.
+- **Girlanda** (motywy zimowe, najbardziej lubiany detal): zwisające łuki sznurka od krawędzi do krawędzi i okrągłe żarówki
+  na oprawkach z miękką poświatą. `garland-model.js` to czysta geometria (łuki Béziera, żarówki, kolory, rytm migotania
+  zależne tylko od szerokości i ziarna; zachowania G1–G12 na początku [`tests/garland-model.test.js`](../tests/garland-model.test.js)),
+  `garland.js` rysuje SVG i mierzy szerokość w pikselach (`ResizeObserver`), więc przebudowuje się przy obrocie ekranu, zmianie
+  okna i przełączeniu na motyw zimowy. SVG ma `viewBox` równy szerokości w px, więc żarówki są kółkami, nie owalami.
+  Żarówek jest ok. jedna na 30 px, łuków jedno na 110 px, a każda girlanda ma własne ziarno (inny zwis, kolory, opóźnienia).
+  Sąsiednie żarówki nigdy nie mają tego samego koloru. Migotanie to tylko `opacity` (2,2–3,0 s, ujemne opóźnienia z generatora
+  z ziarnem, więc nie ma mechanicznego okresu), wstrzymane poza ekranem (`IntersectionObserver`) i wyłączone przy
+  `prefers-reduced-motion`. Sznurek ma kolor `--muted` z kryciem 0,5. Wysokość kontenera jest stała (40 px), więc układ nie skacze.
 - **Cytaty:** oryginalne sentencje bez autorów (`quotes.js`), żeby nie przypisywać prawdziwym osobom słów, których nie powiedziały.
 - **Seria dni:** liczona wstecz po kluczach dni od dziś, a gdy dziś nie ma wpisu, od wczoraj, żeby nie spadała do zera przed napisaniem.
 - **Podsumowanie miesiąca:** liczba wpisów, najdłuższa seria, do 3 osób, 3 losowe chwile. Osoby liczone w `Map`, bo imię „constructor” psuło zwykły obiekt.
@@ -238,7 +245,7 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - Zasady testów: oczekiwane wartości z niezależnego źródła (nie liczone testowanym kodem), własności sprawdzane pętlą po wielu latach, test regresyjny dla każdego znanego błędu, granice zamiast samego środka, numer zachowania (K, S) w nazwie testu.
 - **Test musi dać się oblać:** `python3 tools/mutation-check.py` psuje kod na kopii (stare `toISOString`, tydzień od niedzieli, brak blokady przyszłości…) i sprawdza, że testy to wykrywają. Usterka, która przeżyje, to słaby test.
 - Interfejs (DOM) nie ma testów automatycznych: sprawdzamy go ręcznie w podglądzie 390×844 w kilku motywach (zawsze też zimowych).
-  Scenariusze w prawdziwej przeglądarce są w `tools/scenarios/` (otwiera się je po `npm start`, zachowują i przywracają `localStorage`). Playwright odłożony jako zbyt ciężki na tę skalę.
+  Scenariusze w prawdziwej przeglądarce są w `tools/scenarios/` (powrót do dziś, girlanda; otwiera się je po `npm start`, zachowują i przywracają `localStorage`). Playwright odłożony jako zbyt ciężki na tę skalę.
 - Prettier i `.editorconfig`. `legacy/` to prototyp do porównań, nie część aplikacji.
 
 ## 11. iOS i PWA
@@ -256,6 +263,7 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - Import nadpisuje wpis z tej samej daty bez porównania `savedAt` _(pkt 14)_.
 - „Zapisano ✓” znika od razu po zapisie; ostrzeżenia i błędy szkicu dzielą z nim jedną linię statusu _(pkt 17)_.
 - Systemowe `confirm()` przy usuwaniu wpisu i odrzucaniu szkicu _(pkt 13)_.
+- Na ekranie 320 px (iPhone SE) lista motywów w nagłówku wystaje poza ekran i powoduje przewijanie poziome _(pkt 12)_.
 - Wpis z datą z przyszłości widać w historii, ale „edytuj” nic nie robi (K16).
 - Dwie karty tej samej przeglądarki mogą nadpisać szkic tego samego dnia (wygrywa ostatni zapis).
 - Powrót do dziś sprawdzono w Chrome z podmienionym zegarem. Nic nie sprawdzono na prawdziwym iPhonie ani czytnikiem ekranu.
@@ -280,7 +288,7 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - **D14 Dni z przyszłości są nieaktywne.** Dziennik opisuje to, co było (zatwierdzone przez autorkę).
 - **D15 Ikona jako PNG z pełnym kwadratowym tłem.** iOS czyta ją raz, ignoruje SVG, a przezroczystość wypełnia czernią. _(plan, pkt 3)_
 - **D16 Ekran startowy w dwóch warstwach** (statyczny obraz systemowy + animowany ekran w aplikacji). iOS pozwala tylko na statyczny. _(plan, pkt 21)_
-- **D17 Animujemy tylko `transform` i `opacity`.** Gradienty i filtry SVG są kosztowne na iOS. _(plan, pkt 11, 21)_
+- **D17 Animujemy tylko `transform` i `opacity`.** Gradienty i filtry SVG są kosztowne na iOS. _(girlanda: zrobione; ekran startowy: plan, pkt 21)_
 - **D18 `prefers-reduced-motion`: bez ruchu.** Dostępność i bateria. _(plan)_
 - **D19 Emoji pór roku: 🍂 ❄️ 🌿 🌊.** Wybór autorki (🌸 i ☀️ za oczywiste). _(plan, pkt 16)_
 - **D20 Palety zmieniamy tylko po akceptacji autorki, kontrast pokazujemy przed/po.** To jej decyzja estetyczna. _(plan, pkt 15)_
@@ -308,6 +316,9 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - **D42 Dokumentacja opisuje tylko stan obecny, historia w dzienniku zmian.** Krótszy dokument jest aktualny i czytelny.
 - **D43 Północ w trakcie pisania: baner z propozycją przejścia od razu, nie po zapisie.** Nie przerywa pisania, a od razu widać, że to już nowy dzień.
 - **D44 Baner szkicu z innego dnia tylko przy starcie i po powrocie na dziś, nie przy każdej nawigacji.** Żeby nie był natrętny; pusta kropka w kalendarzu przypomina cały czas.
+- **D45 Girlanda mierzona w pikselach, bez `preserveAspectRatio="none"`.** Stały `viewBox` 640 rozciągał żarówki w owale na wąskim telefonie.
+- **D46 Sznurek girlandy w kolorze `--muted` (krycie 0,5) zamiast `--border`.** W zima jasny `--border` był prawie niewidoczny na białym tle. Istniejący token, palety bez zmian; do akceptacji autorki.
+- **D47 Poświata żarówek gradientem, migotanie tylko `opacity`, pauza poza ekranem.** Filtry SVG i animacje gradientów są ciężkie na iOS, a ukryte girlandy nie powinny zużywać baterii.
 
 ## 14. Konwencje
 

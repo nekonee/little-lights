@@ -164,20 +164,22 @@
   },
   {
     "id": 11,
-    "title": "Girlanda światełek w motywach zimowych — dopracować (wygląd i telefon)",
+    "title": "✅ Girlanda światełek w motywach zimowych — dopracować (wygląd i telefon)",
     "description": "Najbardziej lubiany detal aplikacji, więc robimy go porządnie. Obecna wersja na telefonie wygląda źle: SVG ma viewBox 640 i preserveAspectRatio=none, więc na wnętrzu ok. 350 px żarówki rozciągają się w wąskie owale, sznurek jest łamaną linią, liczba żarówek jest stała, a opóźnienia migotania powtarzają się co 8 żarówek (wygląda mechanicznie). Sznurek w kolorze --border jest w zima jasny prawie niewidoczny (#cfe0e6 na bieli).",
     "priority": "high",
     "details": [
-      "Skala: szerokość mierzona w pikselach (ResizeObserver, orientationchange), viewBox = rzeczywisty rozmiar w px, bez preserveAspectRatio=none. Żarówki zawsze są kółkami r≈4,5. Liczba żarówek = round(szerokość / ok. 30 px), czyli na iPhonie 14 (wnętrze ok. 350 px) ok. 11–12.",
-      "Sznurek: zamiast łamanej linii, gładkie, zwisające łuki jak prawdziwa girlanda: 3–4 zawieszenia na szerokość, punkty zaczepienia u góry, zwis ok. 10–14 px, każdy łuk jako krzywa Béziera (Q). Żarówki rozłożone równomiernie wzdłuż łuku i zwisające pod sznurkiem na krótkich uchwytach z małą oprawką (prostokąt ok. 3x4 px).",
-      "Żarówka: koło r≈4,5 w jednym z 5 stałych kolorów (#e2483f, #3fae6a, #e8c15a, #5f9bc7, #e28fc0) plus miękka poświata: drugie koło r≈9 z radialGradient tego samego koloru, opacity ok. 0,25. Bez filtrów SVG feGaussianBlur (ciężkie na iOS). Kolory w cyklu tak, by sąsiednie żarówki nie były identyczne.",
-      "Migotanie: opacity 1 → 0,45 → 1, czas 2,2–3,0 s per żarówka, ujemne animation-delay z pseudolosowego generatora z ziarnem (nie wzór (i%8)*0,18), więc rytm nigdy się nie powtarza, a animacja startuje od razu w środku cyklu. Animować wyłącznie opacity (poświata i żarówka razem).",
-      "Bateria i płynność: animacja pauzowana poza ekranem (IntersectionObserver → animation-play-state: paused). Przy prefers-reduced-motion: reduce żarówki świecą na stałe bez migotania. Sprawdzić na iPhonie 14; jeśli zacina, animować tylko widoczne girlandy.",
-      "Pozycja: pełna szerokość ekranu (ujemne marginesy równe paddingowi kontenera, 20 px), żeby sznurek wisiał od krawędzi do krawędzi. Wysokość zarezerwowana na stałe (ok. 40 px), więc układ nie skacze; pointer-events: none; aria-hidden=true.",
-      "Kolor sznurka: var(--muted) z opacity ok. 0,5 zamiast var(--border), sprawdzić w obu motywach zimowych. Grubość ok. 1,5 pt (zgodnie ze specyfikacją).",
-      "Różnorodność: każda instancja ma własne ziarno (faza łuków, przesunięcie kolorów, opóźnienia), więc girlandy nad różnymi sekcjami nie wyglądają identycznie. Girlanda nad nagłówkiem, cytatem, formularzem, podsumowaniem miesiąca, historią i kopią zapasową (jak dotąd).",
-      "Widoczność tylko w zima-jasny i zima-ciemny. Przy przełączeniu na motyw zimowy przebudować girlandy (w display:none szerokość wynosi 0), przy przełączeniu na inny ukryć lub usunąć bez zostawiania duplikatów.",
-      "Weryfikacja: zrzuty na szerokości 390 px, w poziomie i w szerokim oknie, w obu motywach zimowych."
+      "Etapy: 1) ✅ zachowania G1–G12 na początku tests/garland-model.test.js, opis w docs/dokumentacja.md (Interfejs); 2) ✅ testy przed kodem (czerwone, 29 testów); 3) ✅ kod: js/garland-model.js (geometria), przepisany js/garland.js, css/components.css; 4) ✅ weryfikacja: testy w 4 strefach, kontrola przez psucie kodu, scenariusz w przeglądarce tools/scenarios/girlanda.html, zrzuty 390 px w obu motywach zimowych. Wyniki: docs/dziennik-zmian.md.",
+      "✅ Skala: szerokość mierzona w pikselach (ResizeObserver, orientationchange), viewBox = rzeczywisty rozmiar w px, bez preserveAspectRatio=none. Żarówki zawsze są kółkami r≈4,5. Liczba żarówek = round(szerokość / 30 px): na iPhonie 14 (pełna szerokość 390 px) 13.",
+      "✅ Sznurek: zamiast łamanej linii, gładkie, zwisające łuki jak prawdziwa girlanda: 3–4 zawieszenia na szerokość, punkty zaczepienia u góry, zwis ok. 10–14 px, każdy łuk jako krzywa Béziera (Q). Żarówki rozłożone równomiernie wzdłuż łuku i zwisające pod sznurkiem na krótkich uchwytach z małą oprawką (prostokąt ok. 3x4 px).",
+      "✅ Żarówka: koło r≈4,5 w jednym z 5 stałych kolorów (#e2483f, #3fae6a, #e8c15a, #5f9bc7, #e28fc0) plus miękka poświata: drugie koło r≈9 z radialGradient tego samego koloru, opacity ok. 0,25. Bez filtrów SVG feGaussianBlur (ciężkie na iOS). Kolory w cyklu tak, by sąsiednie żarówki nie były identyczne.",
+      "✅ Migotanie: opacity 1 → 0,45 → 1, czas 2,2–3,0 s per żarówka, ujemne animation-delay z pseudolosowego generatora z ziarnem (nie wzór (i%8)*0,18), więc rytm nigdy się nie powtarza, a animacja startuje od razu w środku cyklu. Animować wyłącznie opacity (poświata i żarówka razem).",
+      "✅ Bateria i płynność: animacja pauzowana poza ekranem (IntersectionObserver → animation-play-state: paused). Przy prefers-reduced-motion: reduce żarówki świecą na stałe bez migotania. Sprawdzić na iPhonie 14; jeśli zacina, animować tylko widoczne girlandy.",
+      "✅ Pozycja: pełna szerokość ekranu (ujemne marginesy równe paddingowi kontenera, 20 px), żeby sznurek wisiał od krawędzi do krawędzi. Wysokość zarezerwowana na stałe (ok. 40 px), więc układ nie skacze; pointer-events: none; aria-hidden=true.",
+      "✅ Kolor sznurka: var(--muted) z opacity ok. 0,5 zamiast var(--border), sprawdzić w obu motywach zimowych. Grubość ok. 1,5 pt (zgodnie ze specyfikacją).",
+      "✅ Różnorodność: każda instancja ma własne ziarno (faza łuków, przesunięcie kolorów, opóźnienia), więc girlandy nad różnymi sekcjami nie wyglądają identycznie. Girlanda nad nagłówkiem, cytatem, formularzem, podsumowaniem miesiąca, historią i kopią zapasową (jak dotąd).",
+      "✅ Widoczność tylko w zima-jasny i zima-ciemny. Przy przełączeniu na motyw zimowy przebudować girlandy (w display:none szerokość wynosi 0), przy przełączeniu na inny ukryć lub usunąć bez zostawiania duplikatów.",
+      "✅ Weryfikacja: zrzuty na szerokości 390 px, w poziomie i w szerokim oknie, w obu motywach zimowych.",
+      "Do decyzji autorki: kolor sznurka zmieniony z --border na --muted (D46), bo w zima jasny był prawie niewidoczny. Nieprzetestowane: prawdziwy iPhone (płynność animacji, zużycie baterii) i przewijanie poziome na 320 px (powód: lista motywów, punkt 12)."
     ]
   },
   {
@@ -195,7 +197,8 @@
       "Krój: Georgia zostaje (zgodnie ze specyfikacją). Opcjonalnie porównać na telefonie z ui-serif (New York) — jedna linijka do zmiany.",
       "Kontrast tekstu: patrz punkt 15 (kolor --muted i tekst na akcencie).",
       "Opcjonalnie w przyszłości: ustawienie „Rozmiar tekstu” (mały/średni/duży) jako jedna zmienna CSS.",
-      "Weryfikacja na prawdziwym telefonie i w podglądzie 390×844."
+      "Weryfikacja na prawdziwym telefonie i w podglądzie 390×844.",
+      "Przy okazji girlandy: na 320 px (iPhone SE) lista motywów w nagłówku wystaje do ok. 373 px i powoduje przewijanie poziome. Ograniczyć jej szerokość (zob. podpunkt o nagłówku)."
     ]
   },
   {

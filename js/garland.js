@@ -1,68 +1,108 @@
 import { byId, h } from './dom.js';
+import {
+  BULB_COLORS,
+  BULB_RADIUS,
+  GLOW_RADIUS,
+  SOCKET_HEIGHT,
+  SOCKET_WIDTH,
+  buildLayout,
+} from './garland-model.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
-const WIDTH = 640;
-const HEIGHT = 34;
-const BULB_COUNT = 14;
-const BULB_RADIUS = 4.5;
-const WAVE_AMPLITUDE = 10;
-const WAVE_PHASE = 1.15;
-const TWINKLE_STEP_SECONDS = 0.18;
-const TWINKLE_STEPS = 8;
-// Jedyne kolory spoza motywu — mają wyglądać jak prawdziwe kolorowe lampki.
-const BULB_COLORS = ['#e2483f', '#3fae6a', '#e8c15a', '#5f9bc7', '#e28fc0'];
 
-function svgElement(tag, attributes) {
+function svgElement(tag, attributes = {}) {
   const element = document.createElementNS(SVG_NS, tag);
   for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, value);
   return element;
 }
 
-/** @param {number} seed przesuwa fazę fali i kolory, żeby girlandy nie były identyczne */
-function buildGarland(seed) {
-  const svg = svgElement('svg', {
-    viewBox: `0 0 ${WIDTH} ${HEIGHT}`,
-    preserveAspectRatio: 'none',
+/** Poświata żarówki: miękki gradient w kolorze żarówki (bez filtrów SVG, które są ciężkie na iOS). */
+function glowGradients(instance) {
+  const defs = svgElement('defs');
+  BULB_COLORS.forEach((color, index) => {
+    const gradient = svgElement('radialGradient', { id: `glow-${instance}-${index}` });
+    gradient.append(
+      svgElement('stop', { offset: '0%', 'stop-color': color, 'stop-opacity': 0.6 }),
+      svgElement('stop', { offset: '100%', 'stop-color': color, 'stop-opacity': 0 }),
+    );
+    defs.append(gradient);
   });
-  let pathData = `M0,${HEIGHT / 2}`;
-  const bulbs = [];
-  for (let i = 0; i <= BULB_COUNT; i++) {
-    const x = (WIDTH / BULB_COUNT) * i;
-    const y = HEIGHT / 2 + Math.sin(i * WAVE_PHASE + seed) * WAVE_AMPLITUDE;
-    pathData += ` L${x.toFixed(1)},${y.toFixed(1)}`;
-    if (i < BULB_COUNT) {
-      const bulb = svgElement('circle', {
-        class: 'bulb',
-        cx: x.toFixed(1),
-        cy: y.toFixed(1),
-        r: BULB_RADIUS,
-        fill: BULB_COLORS[(i + seed) % BULB_COLORS.length],
-      });
-      bulb.style.animationDelay = `${((i + seed) % TWINKLE_STEPS) * TWINKLE_STEP_SECONDS}s`;
-      bulbs.push(bulb);
-    }
-  }
-  svg.append(
-    svgElement('path', {
-      d: pathData,
-      fill: 'none',
-      stroke: 'var(--border)',
-      'stroke-width': 1.5,
-      opacity: 0.6,
+  return defs;
+}
+
+function buildBulb(bulb, instance) {
+  const group = svgElement('g', { class: 'bulb-light' });
+  group.style.setProperty('--twinkle-duration', `${bulb.duration}s`);
+  group.style.setProperty('--twinkle-delay', `${bulb.delay}s`);
+  const colorIndex = BULB_COLORS.indexOf(bulb.color);
+  group.append(
+    svgElement('circle', {
+      cx: bulb.cx,
+      cy: bulb.cy,
+      r: GLOW_RADIUS,
+      fill: `url(#glow-${instance}-${colorIndex})`,
     }),
-    ...bulbs,
+    svgElement('circle', { cx: bulb.cx, cy: bulb.cy, r: BULB_RADIUS, fill: bulb.color }),
   );
+  return group;
+}
+
+/** SVG o rozmiarze równym szerokości w pikselach, więc żarówki są kółkami, a nie owalami. */
+function buildGarland(layout, instance) {
+  const svg = svgElement('svg', { viewBox: `0 0 ${layout.width} ${layout.height}` });
+  svg.append(glowGradients(instance));
+  for (const swag of layout.swags)
+    svg.append(svgElement('path', { class: 'garland-cord', d: swag.path }));
+  for (const bulb of layout.bulbs) {
+    svg.append(
+      svgElement('rect', {
+        class: 'garland-socket',
+        x: bulb.x - SOCKET_WIDTH / 2,
+        y: bulb.y,
+        width: SOCKET_WIDTH,
+        height: SOCKET_HEIGHT,
+        rx: 0.6,
+      }),
+    );
+  }
+  for (const bulb of layout.bulbs) svg.append(buildBulb(bulb, instance));
   return svg;
 }
 
-function garlandContainer(seed) {
-  return h('div', { class: 'lights-decor', 'aria-hidden': 'true' }, buildGarland(seed));
+function render(container, width) {
+  if (width === Number(container.dataset.builtWidth)) return;
+  container.dataset.builtWidth = String(width);
+  const layout = buildLayout(width, Number(container.dataset.seed));
+  container.replaceChildren(
+    ...(layout.width ? [buildGarland(layout, container.dataset.seed)] : []),
+  );
 }
 
-/** Girlanda nad nagłówkiem oraz nad każdym cytatem, kartą i historią. Widoczność steruje CSS motywu. */
+/**
+ * Girlanda nad nagłówkiem oraz nad każdym cytatem, kartą i historią. Widoczność steruje CSS motywu.
+ * Szerokość jest mierzona w pikselach, więc girlanda przebudowuje się przy obrocie ekranu i zmianie okna,
+ * a po przełączeniu na motyw zimowy (z width 0 na właściwą) sama się rysuje. Poza ekranem animacja jest wstrzymana.
+ */
 export function initGarlands() {
-  byId('lightsDecor').append(buildGarland(0));
-  document.querySelectorAll('.quote, .card, .history').forEach((section, index) => {
-    section.before(garlandContainer(index + 1));
+  const containers = [byId('lightsDecor')];
+  document.querySelectorAll('.quote, .card, .history').forEach((section) => {
+    const container = h('div', { class: 'lights-decor', 'aria-hidden': 'true' });
+    section.before(container);
+    containers.push(container);
   });
+  containers.forEach((container, index) => {
+    container.dataset.seed = String(index);
+  });
+
+  const sizeObserver = new ResizeObserver((entries) => {
+    for (const entry of entries) render(entry.target, Math.round(entry.contentRect.width));
+  });
+  const visibilityObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries)
+      entry.target.classList.toggle('is-offscreen', !entry.isIntersecting);
+  });
+  for (const container of containers) {
+    sizeObserver.observe(container);
+    visibilityObserver.observe(container);
+  }
 }

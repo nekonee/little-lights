@@ -21,6 +21,7 @@ D = 'js/dates.js'
 J = 'js/drafts.js'
 S = 'js/draft-sync.js'
 T = 'js/today-sync.js'
+G = 'js/garland-model.js'
 mutants=[
  ('tydzień od niedzieli', M, "(weekdayOfFirst + DAYS_IN_WEEK - 1) % DAYS_IN_WEEK", "weekdayOfFirst"),
  ('5 wierszy zamiast 6 (35 komórek)', M, "const GRID_ROWS = 6;", "const GRID_ROWS = 5;"),
@@ -100,6 +101,29 @@ mutants=[
  ('baner: szkic równy wpisowi się liczy', T, "entries[key] ?? null", "null"),
  ('baner: wybiera najstarszy szkic', T, "updatedAt > best.updatedAt ||", "updatedAt < best.updatedAt ||"),
  ('baner: remis rozstrzyga wcześniejszy dzień', T, "key > best.key", "key < best.key"),
+ ('girlanda: żarówka co 40 px zamiast 30', G, "const BULB_SPACING_PX = 30;", "const BULB_SPACING_PX = 40;"),
+ ('girlanda: brak minimum żarówek', G, "return Math.max(MIN_BULBS, Math.round(width / BULB_SPACING_PX));", "return Math.round(width / BULB_SPACING_PX);"),
+ ('girlanda: zła szerokość nie daje zera', G, "return Number.isFinite(width) && width > 0;", "return width > 0;"),
+ ('girlanda: łuk co 200 px', G, "const SWAG_WIDTH_PX = 110;", "const SWAG_WIDTH_PX = 200;"),
+ ('girlanda: brak limitu łuków', G, "Math.min(MAX_SWAGS, Math.max(MIN_SWAGS,", "Math.min(99, Math.max(MIN_SWAGS,"),
+ ('girlanda: łuk nie sięga prawej krawędzi', G, "const x1 = round1((width * (k + 1)) / swagTotal);", "const x1 = round1((width * (k + 1)) / (swagTotal + 0.2));"),
+ ('girlanda: punkt sterujący nie w środku', G, "const cx = round1((x0 + x1) / 2);", "const cx = round1(x0 + (x1 - x0) * 0.4);"),
+ ('girlanda: zwis za duży', G, "export const SAG_MAX = 14;", "export const SAG_MAX = 20;"),
+ ('girlanda: zwis zawsze maksymalny', G, "const sag = SAG_MIN + random() * (SAG_MAX - SAG_MIN);", "const sag = SAG_MAX; random();"),
+ ('girlanda: żarówka na punkcie zaczepienia', G, "const t = (i + 0.5) / inThisSwag;", "const t = i / inThisSwag;"),
+ ('girlanda: żarówki nierówno rozdzielone', G, "Math.floor(bulbTotal / swagTotal) + (k < bulbTotal % swagTotal ? 1 : 0)", "k === 0 ? bulbTotal - swagTotal + 1 : 1"),
+ ('girlanda: żarówka bez oprawki (zbyt wysoko)', G, "cy: round1(y + SOCKET_HEIGHT + BULB_RADIUS - 1),", "cy: round1(y),"),
+ ('girlanda: żarówka za nisko', G, "cy: round1(y + SOCKET_HEIGHT + BULB_RADIUS - 1),", "cy: round1(y + 20),"),
+ ('girlanda: sąsiednie kolory mogą być takie same', G, "return (previous + 1 + Math.floor(random() * (BULB_COLORS.length - 1))) % BULB_COLORS.length;", "return Math.floor(random() * BULB_COLORS.length);"),
+ ('girlanda: tylko dwa kolory', G, "return (previous + 1 + Math.floor(random() * (BULB_COLORS.length - 1))) % BULB_COLORS.length;", "return (previous + 1) % 2;"),
+ ('girlanda: dodatnie opóźnienie', G, "delay: -round2(random() * duration),", "delay: round2(random() * duration),"),
+ ('girlanda: opóźnienie dłuższe niż cykl', G, "delay: -round2(random() * duration),", "delay: -round2(random() * duration * 3),"),
+ ('girlanda: stały czas migotania', G, "const duration = round2(TWINKLE_MIN_S + random() * (TWINKLE_MAX_S - TWINKLE_MIN_S));", "const duration = 2.6; random();"),
+ ('girlanda: mechaniczny okres opóźnień', G, "delay: -round2(random() * duration),", "delay: -round2(((i + k) % 8) * 0.18),"),
+ ('girlanda: ziarno ignorowane', G, "const random = seededRandom(seed);", "const random = seededRandom(1);"),
+ ('girlanda: generator zwraca 1', G, "return ((t ^ (t >>> 14)) >>> 0) / 4294967296;", "return ((t ^ (t >>> 14)) >>> 0) / 4294967295;"),
+ ('girlanda: generator ignoruje ziarno', G, "let state = seed | 0;", "let state = 7;"),
+ ('girlanda: wysokość 30 (poświata ucięta)', G, "export const HEIGHT = 40;", "export const HEIGHT = 30;"),
  ('todayKey przez toISOString (stary błąd UTC)', D, "return dateKey(date.getFullYear(), date.getMonth() + 1, date.getDate());", "return date.toISOString().slice(0, 10);"),
  ('addDaysKey liczy w lokalnym czasie milisekundami', D, "const shifted = new Date(Date.UTC(parsed.year, parsed.month - 1, parsed.day) + days * DAY_MS);\n  return dateKey(shifted.getUTCFullYear(), shifted.getUTCMonth() + 1, shifted.getUTCDate());",
    "const shifted = new Date(parsed.year, parsed.month - 1, parsed.day);\n  shifted.setTime(shifted.getTime() + days * DAY_MS);\n  return dateKey(shifted.getFullYear(), shifted.getMonth() + 1, shifted.getDate());"),

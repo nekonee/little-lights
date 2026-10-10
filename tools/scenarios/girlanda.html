@@ -1,0 +1,185 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Scenariusz: girlanda</title>
+<!--
+  Scenariusz w prawdziwej przeglądarce dla punktu 11 (girlanda światełek).
+  Uruchomienie: npm start, potem http://localhost:8000/tools/scenarios/girlanda.html
+  Aplikacja działa w ramce, której szerokość zmieniamy, a przewijanie wywołuje pauzę poza ekranem.
+  Obserwatory rozmiaru i widoczności działają tylko w widocznej karcie. Gdy przeglądarka jest sterowana narzędziem bez okna,
+  strona bywa „ukryta” i scenariusz czeka; wtedy trzeba ją co jakiś czas „pokazać” (np. zrzutem ekranu).
+  UWAGA: scenariusz zmienia localStorage adresu localhost:8000 (motyw). Dane są kopiowane na początku i przywracane na
+  końcu, ale na wszelki wypadek zrób kopię zapasową wpisów przed uruchomieniem.
+-->
+<style>
+  body { font: 13px/1.5 monospace; margin: 12px; }
+  iframe { height: 300px; border: 1px solid #999; display: block; }
+  .ok { color: #1a7f37; }
+  .bad { color: #c00; font-weight: bold; }
+</style>
+<iframe id="frame" title="aplikacja" style="width: 390px"></iframe>
+<pre id="out"></pre>
+<script type="module">
+  const out = document.getElementById('out');
+  const frame = document.getElementById('frame');
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  let failures = 0;
+
+  function check(name, condition, extra = '') {
+    if (!condition) failures++;
+    const cls = condition ? 'ok' : 'bad';
+    out.insertAdjacentHTML('beforeend', `<span class="${cls}">${condition ? 'OK  ' : 'FAIL'}</span> ${name} ${extra}\n`);
+  }
+
+  const win = () => frame.contentWindow;
+  const doc = () => frame.contentDocument;
+  const garlands = () => [...doc().querySelectorAll('.lights-decor')];
+  /** Czeka, aż warunek się spełni (obserwator rozmiaru działa dopiero przy renderowaniu, więc nie wystarczy stały czas). */
+  async function waitFor(condition, timeoutMs = 40000) {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      try {
+        if (condition()) return true;
+      } catch {
+        /* element jeszcze nie istnieje */
+      }
+      await sleep(100);
+    }
+    return false;
+  }
+  /** Elementy sięgające za prawą krawędź ekranu (do diagnozy przewijania poziomego). */
+  const overflowing = () =>
+    [...doc().querySelectorAll('body *')]
+      .filter((el) => el.getBoundingClientRect().right > doc().documentElement.clientWidth + 0.5)
+      .slice(0, 6)
+      .map((el) => `${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}${el.className && typeof el.className === 'string' ? '.' + el.className.split(' ')[0] : ''}=${Math.round(el.getBoundingClientRect().right)}`);
+  const rendered = (count) => () => garlands().length === 6 && garlands().every((g) => g.querySelectorAll('.bulb-light').length === count);
+  const bulbs = (container) => [...container.querySelectorAll('.bulb-light')];
+
+  async function boot(theme, width) {
+    localStorage.setItem('gratitude_journal_theme', theme);
+    frame.style.width = width + 'px';
+    await new Promise((resolve) => {
+      frame.onload = resolve;
+      frame.src = '/index.html?x=' + Math.random();
+    });
+    await sleep(100);
+  }
+
+  async function chooseTheme(theme) {
+    const select = doc().getElementById('themeSelect');
+    select.value = theme;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(150);
+  }
+
+  async function resizeTo(width) {
+    frame.style.width = width + 'px';
+    await sleep(150);
+  }
+
+  const backup = Object.fromEntries(Object.keys(localStorage).map((key) => [key, localStorage.getItem(key)]));
+
+  try {
+    // A. kształt i skala na 390 px
+    await boot('zima-ciemny', 390);
+    check('A0 girlandy narysowały się po załadowaniu', await waitFor(rendered(13)), garlands().map((g) => bulbs(g).length).join(','));
+    const all = garlands();
+    check('A1 girlanda jest nad nagłówkiem, cytatem, 3 kartami i historią (6 sztuk)', all.length === 6, String(all.length));
+    const first = all[0];
+    const rect = first.getBoundingClientRect();
+    check('A2 girlanda sięga od krawędzi do krawędzi (szerokość = szerokość ekranu)', Math.round(rect.width) === win().innerWidth && Math.round(rect.left) === 0, `${rect.left}/${rect.width}/${win().innerWidth}`);
+    const svg = first.querySelector('svg');
+    check('A3 viewBox ma szerokość w pikselach i wysokość 40 (bez rozciągania)', svg.getAttribute('viewBox') === `0 0 ${Math.round(rect.width)} 40`, svg.getAttribute('viewBox'));
+    check('A4 kontener ma stałą wysokość 40 px', Math.round(rect.height) === 40, String(rect.height));
+    const bulb = bulbs(first)[0].querySelectorAll('circle')[1].getBoundingClientRect();
+    check('A5 żarówka jest kółkiem, nie owalem', Math.abs(bulb.width - bulb.height) < 0.5 && Math.abs(bulb.width - 9) < 0.5, `${bulb.width}×${bulb.height}`);
+    check('A6 żarówek 13 na 390 px', bulbs(first).length === 13, String(bulbs(first).length));
+    check('A7 są 4 łuki sznurka', first.querySelectorAll('.garland-cord').length === 4, String(first.querySelectorAll('.garland-cord').length));
+    check('A8 każda żarówka ma oprawkę', first.querySelectorAll('.garland-socket').length === 13);
+    check('A9 girlandy różnią się między sobą (ziarno)', all[0].querySelector('path').getAttribute('d') !== all[1].querySelector('path').getAttribute('d'));
+    check('A10 brak przewijania poziomego', doc().documentElement.scrollWidth <= doc().documentElement.clientWidth, `${doc().documentElement.scrollWidth}/${doc().documentElement.clientWidth}`);
+    const delays = bulbs(first).map((b) => b.style.getPropertyValue('--twinkle-delay'));
+    check('A11 opóźnienia migotania są ujemne i różne', delays.every((d) => parseFloat(d) <= 0) && new Set(delays).size > 8, delays.slice(0, 4).join(','));
+    const sag = (el) => el.querySelector('.garland-cord').getAttribute('d');
+    check('A12 sznurek to krzywa Béziera (Q), nie łamana', /Q/.test(sag(first)) && !/L/.test(sag(first)), sag(first));
+
+    // B. animacja: tylko opacity, ograniczony ruch, kolor sznurka z motywu
+    const keyframes = [...doc().styleSheets].flatMap((sheet) => [...sheet.cssRules]).find((rule) => rule.name === 'twinkle');
+    const props = new Set([...keyframes.cssRules].flatMap((frame) => [...frame.style]));
+    check('B1 migotanie animuje wyłącznie opacity', props.size === 1 && props.has('opacity'), [...props].join(','));
+    const reduced = [...doc().styleSheets]
+      .flatMap((sheet) => [...sheet.cssRules])
+      .find((rule) => rule.media && rule.media.mediaText.includes('prefers-reduced-motion'));
+    check('B2 przy ograniczonym ruchu żarówki nie migoczą', !!reduced && [...reduced.cssRules].some((r) => r.selectorText.includes('bulb-light') && r.style.animationName === 'none'));
+    const cord = win().getComputedStyle(first.querySelector('.garland-cord'));
+    const muted = win().getComputedStyle(doc().body).getPropertyValue('color');
+    check('B3 sznurek ma kolor z motywu (--muted) i krycie 0,5', cord.stroke !== 'none' && Math.abs(parseFloat(cord.opacity) - 0.5) < 0.01 && cord.strokeWidth === '1.5px', `${cord.stroke} ${cord.opacity} ${cord.strokeWidth} (tekst ${muted})`);
+    check('B4 żarówki animują się (animation-name = twinkle)', win().getComputedStyle(bulbs(first)[0]).animationName === 'twinkle');
+
+    // C. pauza poza ekranem
+    check('C1 widoczna girlanda nie jest wstrzymana', !first.classList.contains('is-offscreen') && win().getComputedStyle(bulbs(first)[0]).animationPlayState === 'running');
+    win().scrollTo(0, 99999);
+    await waitFor(() => first.classList.contains('is-offscreen'));
+    check('C2 po przewinięciu girlanda z góry jest poza ekranem i wstrzymana', first.classList.contains('is-offscreen') && win().getComputedStyle(bulbs(first)[0]).animationPlayState === 'paused', first.className);
+    const lower = garlands()[5];
+    lower.scrollIntoView({ block: 'center' });
+    await waitFor(() => !lower.classList.contains('is-offscreen'));
+    check('C3 girlanda wprowadzona w pole widzenia jest animowana', !lower.classList.contains('is-offscreen') && win().getComputedStyle(bulbs(lower)[0]).animationPlayState === 'running', lower.className);
+    win().scrollTo(0, 0);
+    await waitFor(() => !first.classList.contains('is-offscreen'));
+    check('C4 po powrocie na górę animacja wznawia się', !first.classList.contains('is-offscreen') && win().getComputedStyle(bulbs(first)[0]).animationPlayState === 'running');
+
+    // D. zmiana szerokości przebudowuje girlandę, bez duplikatów
+    await resizeTo(640);
+    await waitFor(() => bulbs(garlands()[0]).length > 13);
+    const wide = garlands()[0];
+    check('D1 po poszerzeniu do 640 px viewBox ma 640 w poziomie', wide.querySelector('svg').getAttribute('viewBox') === '0 0 640 40' || wide.querySelector('svg').getAttribute('viewBox').startsWith('0 0 6'), wide.querySelector('svg').getAttribute('viewBox'));
+    check('D2 jest więcej żarówek i łuków niż na 390 px', bulbs(wide).length > 13 && wide.querySelectorAll('.garland-cord').length >= 5, `${bulbs(wide).length}/${wide.querySelectorAll('.garland-cord').length}`);
+    check('D3 w kontenerze jest dokładnie jeden svg (bez duplikatów)', wide.querySelectorAll('svg').length === 1);
+    const wideBulb = bulbs(wide)[0].querySelectorAll('circle')[1].getBoundingClientRect();
+    check('D4 na szerokim ekranie żarówka nadal jest kółkiem', Math.abs(wideBulb.width - wideBulb.height) < 0.5, `${wideBulb.width}×${wideBulb.height}`);
+    await resizeTo(320);
+    await waitFor(() => bulbs(garlands()[0]).length < 13);
+    const narrow = garlands()[0];
+    check('D5 po zwężeniu do 320 px żarówek jest mniej', bulbs(narrow).length < 13, String(bulbs(narrow).length));
+    const screenWidth = doc().documentElement.clientWidth;
+    check('D6 na 320 px żadna girlanda nie wystaje poza ekran', garlands().every((g) => g.getBoundingClientRect().right <= screenWidth + 0.5 && g.getBoundingClientRect().left >= -0.5));
+    out.insertAdjacentHTML('beforeend', `INFO przewijanie poziome na 320 px (nie girlanda): ${doc().documentElement.scrollWidth}/${screenWidth} ${overflowing().filter((x) => !x.includes('lights-decor')).join(' ') || 'brak'}\n`);
+    await resizeTo(390);
+    await waitFor(rendered(13));
+
+    // E. przełączanie motywów
+    await chooseTheme('jesien-jasny');
+    check('E1 w motywie jesiennym girlandy są ukryte', garlands().every((g) => win().getComputedStyle(g).display === 'none'));
+    await waitFor(() => garlands().every((g) => g.querySelectorAll('.bulb-light').length === 0));
+    check('E2 i nie zostawiają w DOM narysowanych żarówek', garlands().every((g) => g.querySelectorAll('.bulb-light').length === 0), String(garlands().reduce((n, g) => n + g.querySelectorAll('.bulb-light').length, 0)));
+    await chooseTheme('zima-jasny');
+    await waitFor(rendered(13));
+    const again = garlands();
+    check('E3 po powrocie do zimy girlandy rysują się od nowa', again.every((g) => bulbs(g).length === 13), again.map((g) => bulbs(g).length).join(','));
+    check('E4 bez duplikatów po wielokrotnym przełączaniu', again.every((g) => g.querySelectorAll('svg').length === 1));
+    await chooseTheme('lato-ciemny');
+    await chooseTheme('zima-ciemny');
+    await waitFor(rendered(13));
+    check('E5 kolejne przełączenie nadal bez duplikatów', garlands().every((g) => g.querySelectorAll('svg').length === 1 && bulbs(g).length === 13));
+
+    // F. zimny start w motywie jesiennym i późniejsze włączenie zimy działa bez odświeżania
+    await boot('jesien-jasny', 390);
+    await sleep(500);
+    check('F1 zimny start w jesieni: brak narysowanych żarówek', garlands().every((g) => bulbs(g).length === 0));
+    await chooseTheme('zima-jasny');
+    await waitFor(rendered(13));
+    check('F2 przełączenie na zimę rysuje girlandy bez odświeżenia strony', garlands().every((g) => bulbs(g).length === 13), garlands().map((g) => bulbs(g).length).join(','));
+
+    // G. szerokość 390 w drugim motywie zimowym i brak błędów
+    check('G1 zima jasny: sznurek ma widoczny kolor i krycie', win().getComputedStyle(garlands()[0].querySelector('.garland-cord')).stroke !== 'none');
+  } catch (error) {
+    failures++;
+    out.insertAdjacentHTML('beforeend', `<span class="bad">WYJĄTEK: ${error.stack}</span>\n`);
+  } finally {
+    localStorage.clear();
+    for (const [key, value] of Object.entries(backup)) localStorage.setItem(key, value);
+    out.insertAdjacentHTML('beforeend', `\n<b>Niepowodzenia: ${failures}</b> (dane localStorage przywrócone)\n`);
+    document.title = failures ? 'FAIL' : 'ALL OK';
+  }
+</script>

@@ -8,6 +8,54 @@ Format wpisu: data, krótki tytuł, potem sekcje (tylko te, które są potrzebne
 
 ---
 
+## 2026-10-10: Girlanda światełek (pkt 11)
+
+**Naprawiono**
+
+- Żarówki były rozciągane w owale na telefonie (`viewBox` 640 + `preserveAspectRatio="none"`). Teraz `viewBox` równa się
+  zmierzonej szerokości w pikselach, więc żarówki są kółkami.
+- Sznurek był łamaną linią i prawie niewidocznym kolorem `--border` w zima jasny.
+- Opóźnienia migotania powtarzały się co 8 żarówek (mechaniczny rytm).
+
+**Dodano**
+
+- Zwisające łuki sznurka (krzywe Béziera) od krawędzi do krawędzi, 2–6 zawieszeń zależnie od szerokości, zwis 10–14 px.
+- Okrągłe żarówki na oprawkach, z miękką poświatą (gradient, bez filtrów SVG). Liczba żarówek zależy od szerokości
+  (ok. jedna na 30 px, 13 na iPhonie 14). Sąsiednie żarówki nigdy nie mają tego samego koloru.
+- Migotanie z ujemnymi opóźnieniami z generatora z ziarnem (2,2–3,0 s na żarówkę), tylko `opacity`.
+- Pauza animacji poza ekranem, wyłączone migotanie przy `prefers-reduced-motion`.
+- Przebudowa przy obrocie ekranu, zmianie okna i przełączeniu motywu (w motywach niezimowych girlandy nie zajmują DOM).
+- `garland-model.js` (czysta geometria) i scenariusz w przeglądarce `tools/scenarios/girlanda.html`.
+
+**Zmieniono**
+
+- Kolor sznurka z `--border` na `--muted` (krycie 0,5). Istniejący token, palety bez zmian; do akceptacji autorki (D46).
+- Wysokość girlandy stała, 40 px (było 34 px plus margines), więc układ nie skacze.
+
+**Sprawdzono**
+
+- 29 nowych testów (najpierw czerwone), razem 234 w czterech strefach. Wartości kontrolne generatora policzone niezależnie w Pythonie.
+- Kontrola przez psucie kodu: 103 usterki (23 nowe), wszystkie wykryte. Wykryła dwie słabości testów: testy importowały wymiary
+  z testowanego modułu (zepsucie stałej psuło też oczekiwanie) i miały za małą precyzję wartości generatora. Obie poprawione.
+  Trzy testy miały też zbyt ostrą tolerancję względem celowego zaokrąglania współrzędnych do 0,1 (poprawione w testach, nie w kodzie).
+- Scenariusz w przeglądarce: kształt i skala na 390 px (kółka 9×9, `viewBox` 390×40, 4 łuki, 13 żarówek), pełna szerokość ekranu,
+  brak przewijania poziomego od girland, ziarna, migotanie tylko `opacity`, reguła `prefers-reduced-motion`, kolor i krycie sznurka,
+  pauza poza ekranem i wznowienie, przebudowa po zmianie szerokości (320, 390, 640 px, bez duplikatów), przełączanie motywów
+  w obie strony (po zimie girlandy rysują się od nowa, w jesieni nie zostawiają elementów), zimny start w jesieni z późniejszym przełączeniem na zimę.
+- Wygląd na 390 px w zima ciemny i zima jasny.
+
+**Nie sprawdzono**
+
+- Prawdziwego iPhone'a: płynności animacji, zużycia baterii i działania przy zmianie orientacji. Pomiar baterii wymaga urządzenia.
+- Reguły `prefers-reduced-motion` w działaniu (sprawdzono tylko jej obecność w CSS).
+- Pełnego, nieprzerwanego przebiegu scenariusza w jednym uruchomieniu: karta sterowana narzędziem bywa „ukryta” i obserwatory
+  nie działają, więc fragmenty uruchamiano kilkakrotnie. Każde sprawdzenie przeszło przynajmniej raz.
+
+**Znalezione przy okazji**
+
+- Na ekranie 320 px (iPhone SE) lista motywów w nagłówku wystaje poza ekran (prawa krawędź ok. 373 px) i powoduje przewijanie
+  poziome. To starszy problem układu, nie girlandy; zapisany w punkcie 12.
+
 ## 2026-10-10: Powrót do dzisiejszej daty (pkt 9)
 
 **Wyjaśnienie.** Zimny start (odświeżenie strony) już wcześniej zawsze otwierał „dziś”. Brakowało powrotu do aplikacji, która

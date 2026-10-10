@@ -62,7 +62,8 @@ js/
   header.js           data i licznik serii
   quote.js            cytat dnia
   themes.js           wybór motywu, emoji pory roku
-  garland.js          girlanda światełek w motywach zimowych
+  garland-model.js    geometria girlandy: łuki, żarówki, kolory, migotanie   (czyste)
+  garland.js          girlanda światełek w motywach zimowych (rysowanie SVG)
 tests/                testy logiki (node --test), dane wymyślone
 tools/                serwer bez cache'u, kontrola testów przez psucie kodu, scenariusze w przeglądarce
 assets/               favicon (docelowo ikony i ekran startowy)
