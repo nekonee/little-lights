@@ -1,4 +1,29 @@
-// Numery K odnoszą się do zachowań opisanych w docs/dokumentacja.md, sekcja „Kalendarz wyboru daty”.
+// Zachowania kalendarza (K1–K23). Numer K jest na początku nazwy testu, który go sprawdza.
+//
+//  K1: Siatka ma zawsze 42 komórki (6×7), także gdy miesiąc mieści się w 5 wierszach.
+//  K2: Tydzień zaczyna się w poniedziałek.
+//  K3: Pierwszy dzień miesiąca leży w kolumnie swojego dnia tygodnia (też przesunięcia 0 i 6).
+//  K4: Kolejne dni bez dziur i powtórzeń; dni „w miesiącu” to dokładnie 1…N (28/29/30/31).
+//  K5: Dni sąsiednich miesięcy dopełniają siatkę, także przez granicę roku.
+//  K6: Przesunięcie miesiąca działa z każdego miesiąca w obie strony; +1 i −1 wraca na miejsce.
+//  K7: „Dziś” to dzień lokalny; dziś nie jest przyszłością, jutro jest.
+//  K8: „Dalej” jest wyłączone w bieżącym miesiącu. Wstecz bez limitu.
+//  K9: Cechy komórki (dziś, wybrany, wpis) są przypisane dokładnie do jej dnia, bez przesunięć.
+//  K10: Opis dla czytnika ekranu: „Piątek, 25 września 2026[, wpis zapisany]”.
+//  K11: Otwarcie panelu pokazuje miesiąc wybranego dnia.
+//  K12: Zamknięcie (przycisk daty, dotknięcie poza panelem, Escape) nie zmienia dnia ani widoku.
+//  K13: Wybór dnia zaznacza go i zamyka panel; dzień z sąsiedniego miesiąca przełącza widok.
+//  K14: Dzień z przyszłości i niepoprawny klucz są ignorowane.
+//  K15: „Dziś” wybiera dziś, ustawia bieżący miesiąc i zamyka panel.
+//  K16: Zmiana z zewnątrz synchronizuje dzień i widok, bez otwierania i zamykania panelu.
+//  K17: Reduktor nie zmienia stanu wejściowego.
+//  K18: Przesuwanie miesięcy nie zmienia wybranego dnia.
+//  K19: Niepoprawny rok lub miesiąc → `RangeError`.
+//  K20: Nieznana akcja → wyjątek (literówka nie może udawać, że działa).
+//  K21: Dzień ze szkicem, bez wpisu: znacznik `draft` (pusta kropka).
+//  K22: Dzień z wpisem i szkicem: wygrywa znacznik `entry` (kafelek i pełna kropka).
+//  K23: Opis dla czytnika uwzględnia szkic („…, szkic niezapisany”, „…, wpis zapisany, szkic zmian”).
+//
 // Oczekiwane wartości (układy siatek, liczby dni) zostały sprawdzone w niezależnym źródle
 // (moduł calendar z Pythona), a nie policzone algorytmem z kodu, który testują.
 import assert from 'node:assert/strict';

@@ -1,4 +1,30 @@
-// Numery S odnoszą się do zachowań z docs/dokumentacja.md, sekcja „Szkice niezapisanych wpisów”.
+// Zachowania szkiców (S1–S23). Numer S jest na początku nazwy testu, który go sprawdza.
+//
+//  S1: Szkic dotyczy jednego dnia, ma pola formularza i `updatedAt`, leży w osobnym kluczu.
+//  S2: Wartości surowe i pozycyjne (3 pola wdzięczności).
+//  S3: Porównanie po normalizacji: różnica tylko w spacjach lub w polu wdzięczności nie tworzy szkicu.
+//  S4: Szkic powstaje tylko, gdy formularz różni się od stanu bazowego.
+//  S5: Pusty formularz nigdy nie jest szkicem, nawet gdy wpis istnieje.
+//  S6: Formularz równy stanowi bazowemu usuwa szkic.
+//  S7: Zapis 500 ms po ostatnim znaku.
+//  S8: Zapis od razu przy zmianie dnia (też „Dziś” i „edytuj”), `visibilitychange` (ukryta) i `pagehide`.
+//  S9: Zapis zmienia tylko szkic bieżącego dnia.
+//  S10: Awaria zapisu nie blokuje pisania, pokazuje komunikat.
+//  S11: Wczytanie dnia: szkic, potem wpis, potem pusty formularz.
+//  S12: Szkic pusty albo równy wpisowi jest ignorowany i usuwany.
+//  S13: Przy szkicu wskaźnik „📝 Szkic — jeszcze niezapisany” (dzień bez wpisu) albo „📝 Szkic zmian — wpis z tego dnia nie jest jeszcze zaktualizowany” oraz przycisk „Odrzuć szkic”.
+//  S14: Zmiana dnia i powrót przywraca wpisany tekst.
+//  S15: Po odświeżeniu szkic wraca.
+//  S16: Zapis wpisu usuwa szkic i anuluje oczekujący zapis.
+//  S17: Odmowa zapisu (brak wdzięczności) nie usuwa szkicu.
+//  S18: „Odrzuć szkic” (z potwierdzeniem) usuwa szkic i wczytuje wpis albo pusty formularz.
+//  S19: Usunięcie wpisu usuwa jego szkic i odświeża formularz, jeśli to wybrany dzień.
+//  S20: Po imporcie nietknięty formularz odświeża się, a z wpisanym tekstem zostaje z ostrzeżeniem, że zapis nadpisze zaimportowany wpis.
+//  S21: Szkice nie wchodzą do eksportu, serii, podsumowania ani historii.
+//  S22: Uszkodzone dane szkiców nie wywracają aplikacji.
+//  S23: Dzień ze szkicem bez wpisu ma w kalendarzu pustą kropkę.
+//
+// S7 i S8 (czas zapisu) sprawdza draft-sync.test.js.
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import {

@@ -1,5 +1,5 @@
 // Czysta logika szkiców niezapisanych formularzy. Bez DOM i bez localStorage.
-// Zachowania S1–S23 opisuje docs/dokumentacja.md, sekcja „Szkice niezapisanych wpisów”.
+// Zachowania S1–S23 wypisane są na początku tests/drafts.test.js.
 import { isValidKey } from './dates.js';
 import { strings } from './strings.js';
 

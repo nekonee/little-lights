@@ -1,4 +1,4 @@
-// Numery S odnoszą się do zachowań z docs/dokumentacja.md, sekcja „Szkice niezapisanych wpisów”.
+// Numery S odnoszą się do zachowań wypisanych na początku tests/drafts.test.js (tu głównie S7, S8, S16).
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { DRAFT_DELAY_MS, createDraftSync } from '../js/draft-sync.js';

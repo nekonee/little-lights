@@ -12,21 +12,26 @@ Format wpisu: data, krótki tytuł, potem sekcje (tylko te, które są potrzebne
 
 **Zmieniono**
 
-- `docs/dokumentacja.md` przepisana od zera: 799 → ok. 340 linii. Opisuje tylko stan obecny i powody decyzji.
+- `docs/dokumentacja.md` przepisana od zera: 799 → ok. 300 linii. Opisuje tylko stan obecny i powody decyzji.
   Usunięte: wyniki weryfikacji, statusy, tabele kontrastów, listy kontrolne M1–M10 i MS1–MS8 (zastąpione jednym akapitem).
-  Zostały: założenia, architektura, dane, daty, import, kalendarz (zachowania K1–K23, kolory), szkice (S1–S23), interfejs,
+  Zostały: założenia, architektura, dane, daty, import, kalendarz (zasady, kolory), szkice (zasady), interfejs,
   testy, iOS, znane ograniczenia, decyzje D1–D42, konwencje.
 - Decyzje zapisane jako krótka lista (decyzja + powód) zamiast tabeli z odrzuconymi alternatywami i statusami.
 - `README.md` skrócony: bez powtórzonych sekcji o formacie danych i datach (są w dokumentacji), bez listy znanych problemów.
 - `plan.json`: poprawione odwołania do dokumentacji, dodany punkt 24.
+
+**Przeniesiono**
+
+- Pełne listy zachowań K1–K23 i S1–S23 z dokumentacji na początek `tests/calendar-model.test.js` i `tests/drafts.test.js`
+  (tam są używane, a numer stoi na początku nazwy testu). W dokumentacji zostały krótkie opisy zasad i odesłania.
+  Dokumentacja: ok. 340 → ok. 300 linii. Komentarze w `calendar-model.js` i `drafts.js` wskazują teraz na pliki testowe.
 
 **Dodano**
 
 - Ten dziennik (`docs/dziennik-zmian.md`).
 - Decyzja D42: dokumentacja opisuje stan obecny, historia jest tutaj.
 
-**Bez zmian w kodzie.** Nazwy sekcji „Kalendarz wyboru daty” i „Szkice niezapisanych wpisów” oraz numery K i S zostały,
-bo odwołują się do nich komentarze i nazwy testów.
+**Bez zmian w logice kodu** (zmieniły się tylko komentarze). Numery K i S zostały bez zmian, bo są w nazwach testów.
 
 ---
 

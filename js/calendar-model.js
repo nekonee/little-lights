@@ -1,5 +1,5 @@
 // Czysta logika kalendarza wyboru daty: siatka miesiąca, przesuwanie widoku, cechy dni i reguły interfejsu.
-// Bez DOM i bez localStorage. Zachowania K1–K20 opisuje docs/dokumentacja.md, sekcja „Kalendarz wyboru daty”.
+// Bez DOM i bez localStorage. Zachowania K1–K23 wypisane są na początku tests/calendar-model.test.js.
 import { addDaysKey, dateKey, formatDatePL, isValidKey, parseKey } from './dates.js';
 import { strings } from './strings.js';
 

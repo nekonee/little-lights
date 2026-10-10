@@ -122,31 +122,9 @@ nad dostępnością i ośmioma motywami.
 Model: `monthGrid(y, m)`, `shiftMonth(view, delta)`, `isFuture`, `canGoNext`, `describeCell`, `createCalendarState`,
 `calendarReducer`. Akcje: `toggle`, `close`, `prev`, `next`, `pickDay`, `goToToday`, `select` (zmiana z zewnątrz, np. „edytuj”).
 
-**Zachowania** (numery K są w nazwach testów):
+**Zachowania.** Siatka ma zawsze 42 komórki (6×7) od poniedziałku. Miesiące przesuwają się na liczbach, więc z każdego miesiąca w obie strony i przez granicę roku. „Dalej” jest wyłączone w bieżącym miesiącu, a dni z przyszłości nie da się wybrać. Otwarcie panelu pokazuje miesiąc wybranego dnia; wybór dnia go zaznacza i zamyka panel (dzień z sąsiedniego miesiąca przełącza widok). „Dziś” wybiera dziś i wraca do bieżącego miesiąca. Dzień ze szkicem ma pustą kropkę, a gdy ma też wpis, wygrywa znacznik wpisu. Reduktor nie zmienia stanu wejściowego, a nieznana akcja rzuca wyjątek.
 
-- **K1** Siatka ma zawsze 42 komórki (6×7), także gdy miesiąc mieści się w 5 wierszach.
-- **K2** Tydzień zaczyna się w poniedziałek.
-- **K3** Pierwszy dzień miesiąca leży w kolumnie swojego dnia tygodnia (też przesunięcia 0 i 6).
-- **K4** Kolejne dni bez dziur i powtórzeń; dni „w miesiącu” to dokładnie 1…N (28/29/30/31).
-- **K5** Dni sąsiednich miesięcy dopełniają siatkę, także przez granicę roku.
-- **K6** Przesunięcie miesiąca działa z każdego miesiąca w obie strony; +1 i −1 wraca na miejsce.
-- **K7** „Dziś” to dzień lokalny; dziś nie jest przyszłością, jutro jest.
-- **K8** „Dalej” jest wyłączone w bieżącym miesiącu. Wstecz bez limitu.
-- **K9** Cechy komórki (dziś, wybrany, wpis) są przypisane dokładnie do jej dnia, bez przesunięć.
-- **K10** Opis dla czytnika ekranu: „Piątek, 25 września 2026[, wpis zapisany]”.
-- **K11** Otwarcie panelu pokazuje miesiąc wybranego dnia.
-- **K12** Zamknięcie (przycisk daty, dotknięcie poza panelem, Escape) nie zmienia dnia ani widoku.
-- **K13** Wybór dnia zaznacza go i zamyka panel; dzień z sąsiedniego miesiąca przełącza widok.
-- **K14** Dzień z przyszłości i niepoprawny klucz są ignorowane.
-- **K15** „Dziś” wybiera dziś, ustawia bieżący miesiąc i zamyka panel.
-- **K16** Zmiana z zewnątrz synchronizuje dzień i widok, bez otwierania i zamykania panelu.
-- **K17** Reduktor nie zmienia stanu wejściowego.
-- **K18** Przesuwanie miesięcy nie zmienia wybranego dnia.
-- **K19** Niepoprawny rok lub miesiąc → `RangeError`.
-- **K20** Nieznana akcja → wyjątek (literówka nie może udawać, że działa).
-- **K21** Dzień ze szkicem, bez wpisu: znacznik `draft` (pusta kropka).
-- **K22** Dzień z wpisem i szkicem: wygrywa znacznik `entry` (kafelek i pełna kropka).
-- **K23** Opis dla czytnika uwzględnia szkic („…, szkic niezapisany”, „…, wpis zapisany, szkic zmian”).
+Pełna lista **K1–K23** jest na początku [`tests/calendar-model.test.js`](../tests/calendar-model.test.js), a numer K stoi na początku nazwy każdego testu.
 
 **Sprawdzane ręcznie** (390×844): komórki i strzałki to `<button>` ≥ 44×44 pt z `aria-label`, `aria-pressed`,
 `aria-current`; panel rozwija się w karcie; kropki odświeżają się po zapisie, usunięciu i imporcie; wszystkie motywy
@@ -216,31 +194,9 @@ dokładnie taki, jaki był. Do porównań pola są normalizowane (przycięte, be
 `formMode`, `afterImport`, `sanitizeDrafts`). `draft-sync.js`: tylko czas zapisu (opóźnienie 500 ms albo wymuszenie).
 `store.js`: `loadDrafts`/`saveDrafts`. `form.js` i `app.js`: odczyt pól, wskaźnik, przycisk „Odrzuć szkic”.
 
-**Zachowania** (numery S są w nazwach testów):
+**Zachowania.** Szkic zapisuje się 500 ms po ostatnim znaku, a od razu przy zmianie dnia, ukryciu aplikacji i `pagehide`. Pusty formularz ani formularz równy stanowi bazowemu szkicu nie tworzą (różnica tylko w spacjach też nie). Wczytanie dnia: szkic, potem wpis, potem pusty formularz; szkic pusty albo równy wpisowi jest ignorowany i usuwany. Szkic znika po zapisie wpisu, po „Odrzuć szkic” (z potwierdzeniem) i po usunięciu wpisu. Po imporcie nietknięty formularz odświeża się, a z wpisanym tekstem zostaje z ostrzeżeniem. Szkice nie wchodzą do eksportu, serii, podsumowania ani historii, a uszkodzone dane szkiców nie wywracają aplikacji. Przy szkicu wskaźnik w formularzu mówi „📝 Szkic — jeszcze niezapisany” (dzień bez wpisu) albo „📝 Szkic zmian — wpis z tego dnia nie jest jeszcze zaktualizowany”.
 
-- **S1** Szkic dotyczy jednego dnia, ma pola formularza i `updatedAt`, leży w osobnym kluczu.
-- **S2** Wartości surowe i pozycyjne (3 pola wdzięczności).
-- **S3** Porównanie po normalizacji: różnica tylko w spacjach lub w polu wdzięczności nie tworzy szkicu.
-- **S4** Szkic powstaje tylko, gdy formularz różni się od stanu bazowego.
-- **S5** Pusty formularz nigdy nie jest szkicem, nawet gdy wpis istnieje.
-- **S6** Formularz równy stanowi bazowemu usuwa szkic.
-- **S7** Zapis 500 ms po ostatnim znaku.
-- **S8** Zapis od razu przy zmianie dnia (też „Dziś” i „edytuj”), `visibilitychange` (ukryta) i `pagehide`.
-- **S9** Zapis zmienia tylko szkic bieżącego dnia.
-- **S10** Awaria zapisu nie blokuje pisania, pokazuje komunikat.
-- **S11** Wczytanie dnia: szkic, potem wpis, potem pusty formularz.
-- **S12** Szkic pusty albo równy wpisowi jest ignorowany i usuwany.
-- **S13** Przy szkicu wskaźnik „📝 Szkic — jeszcze niezapisany” (dzień bez wpisu) albo „📝 Szkic zmian — wpis z tego dnia nie jest jeszcze zaktualizowany” oraz przycisk „Odrzuć szkic”.
-- **S14** Zmiana dnia i powrót przywraca wpisany tekst.
-- **S15** Po odświeżeniu szkic wraca.
-- **S16** Zapis wpisu usuwa szkic i anuluje oczekujący zapis.
-- **S17** Odmowa zapisu (brak wdzięczności) nie usuwa szkicu.
-- **S18** „Odrzuć szkic” (z potwierdzeniem) usuwa szkic i wczytuje wpis albo pusty formularz.
-- **S19** Usunięcie wpisu usuwa jego szkic i odświeża formularz, jeśli to wybrany dzień.
-- **S20** Po imporcie nietknięty formularz odświeża się, a z wpisanym tekstem zostaje z ostrzeżeniem, że zapis nadpisze zaimportowany wpis.
-- **S21** Szkice nie wchodzą do eksportu, serii, podsumowania ani historii.
-- **S22** Uszkodzone dane szkiców nie wywracają aplikacji.
-- **S23** Dzień ze szkicem bez wpisu ma w kalendarzu pustą kropkę.
+Pełna lista **S1–S23** jest na początku [`tests/drafts.test.js`](../tests/drafts.test.js), a numer S stoi na początku nazwy każdego testu.
 
 Szkice nie są w kopii zapasowej i nie wygasają same: tekst znika tylko przez zapis, odrzucenie albo usunięcie wpisu.
 
