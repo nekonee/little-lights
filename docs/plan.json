@@ -179,7 +179,7 @@
       "✅ Różnorodność: każda instancja ma własne ziarno (faza łuków, przesunięcie kolorów, opóźnienia), więc girlandy nad różnymi sekcjami nie wyglądają identycznie. Girlanda nad nagłówkiem, cytatem, formularzem, podsumowaniem miesiąca, historią i kopią zapasową (jak dotąd).",
       "✅ Widoczność tylko w zima-jasny i zima-ciemny. Przy przełączeniu na motyw zimowy przebudować girlandy (w display:none szerokość wynosi 0), przy przełączeniu na inny ukryć lub usunąć bez zostawiania duplikatów.",
       "✅ Weryfikacja: zrzuty na szerokości 390 px, w poziomie i w szerokim oknie, w obu motywach zimowych.",
-      "Do decyzji autorki: kolor sznurka zmieniony z --border na --muted (D46), bo w zima jasny był prawie niewidoczny. Nieprzetestowane: prawdziwy iPhone (płynność animacji, zużycie baterii) i przewijanie poziome na 320 px (powód: lista motywów, punkt 12)."
+      "Zaakceptowane przez autorkę po porównaniu zrzutów: kolor sznurka zmieniony z --border na --muted (D46), bo w zima jasny był prawie niewidoczny. Nieprzetestowane: prawdziwy iPhone (płynność animacji, zużycie baterii) i przewijanie poziome na 320 px (powód: lista motywów, punkt 12)."
     ]
   },
   {

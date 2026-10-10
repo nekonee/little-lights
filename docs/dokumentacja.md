@@ -317,7 +317,7 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - **D43 Północ w trakcie pisania: baner z propozycją przejścia od razu, nie po zapisie.** Nie przerywa pisania, a od razu widać, że to już nowy dzień.
 - **D44 Baner szkicu z innego dnia tylko przy starcie i po powrocie na dziś, nie przy każdej nawigacji.** Żeby nie był natrętny; pusta kropka w kalendarzu przypomina cały czas.
 - **D45 Girlanda mierzona w pikselach, bez `preserveAspectRatio="none"`.** Stały `viewBox` 640 rozciągał żarówki w owale na wąskim telefonie.
-- **D46 Sznurek girlandy w kolorze `--muted` (krycie 0,5) zamiast `--border`.** W zima jasny `--border` był prawie niewidoczny na białym tle. Istniejący token, palety bez zmian; do akceptacji autorki.
+- **D46 Sznurek girlandy w kolorze `--muted` (krycie 0,5) zamiast `--border`.** W zima jasny `--border` był prawie niewidoczny na białym tle. Istniejący token, palety bez zmian. Zaakceptowane przez autorkę po porównaniu zrzutów przed/po (390 px, zima jasny).
 - **D47 Poświata żarówek gradientem, migotanie tylko `opacity`, pauza poza ekranem.** Filtry SVG i animacje gradientów są ciężkie na iOS, a ukryte girlandy nie powinny zużywać baterii.
 
 ## 14. Konwencje

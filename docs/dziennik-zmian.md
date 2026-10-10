@@ -29,7 +29,7 @@ Format wpisu: data, krótki tytuł, potem sekcje (tylko te, które są potrzebne
 
 **Zmieniono**
 
-- Kolor sznurka z `--border` na `--muted` (krycie 0,5). Istniejący token, palety bez zmian; do akceptacji autorki (D46).
+- Kolor sznurka z `--border` na `--muted` (krycie 0,5). Istniejący token, palety bez zmian. Autorka porównała zrzuty obu wariantów (390 px, zima jasny) i zaakceptowała `--muted` (D46).
 - Wysokość girlandy stała, 40 px (było 34 px plus margines), więc układ nie skacze.
 
 **Sprawdzono**
