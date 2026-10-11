@@ -2,9 +2,15 @@
 <html lang="pl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Little Lights" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="format-detection" content="telephone=no" />
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
-    <title>🍂 Dziennik Wdzięczności</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1" />
+    <title>🍂 Little Lights</title>
     <link rel="stylesheet" href="css/tokens.css" />
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/components.css" />
@@ -14,7 +20,7 @@
       <div class="lights-decor" id="lightsDecor" aria-hidden="true"></div>
       <div class="top-row">
         <div>
-          <h1>🍂 Dziennik Wdzięczności</h1>
+          <h1>🍂 Little Lights</h1>
           <div class="date" id="todayLabel"></div>
         </div>
         <select class="theme-select" id="themeSelect" title="Wybierz motyw">

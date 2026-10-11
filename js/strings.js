@@ -1,4 +1,4 @@
-export const APP_TITLE = 'Dziennik Wdzięczności';
+export const APP_TITLE = 'Little Lights';
 
 function pluralize(count, one, many) {
   return count === 1 ? one : many;

@@ -29,12 +29,12 @@
   },
   {
     "id": 2,
-    "title": "Dodać manifest.json i meta tagi trybu aplikacji",
+    "title": "✅ Dodać manifest.json i meta tagi trybu aplikacji",
     "description": "Podstawa PWA. Baza kodu: dziennik-wdziecznosci-final-kalendarz-grafika.html (starsza wersja dziennik-wdziecznosci-final.html jest już nieaktualna) — po wystawieniu plik nazywa się index.html.",
     "priority": "normal",
     "details": [
-      "manifest.json: name „Dziennik Wdzięczności”, short_name „Dziennik”, lang pl, start_url „./”, scope „./”, display standalone, background_color i theme_color z motywu domyślnego (jesień jasny #fbf0e2), ikony 192x192 i 512x512 PNG.",
-      "W <head> statycznie (nie dopisywane przez JS): link rel=manifest, meta apple-mobile-web-app-capable=yes, apple-mobile-web-app-title=Dziennik, apple-mobile-web-app-status-bar-style=black-translucent (razem z obsługą safe area, patrz punkt 13), meta format-detection telephone=no.",
+      "✅ manifest.json: name i short_name „Little Lights”, lang pl, start_url „./”, scope „./”, display standalone, background_color i theme_color z motywu domyślnego (jesień jasny #fbf0e2), ikony 192x192 i 512x512 PNG.",
+      "✅ W <head> statycznie (nie dopisywane przez JS): link rel=manifest, meta apple-mobile-web-app-capable=yes, apple-mobile-web-app-title=Little Lights, apple-mobile-web-app-status-bar-style=black-translucent (razem z obsługą safe area, patrz punkt 13), meta format-detection telephone=no.",
       "Ikony i zabezpieczenie ich wyglądu: punkt 3."
     ]
   },
@@ -46,7 +46,7 @@
     "details": [
       "✅ Pliki PNG z assets/icon-source.svg: assets/icons/icon-{120,152,167,180,192,512}.png oraz apple-touch-icon.png w katalogu głównym (kopia 180x180). iOS ignoruje SVG i data: URI jako ikonę ekranu głównego. ",
       "✅ Pełne, kwadratowe tło (żurawina) bez przezroczystości i bez własnych zaokrągleń; iOS sam zaokrągla rogi, a przezroczystość wypełnia na czarno. Ważne elementy w środkowych ok. 80%. ",
-      "Static <link rel=apple-touch-icon sizes=180x180 href=apple-touch-icon.png?v=1> w <head> oraz dodatkowa kopia w katalogu głównym /apple-touch-icon.png (Safari szuka jej tam samo, gdy link zawiedzie).",
+      "✅ Static <link rel=apple-touch-icon sizes=180x180 href=apple-touch-icon.png?v=1> w <head> oraz dodatkowa kopia w katalogu głównym /apple-touch-icon.png (Safari szuka jej tam samo, gdy link zawiedzie).",
       "Ikona z tego samego adresu i po https, bez przekierowań, poprawny typ image/png. Pliku nie ukrywać za żadnym logowaniem.",
       "Zmiana ikony w przyszłości: podbić wersję w nazwie (?v=2 albo nowa nazwa pliku), bo Safari mocno cache’uje, a potem usunąć aplikację z ekranu i dodać ją ponownie.",
       "Ikona jest stała i niezależna od motywu sezonowego (zgodnie ze specyfikacją).",
@@ -207,7 +207,7 @@
     "description": "Zestaw drobnych zmian, żeby zainstalowana aplikacja zachowywała się jak natywna na iPhonie 14 (390×844 pt, notch, safe area ok. 47 pt na górze i 34 pt na dole w pionie, iOS 16+).",
     "priority": "normal",
     "details": [
-      "viewport-fit=cover w meta viewport i wcięcia na safe area: padding-top/bottom z env(safe-area-inset-*) na kontenerze, przy black-translucent status bar (tło motywu sięga pod pasek statusu, nic nie wchodzi pod notch).",
+      "✅ (góra i dół; boki w poziomie zostają) viewport-fit=cover w meta viewport i wcięcia na safe area: padding-top/bottom z env(safe-area-inset-*) na kontenerze, przy black-translucent status bar (tło motywu sięga pod pasek statusu, nic nie wchodzi pod notch).",
       "Wysokość: min-height: 100dvh (z zapasem na starsze wersje), zamiast 100vh, które na iOS sięga za dolny pasek.",
       "Nie blokować powiększania (bez maximum-scale=1 i user-scalable=no) — to kwestia dostępności. Zoom po fokusie rozwiązuje punkt 12.",
       "touch-action: manipulation na przyciskach i komórkach (bez opóźnienia i przypadkowego zoomu po dwukrotnym dotknięciu), -webkit-tap-highlight-color zgodny z motywem. Zrobione w punkcie 8 dla kalendarza i przycisków daty; zostają pozostałe przyciski i tap-highlight.",

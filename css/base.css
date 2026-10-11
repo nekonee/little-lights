@@ -24,6 +24,8 @@ body {
   max-width: 640px;
   margin: 0 auto;
   padding: 28px 20px 60px;
+  padding: calc(28px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right))
+    calc(60px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
 }
 h1 {
   font-size: 1.7rem;

@@ -25,6 +25,9 @@ G = 'js/garland-model.js'
 B = 'js/backup.js'
 H = 'js/share.js'
 STR = 'js/strings.js'
+MF = 'manifest.json'
+IX = 'index.html'
+CSS = 'css/base.css'
 mutants=[
  ('tydzień od niedzieli', M, "(weekdayOfFirst + DAYS_IN_WEEK - 1) % DAYS_IN_WEEK", "weekdayOfFirst"),
  ('5 wierszy zamiast 6 (35 komórek)', M, "const GRID_ROWS = 6;", "const GRID_ROWS = 5;"),
@@ -170,14 +173,45 @@ mutants=[
  ('teksty: pusty plik także, gdy tylko „bez zmian”', STR, "added + updated + unchanged === 0", "added + updated === 0"),
  ('teksty: pominięte zawsze widoczne', STR, "skipped > 0 ?", "true ?"),
  ('teksty: zamienione liczby w raporcie', STR, "Dodano: ${added}, zaktualizowano: ${updated}", "Dodano: ${updated}, zaktualizowano: ${added}"),
+ ('pwa: nazwa w manifeście stara', MF, '"name": "Little Lights"', '"name": "Dziennik Wdzięczności"'),
+ ('pwa: short_name inny niż name', MF, '"short_name": "Little Lights"', '"short_name": "Dziennik"'),
+ ('pwa: język manifestu angielski', MF, '"lang": "pl"', '"lang": "en"'),
+ ('pwa: tryb z paskiem przeglądarki', MF, '"display": "standalone"', '"display": "browser"'),
+ ('pwa: start_url absolutny (zepsuje podkatalog)', MF, '"start_url": "./"', '"start_url": "/"'),
+ ('pwa: scope absolutny', MF, '"scope": "./"', '"scope": "/"'),
+ ('pwa: start_url z pełnym adresem', MF, '"start_url": "./"', '"start_url": "https://nekonee.github.io/little-lights/"'),
+ ('pwa: tło ładowania inne niż motyw domyślny', MF, '"background_color": "#fbf0e2"', '"background_color": "#ffffff"'),
+ ('pwa: kolor motywu inny niż domyślny', MF, '"theme_color": "#fbf0e2"', '"theme_color": "#000000"'),
+ ('pwa: ikona 192 deklarowana jako 193', MF, '"sizes": "192x192"', '"sizes": "193x193"'),
+ ('pwa: ikona 512 wskazuje na ikonę 192', MF, '"src": "assets/icons/icon-512.png"', '"src": "assets/icons/icon-192.png"'),
+ ('pwa: ikona wskazuje na nieistniejący plik', MF, '"src": "assets/icons/icon-192.png"', '"src": "assets/icons/brak.png"'),
+ ('pwa: ikona ze ścieżką absolutną', MF, '"src": "assets/icons/icon-192.png"', '"src": "/assets/icons/icon-192.png"'),
+ ('pwa: ikona z błędnym typem MIME', MF, '"type": "image/png",\n      "purpose": "any"\n    },\n    {\n      "src": "assets/icons/icon-512.png"', '"type": "image/jpeg",\n      "purpose": "any"\n    },\n    {\n      "src": "assets/icons/icon-512.png"'),
+ ('pwa: brak ikony 512', MF, '"sizes": "512x512"', '"sizes": "256x256"'),
+ ('pwa: brak linku do manifestu', IX, '<link rel="manifest" href="manifest.json" />', ''),
+ ('pwa: link do manifestu z absolutną ścieżką', IX, 'href="manifest.json"', 'href="/manifest.json"'),
+ ('pwa: brak trybu aplikacji Apple', IX, 'name="apple-mobile-web-app-capable" content="yes"', 'name="apple-mobile-web-app-capable" content="no"'),
+ ('pwa: tytuł pod ikoną inny', IX, 'name="apple-mobile-web-app-title" content="Little Lights"', 'name="apple-mobile-web-app-title" content="Dziennik"'),
+ ('pwa: pasek statusu domyślny zamiast translucent', IX, 'content="black-translucent"', 'content="default"'),
+ ('pwa: telefony zamieniane na linki', IX, 'content="telephone=no"', 'content="telephone=yes"'),
+ ('pwa: brak apple-touch-icon', IX, '<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1" />', ''),
+ ('pwa: apple-touch-icon bez wersji w adresie', IX, 'href="apple-touch-icon.png?v=1"', 'href="apple-touch-icon.png"'),
+ ('pwa: apple-touch-icon o złym rozmiarze', IX, 'sizes="180x180"', 'sizes="152x152"'),
+ ('pwa: brak viewport-fit=cover', IX, ', viewport-fit=cover', ''),
+ ('pwa: zablokowane powiększanie', IX, 'initial-scale=1, viewport-fit=cover', 'initial-scale=1, maximum-scale=1, viewport-fit=cover'),
+ ('pwa: stary tytuł strony w HTML', IX, '<title>🍂 Little Lights</title>', '<title>🍂 Dziennik Wdzięczności</title>'),
+ ('pwa: stary nagłówek h1 w HTML', IX, '<h1>🍂 Little Lights</h1>', '<h1>🍂 Dziennik Wdzięczności</h1>'),
+ ('pwa: APP_TITLE inny niż w manifeście', STR, "export const APP_TITLE = 'Little Lights';", "export const APP_TITLE = 'Little Light';"),
+ ('pwa: brak wcięcia u góry (notch)', CSS, 'calc(28px + env(safe-area-inset-top))', '28px'),
+ ('pwa: brak wcięcia na dole (pasek home)', CSS, 'calc(60px + env(safe-area-inset-bottom))', '60px'),
 ]
 TZS=['Europe/Warsaw','America/Los_Angeles','Pacific/Kiritimati','UTC']
 def fresh():
     if os.path.exists(TMP):
         shutil.rmtree(TMP)
     os.makedirs(TMP)
-    for d in ('js','tests'): shutil.copytree(f'{SRC}/{d}', f'{TMP}/{d}')
-    shutil.copy(f'{SRC}/package.json', TMP)
+    for d in ('js','tests','css','assets'): shutil.copytree(f'{SRC}/{d}', f'{TMP}/{d}')
+    for f in ('package.json','index.html','manifest.json','apple-touch-icon.png'): shutil.copy(f'{SRC}/{f}', TMP)
 def run(tz):
     r=subprocess.run(['node','--test'],cwd=TMP,env={**os.environ,'TZ':tz},capture_output=True,text=True)
     m=re.search(r'ℹ fail (\d+)',r.stdout); return int(m.group(1)) if m else -1

@@ -1,6 +1,6 @@
-# Dziennik Wdzięczności
+# Little Lights
 
-Codzienny dziennik wdzięczności po polsku. Aplikacja jest jednoosobowa, lokalna i działa bez konta i backendu:
+Codzienny dziennik wdzięczności po polsku (aplikacja nazywa się Little Lights). Aplikacja jest jednoosobowa, lokalna i działa bez konta i backendu:
 wpisy zapisują się w `localStorage` przeglądarki, a kopię zapasową robi się plikiem JSON. Docelowo PWA na iPhonie.
 
 - [`docs/dokumentacja.md`](docs/dokumentacja.md): jak to działa i skąd wynikają decyzje (w tym format danych i zasady dat).
@@ -35,7 +35,8 @@ Testy obejmują logikę bez DOM: daty, serię, podsumowanie, kopię zapasową, k
 ## Struktura
 
 ```text
-index.html            szkielet strony (bez logiki i bez stylów inline)
+index.html            szkielet strony (bez logiki i bez stylów inline), tagi aplikacji w <head>
+manifest.json         manifest PWA: nazwa, kolory, ikony (czytany przy instalacji)
 css/
   tokens.css          8 motywów jako zmienne CSS
   base.css            reset, typografia, pola formularza

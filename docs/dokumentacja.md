@@ -1,4 +1,4 @@
-# Dokumentacja: Dziennik Wdzięczności
+# Dokumentacja: Little Lights
 
 Jak aplikacja działa i dlaczego tak. Dokument opisuje **stan obecny**. Co i kiedy się zmieniło, jest w dzienniku zmian,
 a co dopiero będzie, w planie.
@@ -272,13 +272,18 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - **Osobny magazyn danych** zainstalowanej aplikacji (patrz „Adres decyduje o danych”).
 - **Ikona:** rudy kotek śpiący pod girlandą na żurawinowym tle (`assets/icon-source.svg`), stała i niezależna od motywu sezonowego.
   Pliki PNG (pełne tło, bez przezroczystości) są w `assets/icons/` (120–512 px) oraz jako `apple-touch-icon.png` w katalogu głównym.
-  Podpięcie w `<head>` i w manifeście jeszcze nie zrobione _(plan, pkt 2–3)_.
+  Podpięta w `<head>` jako `apple-touch-icon.png?v=1` (180 px) i w manifeście (192 i 512 px). Zmiana ikony: podbić `?v=` i dodać aplikację do ekranu od nowa.
+- **Manifest i tagi w `<head>`** (statyczne, bez JS): `manifest.json` (nazwa i `short_name` „Little Lights”, `lang` pl, `display` standalone,
+  `start_url` i `scope` `./`, kolory `#fbf0e2` z motywu domyślnego, ikony 192 i 512) oraz tagi Apple (tryb aplikacji, tytuł pod ikoną,
+  pasek statusu `black-translucent`, `format-detection telephone=no`). Wszystkie ścieżki są względne, bo aplikacja stoi pod adresem
+  z podkatalogiem (`…/little-lights/`). Manifest i ikona są czytane przy instalacji; zmiana nazwy lub koloru wymaga ponownego dodania aplikacji.
+  Zachowania P1–P9 są na początku [`tests/pwa.test.js`](../tests/pwa.test.js).
 - **Ikona i ekran startowy są czytane raz, przy instalacji.** Zmiana = usunąć aplikację i dodać ponownie; podbijamy wersję w nazwie pliku.
 - **Timery w tle są usypiane**, więc o zmianie dnia decydują zdarzenia powrotu (`visibilitychange`, `pageshow`), a nie timer.
 - **Aplikacja może zostać zamknięta bez ostrzeżenia**, stąd natychmiastowy zapis szkicu przy ukryciu i `pagehide`.
 - **Share Sheet** (`navigator.share`) musi być wywołany bezpośrednio w kliknięciu, bez wcześniejszych `await` (tak jest zrobiony eksport).
 - **Pola poniżej 16 px powodują zoom** po dotknięciu; dziś mają ok. 15 px _(plan, pkt 12)_.
-- **Safe area i notch** wymagają `viewport-fit=cover` i `env(safe-area-inset-*)` _(plan, pkt 13)_.
+- **Safe area i notch:** `viewport-fit=cover` i odstępy `env(safe-area-inset-*)` na górze i na dole kontenera są zrobione (pasek statusu jest półprzezroczysty, więc treść nie może wejść pod zegar). Boki i pozostałe poprawki iPhone'a: _(plan, pkt 13)_.
 
 ## 12. Znane ograniczenia
 
@@ -347,6 +352,8 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - **D49 Remis `savedAt` i ta sama treść to „bez zmian”, bez osobnej liczby konfliktów.** Remis z różną treścią zdarza się tylko przy wpisach bez `savedAt`, a prostszy raport jest czytelniejszy.
 - **D50 „Ostatnia kopia” w osobnym kluczu i liczona w dniach kalendarzowych.** Zapis licznika nie może psuć eksportu ani trafiać do pliku, a zmiana czasu nie może przesuwać wyniku.
 - **D51 Ikona: kotek pod girlandą na żurawinie, jedna przez cały rok.** Wybór autorki spośród czterech projektów (girlanda, kubek, słoik, kotek); ciepła, „cozy” ikona ma cieszyć o każdej porze. Czerwona żarówka zamieniona na kremową, żeby nie ginęła na czerwonym tle.
+- **D52 Nazwa „Little Lights” wszędzie:** manifest, tytuł pod ikoną, `<title>`, nagłówek w aplikacji (`APP_TITLE`) i nazwa repozytorium. Spójność wybrana przez autorkę; stara nazwa „Dziennik Wdzięczności” zostaje tylko w dokumentach projektu i w `legacy/`.
+- **D53 `black-translucent` razem z odstępami na safe area.** Półprzezroczysty pasek statusu wciąga treść pod zegar i notch, więc tag i odstępy idą w jednym kroku (początek punktu 13).
 
 ## 14. Konwencje
 

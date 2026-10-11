@@ -8,6 +8,40 @@ Format wpisu: data, krótki tytuł, potem sekcje (tylko te, które są potrzebne
 
 ---
 
+## 2026-10-11: Manifest i tagi aplikacji, nazwa „Little Lights” (pkt 2, początek pkt 13)
+
+**Dodano**
+
+- `manifest.json`: nazwa i `short_name` „Little Lights”, `lang` pl, `display` standalone, `start_url` i `scope` `./`,
+  kolory `#fbf0e2`, ikony 192 i 512 px.
+- Statyczne tagi w `<head>`: link do manifestu, tryb aplikacji Apple, tytuł pod ikoną, pasek statusu `black-translucent`,
+  `format-detection telephone=no`, `apple-touch-icon` 180 px z `?v=1`.
+- `viewport-fit=cover` i odstępy `env(safe-area-inset-top/bottom)` na kontenerze (z odstępem zapasowym dla starszych przeglądarek).
+  To pierwszy kawałek punktu 13, potrzebny, bo `black-translucent` wciąga treść pod zegar i notch.
+- 10 testów (`tests/pwa.test.js`, P1–P9) czytających prawdziwe pliki: manifest, nagłówek, wymiary i typ PNG z nagłówka pliku, CSS.
+
+**Zmieniono**
+
+- Nazwa aplikacji na „Little Lights” w `APP_TITLE`, `<title>`, nagłówku h1, manifeście i tytule pod ikoną (decyzja autorki, D52).
+  Dokumenty projektu i `legacy/` zachowują starą nazwę.
+- `tools/mutation-check.py` kopiuje teraz także `index.html`, `manifest.json`, `css/`, `assets/` i ikonę, bo nowe testy czytają te pliki.
+
+**Sprawdzono**
+
+- Testy: 280 w czterech strefach (10 nowych, najpierw czerwone: brak `manifest.json`).
+- Kontrola przez psucie kodu: 174 usterki (34 nowe: manifest, tagi, ścieżki absolutne, wymiary ikon, odstępy), wszystkie wykryte.
+  Ikona z kanałem alfa (czego skrypt tekstowy nie wywoła) sprawdzona ręcznie na kopii: test P5 pada.
+- Przeglądarka 390×844: aplikacja ładuje się z nową nazwą, manifest i ikony odpowiadają (200, `application/json` i `image/png`),
+  odstępy bez zmian (na komputerze wcięcia wynoszą 0).
+
+**Nie sprawdzono**
+
+- Zachowania na prawdziwym iPhonie: pełny ekran, ikona, nazwa pod ikoną, odstępy pod notchem i paskiem home.
+  Wymaga adresu w internecie (pkt 4). Nazwa „Little Lights” może okazać się za długa pod ikoną; wtedy skrócić `apple-mobile-web-app-title`.
+- Poziome wcięcia (boki) w układzie poziomym; girlanda ma ujemne marginesy 20 px i w poziomie nie dosięgnie krawędzi.
+
+---
+
 ## 2026-10-11: Ikona aplikacji (pkt 3, część)
 
 **Dodano**
