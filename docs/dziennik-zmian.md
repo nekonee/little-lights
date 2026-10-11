@@ -8,6 +8,27 @@ Format wpisu: data, krótki tytuł, potem sekcje (tylko te, które są potrzebne
 
 ---
 
+## 2026-10-11: Repozytorium i pierwsza publikacja (pkt 4)
+
+**Dodano**
+
+- Publiczne repozytorium `nekonee/little-lights` (wymaga tego darmowy plan GitHub), GitHub Pages ze źródłem „GitHub Actions”,
+  strona pod `https://nekonee.github.io/little-lights/`. Historia 31 commitów z adresem noreply.
+
+**Sprawdzono**
+
+- Pierwszy przebieg workflow zielony za pierwszym razem: testy 5 s, publikacja 13 s.
+- Na żywo: strona, manifest (`application/json`), `apple-touch-icon.png` (także z `?v=1`), ikony 192 i 512, skrypty i style odpowiadają (200),
+  tytuł „🍂 Little Lights”. `docs/`, `legacy/`, `tools/`, `tests/`, `.github/`, `README.md` i `package.json` dają 404.
+- GitHub Pages wysyła `cache-control: max-age=600` (potwierdzone), więc zmiany mogą być widoczne z opóźnieniem do ok. 10 minut.
+
+**Nie sprawdzono**
+
+- Instalacji i działania na prawdziwym iPhonie (ikona, nazwa pod ikoną, pełny ekran, odstępy pod notchem, okno udostępniania i wybór pliku).
+- Adnotacja GitHuba: etykieta `ubuntu-latest` przejdzie na Ubuntu 26 od 19.10.2026; testy nie zależą od systemu, więc nic nie zmieniamy.
+
+---
+
 ## 2026-10-11: Przegląd przed publikacją i nazwa „Little Lights” w plikach (pkt 4, część)
 
 **Sprawdzono (przegląd przed upublicznieniem repozytorium)**

@@ -47,7 +47,7 @@
       "✅ Pliki PNG z assets/icon-source.svg: assets/icons/icon-{120,152,167,180,192,512}.png oraz apple-touch-icon.png w katalogu głównym (kopia 180x180). iOS ignoruje SVG i data: URI jako ikonę ekranu głównego. ",
       "✅ Pełne, kwadratowe tło (żurawina) bez przezroczystości i bez własnych zaokrągleń; iOS sam zaokrągla rogi, a przezroczystość wypełnia na czarno. Ważne elementy w środkowych ok. 80%. ",
       "✅ Static <link rel=apple-touch-icon sizes=180x180 href=apple-touch-icon.png?v=1> w <head> oraz dodatkowa kopia w katalogu głównym /apple-touch-icon.png (Safari szuka jej tam samo, gdy link zawiedzie).",
-      "Ikona z tego samego adresu i po https, bez przekierowań, poprawny typ image/png. Pliku nie ukrywać za żadnym logowaniem.",
+      "✅ (sprawdzone na żywo: ten sam adres po https, bez przekierowań, image/png) Ikona z tego samego adresu i po https, bez przekierowań, poprawny typ image/png. Pliku nie ukrywać za żadnym logowaniem.",
       "Zmiana ikony w przyszłości: podbić wersję w nazwie (?v=2 albo nowa nazwa pliku), bo Safari mocno cache’uje, a potem usunąć aplikację z ekranu i dodać ją ponownie.",
       "Ikona jest stała i niezależna od motywu sezonowego (zgodnie ze specyfikacją).",
       "Najpierw wystawić stronę z gotową ikoną, dopiero potem instalować na iPhonie, bo ikona zapamiętuje się przy instalacji.",
@@ -57,11 +57,11 @@
   },
   {
     "id": 4,
-    "title": "Wystawić plik w internecie (hosting)",
+    "title": "✅ Wystawić plik w internecie (hosting)",
     "description": "iPhone/Safari wymaga, by strona była dostępna pod adresem https:// — nie zadziała to z lokalnego pliku na dysku. Najprościej: darmowy hosting statyczny typu GitHub Pages albo Netlify. Zanim zaczniesz używać aplikacji, wybierz adres, który zostanie na stałe.",
     "priority": "normal",
     "details": [
-      "localStorage jest przypisany do adresu (origin). Zmiana adresu, nazwy użytkownika, repozytorium albo domeny oznacza nowy, pusty magazyn danych — wpisy trzeba by przenieść przez eksport i import. Wybrać docelowy adres przed pierwszym wpisem w PWA.",
+      "✅ (adres https://nekonee.github.io/little-lights/, repozytorium publiczne nekonee/little-lights) localStorage jest przypisany do adresu (origin). Zmiana adresu, nazwy użytkownika, repozytorium albo domeny oznacza nowy, pusty magazyn danych — wpisy trzeba by przenieść przez eksport i import. Wybrać docelowy adres przed pierwszym wpisem w PWA.",
       "✅ (workflow publikuje tylko index.html, manifest, ikony, css, js i assets; kopii wpisów tam nie ma) Na hosting trafia tylko kod (index.html, manifest, ikony). Wpisy zostają na telefonie. Nie wrzucać do repozytorium plików z kopią zapasową (kopia-dziennika-wdziecznosci-*.json).",
       "Ten sam adres otwarty na komputerze będzie działał, ale ma osobny magazyn danych (patrz punkt 20).",
       "✅ (workflow GitHub Actions z testami przed publikacją; .gitignore sprawdzony testem) Publikacja z repozytorium git (punkt 1): struktura plików działa bez budowania, więc GitHub Pages serwuje ją bez zmian. Przed pierwszą publikacją sprawdzić .gitignore, żeby żaden plik z kopią wpisów nie trafił do repozytorium."

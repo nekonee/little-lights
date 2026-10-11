@@ -276,7 +276,7 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
   adresem używa tego samego klucza `localStorage` co aplikacja, a scenariusze w `tools/` czyszczą `localStorage`.
   Uprawnienia są minimalne (odczyt kodu, zapis Pages, token OIDC), akcje tylko oficjalne `actions/*` z numerem wersji głównej,
   bez sekretów. Zachowania W1–W6 są na początku [`tests/deploy.test.js`](../tests/deploy.test.js).
-- **Docelowy adres:** `https://nekonee.github.io/little-lights/` (podkatalog, stąd względne ścieżki). Nazwa repozytorium jest częścią adresu,
+- **Adres (działa):** `https://nekonee.github.io/little-lights/` (podkatalog, stąd względne ścieżki). Nazwa repozytorium jest częścią adresu,
   a domena `nekonee.github.io` decyduje o magazynie danych, więc nazwy konta ani repozytorium nie zmieniamy bez eksportu kopii.
 - **Osobny magazyn danych** zainstalowanej aplikacji (patrz „Adres decyduje o danych”).
 - **Ikona:** rudy kotek śpiący pod girlandą na żurawinowym tle (`assets/icon-source.svg`), stała i niezależna od motywu sezonowego.
