@@ -224,7 +224,7 @@
   },
   {
     "id": 14,
-    "title": "Eksport/import przez iOS z zasadą „nowszy wygrywa”",
+    "title": "✅ Eksport/import przez iOS z zasadą „nowszy wygrywa”",
     "description": "Zwykłe pobieranie pliku działa na iOS inaczej niż na komputerze, więc eksport idzie przez Share Sheet (mail, Pliki, AirDrop). Import wybiera plik z Plików albo Maila. Format pliku zostaje bez zmian (obiekt kluczowany datą YYYY-MM-DD, wpisy z polami date, grateful, why, person, proud, lesson, savedAt).",
     "priority": "normal",
     "details": [

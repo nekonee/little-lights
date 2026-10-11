@@ -43,16 +43,17 @@ Przebieg głównych akcji:
 - **Wybór dnia:** kalendarz (`pickDay`) → `onSelectDate` → `app` wczytuje szkic, wpis albo pusty formularz.
 - **Zapis:** wymaga min. jednej wdzięczności. Wpis trafia pod klucz dnia z `savedAt`, szkic dnia jest usuwany. Błąd zapisu daje komunikat i nic nie zmienia.
 - **Usunięcie:** pytanie z datą, potem usunięcie wpisu i szkicu tego dnia.
-- **Eksport:** JSON z wcięciem 2 spacji, plik `kopia-dziennika-wdziecznosci-YYYY-MM-DD.json`.
-- **Import:** JSON → `sanitizeEntries` → scalenie → zapis. Błąd na dowolnym etapie nic nie zmienia.
+- **Eksport:** JSON z wcięciem 2 spacji, plik `kopia-dziennika-wdziecznosci-YYYY-MM-DD.json`, przez okno udostępniania albo pobranie (sekcja 5).
+- **Import:** JSON → `sanitizeEntries` → `mergeEntries` → zapis → raport. Błąd na dowolnym etapie nic nie zmienia.
 
 ## 3. Dane
 
-| Klucz `localStorage`           | Zawartość                                         |
-| ------------------------------ | ------------------------------------------------- |
-| `gratitude_journal_entries_v1` | wpisy kluczowane dniem `YYYY-MM-DD`               |
-| `gratitude_journal_drafts_v1`  | szkice niezapisanych formularzy, kluczowane dniem |
-| `gratitude_journal_theme`      | nazwa motywu, np. `zima-ciemny`                   |
+| Klucz `localStorage`            | Zawartość                                         |
+| ------------------------------- | ------------------------------------------------- |
+| `gratitude_journal_entries_v1`  | wpisy kluczowane dniem `YYYY-MM-DD`               |
+| `gratitude_journal_drafts_v1`   | szkice niezapisanych formularzy, kluczowane dniem |
+| `gratitude_journal_theme`       | nazwa motywu, np. `zima-ciemny`                   |
+| `gratitude_journal_last_backup` | dzień ostatniej kopii `YYYY-MM-DD` (poza kopią)   |
 
 ```json
 {
@@ -91,7 +92,7 @@ Cały kod w `js/dates.js`.
    zawsze wielką literą: „Piątek, 25 września 2026”, „Wrzesień 2026”.
 
 Funkcje: `dateKey`, `monthKey`, `keyFromLocalDate`, `todayKey`, `parseKey`, `isValidKey`, `monthOf`, `addDaysKey`,
-`formatDatePL`, `formatMonthPL`. Niepoprawny klucz: `parseKey` daje `null`, `addDaysKey` rzuca `RangeError`,
+`daysBetween`, `formatDatePL`, `formatMonthPL`. Niepoprawny klucz: `parseKey` daje `null`, `addDaysKey` i `daysBetween` rzucają `RangeError`,
 funkcje formatujące zwracają tekst bez zmian.
 
 ## 5. Kopia zapasowa i import
@@ -104,10 +105,28 @@ Plik z zewnątrz to dane niezaufane. `sanitizeEntries` sprawdza każdy wpis:
 
 Niepoprawne wpisy są **pomijane z podaniem liczby**, żeby jeden zepsuty nie blokował odzyskania reszty.
 
-- **Scalanie dziś:** wpis z pliku zastępuje obecny z tej samej daty.
-- **Scalanie docelowo** _(plan, pkt 14)_: zostaje wpis z większym `savedAt` (brak = 0, remis = obecny), żeby stara kopia nie nadpisała świeższej pracy.
-- **Usunięcia nie są synchronizowane.** Kopia to zbiór wpisów, nie historia zmian: usunięty wpis wróci po wczytaniu starszej kopii.
-- Telefon i komputer nie synchronizują się. Dane przenosi się plikiem (eksport → AirDrop/Pliki → import).
+**Scalanie** (`mergeEntries`): dla każdej daty zostaje wpis z większym `savedAt` (brak, tekst, `NaN` i wartości ujemne to 0),
+żeby stara kopia nie nadpisała świeższej pracy. Przy remisie i przy tej samej treści (5 pól, z kolejnością wdzięczności)
+zostaje wpis obecny. Wpis tylko w pliku jest dodawany, wpis tylko lokalny zostaje, a obecny wpis niebędący obiektem liczy się jak brak.
+Wynik: `{ entries, added, updated, unchanged }`, argumenty nie są zmieniane. Raport: „Dodano: X, zaktualizowano: Y, bez zmian: Z”
+(plus liczba pominiętych wpisów), a plik bez poprawnych wpisów daje „W pliku nie ma wpisów do wczytania”.
+
+- **Usunięcia nie są synchronizowane.** Kopia to zbiór wpisów, nie historia zmian: usunięty wpis wróci po wczytaniu starszej kopii (podpowiedź jest w karcie kopii).
+- **Importu nie da się cofnąć.** Zasada „nowszy wygrywa” chroni przed zwykłą pomyłką; przy zepsutym zegarze telefonu pomaga tylko inny plik kopii.
+- Telefon i komputer nie synchronizują się. Dane przenosi się plikiem (eksport → AirDrop/Pliki/mail → import).
+
+**Eksport** (`share.js`, `backup-panel.js`): plik `File` powstaje synchronicznie w kliknięciu (iOS gubi gest po `await`).
+`pickExportMethod` wybiera okno udostępniania tylko wtedy, gdy `navigator.canShare({ files })` zwróci `true`, inaczej pobranie
+linkiem. Zamknięcie okna (`AbortError`) nie jest błędem i nic nie zmienia; inny błąd okna uruchamia pobranie. Wybór pliku
+przy imporcie akceptuje `.json,application/json` (węższe `accept` bywa na iOS wyszarzone).
+
+**Licznik „Ostatnia kopia”** (`backupStatus`): dzień udanego eksportu (okno udostępniania zakończone albo pobranie) zapisuje się
+w osobnym kluczu, poza plikiem kopii. Różnica liczona w dniach kalendarzowych (`daysBetween`): „dziś”, „wczoraj”, „X dni temu”.
+Bez wpisów licznika nie ma, wpisy bez kopii (albo z zepsutą datą) dają „Jeszcze nie robiłaś kopii zapasowej”, a data z przyszłości
+(przestawiony zegar) to „dziś”. Import licznika nie zmienia. Licznik odświeża się razem z resztą ekranu (`refreshAll`).
+Aplikacja cicho prosi też o trwały magazyn (`navigator.storage.persist()`).
+
+Zachowania **M1–M18** są na początku [`tests/backup.test.js`](../tests/backup.test.js) (M17–M18 w [`tests/share.test.js`](../tests/share.test.js)).
 
 ## 6. Kalendarz wyboru daty
 
@@ -245,7 +264,7 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - Zasady testów: oczekiwane wartości z niezależnego źródła (nie liczone testowanym kodem), własności sprawdzane pętlą po wielu latach, test regresyjny dla każdego znanego błędu, granice zamiast samego środka, numer zachowania (K, S) w nazwie testu.
 - **Test musi dać się oblać:** `python3 tools/mutation-check.py` psuje kod na kopii (stare `toISOString`, tydzień od niedzieli, brak blokady przyszłości…) i sprawdza, że testy to wykrywają. Usterka, która przeżyje, to słaby test.
 - Interfejs (DOM) nie ma testów automatycznych: sprawdzamy go ręcznie w podglądzie 390×844 w kilku motywach (zawsze też zimowych).
-  Scenariusze w prawdziwej przeglądarce są w `tools/scenarios/` (powrót do dziś, girlanda; otwiera się je po `npm start`, zachowują i przywracają `localStorage`). Playwright odłożony jako zbyt ciężki na tę skalę.
+  Scenariusze w prawdziwej przeglądarce są w `tools/scenarios/` (powrót do dziś, girlanda, kopia zapasowa z atrapą okna udostępniania; otwiera się je po `npm start`, zachowują i przywracają `localStorage`). Playwright odłożony jako zbyt ciężki na tę skalę.
 - Prettier i `.editorconfig`. `legacy/` to prototyp do porównań, nie część aplikacji.
 
 ## 11. iOS i PWA
@@ -254,13 +273,15 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - **Ikona i ekran startowy są czytane raz, przy instalacji.** Zmiana = usunąć aplikację i dodać ponownie; podbijamy wersję w nazwie pliku.
 - **Timery w tle są usypiane**, więc o zmianie dnia decydują zdarzenia powrotu (`visibilitychange`, `pageshow`), a nie timer.
 - **Aplikacja może zostać zamknięta bez ostrzeżenia**, stąd natychmiastowy zapis szkicu przy ukryciu i `pagehide`.
-- **Share Sheet** (`navigator.share`) musi być wywołany bezpośrednio w kliknięciu, bez wcześniejszych `await`.
+- **Share Sheet** (`navigator.share`) musi być wywołany bezpośrednio w kliknięciu, bez wcześniejszych `await` (tak jest zrobiony eksport).
 - **Pola poniżej 16 px powodują zoom** po dotknięciu; dziś mają ok. 15 px _(plan, pkt 12)_.
 - **Safe area i notch** wymagają `viewport-fit=cover` i `env(safe-area-inset-*)` _(plan, pkt 13)_.
 
 ## 12. Znane ograniczenia
 
-- Import nadpisuje wpis z tej samej daty bez porównania `savedAt` _(pkt 14)_.
+- Okno udostępniania i wybór pliku w Plikach nie były sprawdzone na prawdziwym iPhonie (w przeglądarce działa atrapa); trzeba to zrobić po wdrożeniu PWA _(pkt 2–6)_.
+- Zły zegar telefonu może dać wpis „z przyszłości”, który wygrywa przy imporcie ze wszystkim.
+- Notka pod kartą kopii nadal mówi „Otwieraj ten sam plik”, co po wdrożeniu PWA przestanie być prawdą _(pkt 2–6)_.
 - „Zapisano ✓” znika od razu po zapisie; ostrzeżenia i błędy szkicu dzielą z nim jedną linię statusu _(pkt 17)_.
 - Systemowe `confirm()` przy usuwaniu wpisu i odrzucaniu szkicu _(pkt 13)_.
 - Na ekranie 320 px (iPhone SE) lista motywów w nagłówku wystaje poza ekran i powoduje przewijanie poziome _(pkt 12)_.
@@ -281,7 +302,7 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - **D7 Daty przez `Intl` (pl-PL, UTC), wielką literą.** Poprawna odmiana bez własnych tabel.
 - **D8 Kopia to JSON w kształcie magazynu.** Jeden format, zgodny ze starymi kopiami.
 - **D9 Import pomija niepoprawne wpisy zamiast odrzucać plik.** Jeden zły wpis nie blokuje reszty.
-- **D10 Import: wygrywa nowszy wpis (`savedAt`).** Stara kopia nie nadpisze świeżej pracy. _(plan, pkt 14)_
+- **D10 Import: wygrywa nowszy wpis (`savedAt`).** Stara kopia nie nadpisze świeżej pracy.
 - **D11 Usunięcia nie są synchronizowane.** Prostota formatu; znaczniki usunięcia komplikowałyby kopię.
 - **D12 Niezapisane dane trafiają do szkicu.** Nic nie ma zniknąć przy zmianie dnia, w tle ani przy zabiciu aplikacji.
 - **D13 Powrót do dziś: zimny start zawsze dziś, z tła po ≥ 10 min lub zmianie dnia, północ w trakcie pisania nie przerywa.** PWA miesiącami żyje w tle, a nowy wpis nie może trafić pod wczorajszą datę.
@@ -293,7 +314,7 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - **D19 Emoji pór roku: 🍂 ❄️ 🌿 🌊.** Wybór autorki (🌸 i ☀️ za oczywiste). _(plan, pkt 16)_
 - **D20 Palety zmieniamy tylko po akceptacji autorki, kontrast pokazujemy przed/po.** To jej decyzja estetyczna. _(plan, pkt 15)_
 - **D21 Service worker: najpierw sieć, potem cache.** Cache-first długo pokazywałby starą wersję. _(plan, pkt 19)_
-- **D22 Eksport przez Share Sheet, pobranie linkiem tylko zapasowo.** Na iOS zwykłe pobieranie działa inaczej. _(plan, pkt 14)_
+- **D22 Eksport przez Share Sheet, pobranie linkiem tylko zapasowo.** Na iOS zwykłe pobieranie działa inaczej; na komputerze nic nie wyróżniamy, bo aplikacja jest głównie na telefon.
 - **D23 Prywatne kopie poza repozytorium.** Wpisy są prywatne, a repozytorium może być publiczne.
 - **D24 Teksty w `strings.js`, logika bez DOM, jeden dostęp do danych.** Testowalność i jeden punkt zmiany.
 - **D25 Bez `innerHTML` z tekstem użytkownika.** Bezpieczeństwo importu.
@@ -310,7 +331,7 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - **D36 Pusty formularz nie jest szkicem.** Brak pustych szkiców, a wpis zawsze da się odzyskać.
 - **D37 Zapis szkicu po 500 ms i wymuszony przy zmianie dnia, ukryciu, `pagehide`.** iOS może uśpić aplikację bez ostrzeżenia.
 - **D38 „Odrzuć szkic” z potwierdzeniem.** Skasowanie napisanego tekstu jest nieodwracalne. _(własne okno: pkt 13)_
-- **D39 Po imporcie nietknięty formularz odświeżamy, rozgrzebany zostawiamy z ostrzeżeniem.** Zapis nie nadpisze po cichu zaimportowanego wpisu. _(pełna zasada: pkt 14)_
+- **D39 Po imporcie nietknięty formularz odświeżamy, rozgrzebany zostawiamy z ostrzeżeniem.** Zapis nie nadpisze po cichu zaimportowanego wpisu.
 - **D40 Szkice poza kopią zapasową i bez wygasania.** To robocza kopia chwili; tekst znika tylko z decyzji autorki.
 - **D41 Szkic w kalendarzu to pusta kropka, wpis wygrywa.** Wyraźnie inna niż pełna kropka, kontrast ≥ 3:1; obrys komórki zajmuje „dziś”.
 - **D42 Dokumentacja opisuje tylko stan obecny, historia w dzienniku zmian.** Krótszy dokument jest aktualny i czytelny.
@@ -319,6 +340,9 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - **D45 Girlanda mierzona w pikselach, bez `preserveAspectRatio="none"`.** Stały `viewBox` 640 rozciągał żarówki w owale na wąskim telefonie.
 - **D46 Sznurek girlandy w kolorze `--muted` (krycie 0,5) zamiast `--border`.** W zima jasny `--border` był prawie niewidoczny na białym tle. Istniejący token, palety bez zmian. Zaakceptowane przez autorkę po porównaniu zrzutów przed/po (390 px, zima jasny).
 - **D47 Poświata żarówek gradientem, migotanie tylko `opacity`, pauza poza ekranem.** Filtry SVG i animacje gradientów są ciężkie na iOS, a ukryte girlandy nie powinny zużywać baterii.
+- **D48 Import bez cofania.** Aplikacja jest dla zabawy, a „nowszy wygrywa” z raportem wystarcza; cofanie podwajałoby dane i dodawało kod, którego autorka nie potrzebuje (jej decyzja).
+- **D49 Remis `savedAt` i ta sama treść to „bez zmian”, bez osobnej liczby konfliktów.** Remis z różną treścią zdarza się tylko przy wpisach bez `savedAt`, a prostszy raport jest czytelniejszy.
+- **D50 „Ostatnia kopia” w osobnym kluczu i liczona w dniach kalendarzowych.** Zapis licznika nie może psuć eksportu ani trafiać do pliku, a zmiana czasu nie może przesuwać wyniku.
 
 ## 14. Konwencje
 

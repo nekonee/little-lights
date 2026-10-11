@@ -8,6 +8,48 @@ Format wpisu: data, krótki tytuł, potem sekcje (tylko te, które są potrzebne
 
 ---
 
+## 2026-10-11: Eksport i import kopii, „nowszy wygrywa” (pkt 14)
+
+**Naprawiono**
+
+- Import zawsze zastępował wpis z tej samej daty wpisem z pliku, więc starsza kopia po cichu kasowała świeższą pracę, a komunikat
+  mówił tylko „Wczytano ✓”.
+
+**Dodano**
+
+- Scalanie `mergeEntries`: zostaje wpis z większym `savedAt` (remis i ta sama treść: wpis obecny), z raportem
+  „Dodano / zaktualizowano / bez zmian” i liczbą pominiętych wpisów.
+- Eksport przez okno udostępniania (`share.js`, `pickExportMethod`), z awaryjnym pobraniem linkiem. Zamknięcie okna nie jest błędem.
+- Licznik „Ostatnia kopia: dziś / wczoraj / X dni temu” i „Jeszcze nie robiłaś kopii zapasowej”, klucz `gratitude_journal_last_backup`
+  (poza plikiem kopii). Funkcja `daysBetween` w `dates.js`.
+- Ciche `navigator.storage.persist()`.
+- Scenariusz w przeglądarce `tools/scenarios/kopia-zapasowa.html` (atrapa okna udostępniania, przechwycone pobranie, wymyślone dane).
+
+**Zmieniono**
+
+- Wybór pliku akceptuje `.json,application/json` (węższe `accept` bywa na iOS wyszarzone).
+- Podpowiedź w karcie kopii mówi, że zostaje nowsza wersja wpisu i że usunięty wpis może wrócić.
+- Bez cofania importu (decyzja autorki, D48) i bez osobnej liczby remisów (D49).
+
+**Sprawdzono**
+
+- 36 nowych testów (najpierw czerwone: trzy pliki nie ładowały się bez brakującego kodu), razem 270 w czterech strefach.
+- Kontrola przez psucie kodu: 144 usterki (41 nowych), 143 wykryte. Pierwsze podejście wykryło 3 luki w testach, wszystkie poprawione:
+  brak przypadku „obecny wpis ma mniej wdzięczności niż plik”, brak ujemnego `savedAt` i brak dnia, którego w strefie nie było
+  (Kiritimati, 31.12.1994; samo `Math.round` ukrywało różnicę lokalnej północy i UTC). Czwarta usterka (brak kontroli `canShare`)
+  jest równoważna, bo `try/catch` daje ten sam wynik, więc usunięta z listy.
+- Scenariusz w przeglądarce: 40 sprawdzeń, 0 niepowodzeń. Obejmuje import starszej, nowszej i mieszanej kopii, ponowny import
+  (same „bez zmian”), pusty i zepsuty plik, formularz otwarty na zaimportowanym dniu (odświeżony albo z ostrzeżeniem),
+  eksport (synchroniczne `share`, nazwa z lokalną datą, zawartość, licznik), anulowanie, błąd okna i brak obsługi plików, licznik po dwóch dniach.
+- Karta kopii obejrzana w 390×844, bez przycinania i przewijania poziomego.
+
+**Nie sprawdzono**
+
+- Okna udostępniania w Safari na iPhonie ani wyboru pliku w aplikacji Pliki (w przeglądarce działa atrapa). Do zrobienia po wdrożeniu PWA.
+- Notka pod kartą kopii („Otwieraj ten sam plik…”) jest nieaktualna dla PWA; do poprawy przy wdrożeniu (pkt 2–6).
+
+---
+
 ## 2026-10-10: Girlanda światełek (pkt 11)
 
 **Naprawiono**

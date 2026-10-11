@@ -3,6 +3,7 @@ import { describe, test } from 'node:test';
 import {
   addDaysKey,
   dateKey,
+  daysBetween,
   formatDatePL,
   formatMonthPL,
   isValidKey,
@@ -109,6 +110,43 @@ describe('addDaysKey', () => {
 
   test('rzuca błąd dla niepoprawnego klucza', () => {
     assert.throws(() => addDaysKey('2026-02-31', 1), RangeError);
+  });
+});
+
+describe('daysBetween', () => {
+  test('ten sam dzień to 0, następny to 1', () => {
+    assert.equal(daysBetween('2026-10-11', '2026-10-11'), 0);
+    assert.equal(daysBetween('2026-10-10', '2026-10-11'), 1);
+  });
+
+  test('liczy dni kalendarzowe przez granice miesięcy i lat', () => {
+    assert.equal(daysBetween('2026-09-26', '2026-10-11'), 15);
+    assert.equal(daysBetween('2026-12-31', '2027-01-01'), 1);
+    assert.equal(daysBetween('2026-01-01', '2027-01-01'), 365);
+    assert.equal(daysBetween('2024-01-01', '2025-01-01'), 366);
+    assert.equal(daysBetween('2028-02-28', '2028-03-01'), 2);
+  });
+
+  test('zmiana czasu nie skraca ani nie wydłuża różnicy', () => {
+    assert.equal(daysBetween('2026-03-28', '2026-03-29'), 1);
+    assert.equal(daysBetween('2026-03-28', '2026-03-30'), 2);
+    assert.equal(daysBetween('2026-10-24', '2026-10-25'), 1);
+    assert.equal(daysBetween('2026-10-24', '2026-10-26'), 2);
+  });
+
+  test('dzień, którego w strefie nie było (Kiritimati, 31.12.1994), nadal liczy się jako dzień', () => {
+    assert.equal(daysBetween('1994-12-29', '1995-01-02'), 4);
+    assert.equal(daysBetween('1994-12-30', '1995-01-01'), 2);
+  });
+
+  test('dla późniejszego dnia „od” wynik jest ujemny', () => {
+    assert.equal(daysBetween('2026-10-11', '2026-10-10'), -1);
+    assert.equal(daysBetween('2027-01-01', '2026-01-01'), -365);
+  });
+
+  test('rzuca błąd dla niepoprawnego klucza', () => {
+    assert.throws(() => daysBetween('2026-02-31', '2026-03-01'), RangeError);
+    assert.throws(() => daysBetween('2026-03-01', 'jutro'), RangeError);
   });
 });
 

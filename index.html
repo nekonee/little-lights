@@ -119,14 +119,16 @@
       <div class="card card--spaced">
         <label class="card-title">💾 Kopia zapasowa</label>
         <div class="hint">
-          Eksportuj wszystkie wpisy do pliku, który możesz bezpiecznie przechować (np. na dysku w
-          chmurze). W razie potrzeby wczytaj go z powrotem.
+          Eksportuj wszystkie wpisy do pliku, który możesz bezpiecznie przechować (np. w Plikach, na
+          dysku w chmurze albo w mailu do siebie). Po wczytaniu pliku dla każdego dnia zostaje
+          nowsza wersja wpisu. Usunięty wpis wróci, jeśli jest w wczytywanym pliku.
         </div>
+        <div class="hint" id="lastBackup"></div>
         <button class="cancel-btn cancel-btn--tight" id="exportBtn">
           ⬇️ Eksportuj wpisy (plik .json)
         </button>
         <label for="importFile" class="cancel-btn file-btn">⬆️ Importuj kopię zapasową</label>
-        <input type="file" id="importFile" accept="application/json" hidden />
+        <input type="file" id="importFile" accept=".json,application/json" hidden />
         <div class="status" id="backupStatus"></div>
       </div>
 

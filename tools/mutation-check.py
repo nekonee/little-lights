@@ -22,6 +22,9 @@ J = 'js/drafts.js'
 S = 'js/draft-sync.js'
 T = 'js/today-sync.js'
 G = 'js/garland-model.js'
+B = 'js/backup.js'
+H = 'js/share.js'
+STR = 'js/strings.js'
 mutants=[
  ('tydzień od niedzieli', M, "(weekdayOfFirst + DAYS_IN_WEEK - 1) % DAYS_IN_WEEK", "weekdayOfFirst"),
  ('5 wierszy zamiast 6 (35 komórek)', M, "const GRID_ROWS = 6;", "const GRID_ROWS = 5;"),
@@ -127,6 +130,46 @@ mutants=[
  ('todayKey przez toISOString (stary błąd UTC)', D, "return dateKey(date.getFullYear(), date.getMonth() + 1, date.getDate());", "return date.toISOString().slice(0, 10);"),
  ('addDaysKey liczy w lokalnym czasie milisekundami', D, "const shifted = new Date(Date.UTC(parsed.year, parsed.month - 1, parsed.day) + days * DAY_MS);\n  return dateKey(shifted.getUTCFullYear(), shifted.getUTCMonth() + 1, shifted.getUTCDate());",
    "const shifted = new Date(parsed.year, parsed.month - 1, parsed.day);\n  shifted.setTime(shifted.getTime() + days * DAY_MS);\n  return dateKey(shifted.getFullYear(), shifted.getMonth() + 1, shifted.getDate());"),
+ ('kopia: remis zastępuje obecny wpis', B, "savedAtOf(incoming) > savedAtOf(existing)", "savedAtOf(incoming) >= savedAtOf(existing)"),
+ ('kopia: starszy wpis z pliku wygrywa', B, "savedAtOf(incoming) > savedAtOf(existing)", "savedAtOf(incoming) < savedAtOf(existing)"),
+ ('kopia: plik zawsze wygrywa (zachowanie z prototypu)', B, "!sameContent(existing, incoming) && savedAtOf(incoming) > savedAtOf(existing)", "true"),
+ ('kopia: obecny zawsze wygrywa', B, "!sameContent(existing, incoming) && savedAtOf(incoming) > savedAtOf(existing)", "false"),
+ ('kopia: ta sama treść liczy się jako zmiana', B, "!sameContent(existing, incoming) &&", ""),
+ ('kopia: treść porównywana tylko po wdzięczności', B, "TEXT_FIELDS.every((field) => a[field] === b[field])", "true"),
+ ('kopia: treść bez ostatniego pola', B, "TEXT_FIELDS.every((field) => a[field] === b[field])", "TEXT_FIELDS.slice(0, 3).every((field) => a[field] === b[field])"),
+ ('kopia: kolejność wdzięczności bez znaczenia', B, "a.grateful.every((item, index) => item === b.grateful[index])", "a.grateful.every((item) => b.grateful.includes(item))"),
+ ('kopia: różna liczba wdzięczności bez znaczenia', B, "a.grateful.length === b.grateful.length &&", ""),
+ ('kopia: savedAt jako tekst się liczy', B, "Number.isFinite(entry.savedAt) && entry.savedAt > 0 ? entry.savedAt : 0", "Number(entry.savedAt) > 0 ? Number(entry.savedAt) : 0"),
+ ('kopia: ujemne savedAt się liczy', B, "Number.isFinite(entry.savedAt) && entry.savedAt > 0 ? entry.savedAt : 0", "Number.isFinite(entry.savedAt) ? entry.savedAt : 0"),
+ ('kopia: uszkodzony wpis lokalny nie jest zastępowany', B, "if (!isPlainObject(existing)) {", "if (existing === undefined) {"),
+ ('kopia: tablica jako wpis lokalny', B, "if (!isPlainObject(existing)) {", "if (typeof existing !== 'object' || existing === null) {"),
+ ('kopia: dodane liczone jako zaktualizowane', B, "entries[key] = incoming;\n      added++;", "entries[key] = incoming;\n      updated++;"),
+ ('kopia: zaktualizowane liczone jako dodane', B, "entries[key] = incoming;\n      updated++;", "entries[key] = incoming;\n      added++;"),
+ ('kopia: bez zmian nie liczone', B, "} else {\n      unchanged++;\n    }", "} else {\n    }"),
+ ('kopia: scalanie modyfikuje obecne wpisy', B, "const entries = { ...current };", "const entries = current;"),
+ ('kopia: wpisy tylko lokalne giną', B, "const entries = { ...current };", "const entries = {};"),
+ ('status: bez wpisów też pokazuje licznik', B, "if (entryCount === 0) return { kind: 'none' };", ""),
+ ('status: zepsuta data nie daje „jeszcze nie”', B, "if (!isValidKey(lastBackup)) return { kind: 'never' };", ""),
+ ('status: data z przyszłości daje liczbę ujemną', B, "Math.max(0, daysBetween(lastBackup, today))", "daysBetween(lastBackup, today)"),
+ ('status: dni liczone odwrotnie', B, "daysBetween(lastBackup, today)", "daysBetween(today, lastBackup)"),
+ ('daysBetween: lokalna północ zamiast UTC', D, "const utc = ({ year, month, day }) => Date.UTC(year, month - 1, day);", "const utc = ({ year, month, day }) => new Date(year, month - 1, day).getTime();"),
+ ('daysBetween: odwrócony znak', D, "return Math.round((utc(to) - utc(from)) / DAY_MS);", "return Math.round((utc(from) - utc(to)) / DAY_MS);"),
+ ('daysBetween: brak błędu dla złego „od”', D, "if (!from) throw new RangeError(`Niepoprawny klucz dnia: ${fromKey}`);", ""),
+ ('daysBetween: brak błędu dla złego „do”', D, "if (!to) throw new RangeError(`Niepoprawny klucz dnia: ${toKey}`);", ""),
+ ('eksport: udostępnianie bez sprawdzenia canShare', H, "return nav.canShare({ files: [file] }) === true ? 'share' : 'download';", "return 'share';"),
+ ('eksport: „prawdopodobnie prawda” z canShare wystarcza', H, "nav.canShare({ files: [file] }) === true", "nav.canShare({ files: [file] })"),
+ ('eksport: canShare pytany bez pliku', H, "nav.canShare({ files: [file] })", "nav.canShare({})"),
+ ('eksport: błąd canShare nie jest łapany', H, "} catch {\n    return 'download';\n  }", "} finally {\n  }"),
+ ('eksport: brak share nie wymusza pobrania', H, "typeof nav?.share !== 'function' || typeof nav?.canShare !== 'function'", "typeof nav?.canShare !== 'function'"),
+ ('eksport: każdy błąd to anulowanie', H, "return error?.name === 'AbortError';", "return error !== undefined && error !== null;"),
+ ('eksport: żaden błąd to nie anulowanie', H, "return error?.name === 'AbortError';", "return false;"),
+ ('teksty: wczoraj jako „1 dni temu”', STR, "if (status.days === 1) return 'Ostatnia kopia: wczoraj';", ""),
+ ('teksty: dziś jako „0 dni temu”', STR, "if (status.days === 0) return 'Ostatnia kopia: dziś';", ""),
+ ('teksty: licznik pokazuje się dla „none”', STR, "if (status.kind !== 'done') return '';", "if (status.kind !== 'done') return 'Jeszcze nie robiłaś kopii zapasowej';"),
+ ('teksty: pusty plik bez osobnego komunikatu', STR, "added + updated + unchanged === 0", "false"),
+ ('teksty: pusty plik także, gdy tylko „bez zmian”', STR, "added + updated + unchanged === 0", "added + updated === 0"),
+ ('teksty: pominięte zawsze widoczne', STR, "skipped > 0 ?", "true ?"),
+ ('teksty: zamienione liczby w raporcie', STR, "Dodano: ${added}, zaktualizowano: ${updated}", "Dodano: ${updated}, zaktualizowano: ${added}"),
 ]
 TZS=['Europe/Warsaw','America/Los_Angeles','Pacific/Kiritimati','UTC']
 def fresh():

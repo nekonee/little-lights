@@ -44,7 +44,8 @@ js/
   app.js              start aplikacji, stan (wybrana data), łączenie modułów
   dates.js            klucze dni i miesięcy, rachunek na dniach, daty po polsku (czyste)
   streak-summary.js   streak i podsumowanie miesiąca                  (czyste)
-  backup.js           serializacja, parsowanie, walidacja i scalanie kopii (czyste)
+  backup.js           serializacja, parsowanie, walidacja, scalanie „nowszy wygrywa” i status kopii (czyste)
+  share.js            wybór eksportu: okno udostępniania albo pobranie  (czyste)
   quotes.js           pula cytatów                                    (dane)
   strings.js          teksty interfejsu tworzone w JS
   store.js            jedyne miejsce dotykające localStorage
@@ -58,7 +59,7 @@ js/
   calendar.js         wybór daty: rysowanie panelu i zdarzenia (cienka warstwa)
   history.js          lista poprzednich wpisów
   summary.js          karta podsumowania miesiąca
-  backup-panel.js     przyciski eksportu i importu
+  backup-panel.js     przyciski eksportu i importu, licznik „Ostatnia kopia”
   header.js           data i licznik serii
   quote.js            cytat dnia
   themes.js           wybór motywu, emoji pory roku

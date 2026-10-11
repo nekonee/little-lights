@@ -1,4 +1,4 @@
-import { isValidKey } from './dates.js';
+import { daysBetween, isValidKey } from './dates.js';
 
 const MAX_GRATEFUL = 3;
 const TEXT_FIELDS = ['why', 'person', 'proud', 'lesson'];
@@ -57,8 +57,55 @@ export function sanitizeEntries(imported) {
   return { entries, skipped };
 }
 
-// Zachowanie z prototypu: wpis z pliku zawsze zastępuje obecny z tą samą datą.
-// Do zastąpienia zasadą „nowszy wygrywa” (docs/plan.json, punkt 14).
+function savedAtOf(entry) {
+  return Number.isFinite(entry.savedAt) && entry.savedAt > 0 ? entry.savedAt : 0;
+}
+
+function sameContent(a, b) {
+  return (
+    Array.isArray(a.grateful) &&
+    Array.isArray(b.grateful) &&
+    a.grateful.length === b.grateful.length &&
+    a.grateful.every((item, index) => item === b.grateful[index]) &&
+    TEXT_FIELDS.every((field) => a[field] === b[field])
+  );
+}
+
+/**
+ * Scala wpisy z pliku z obecnymi. Dla każdej daty zostaje wpis z większym `savedAt`
+ * (brak lub zła wartość to 0); przy remisie i przy tej samej treści zostaje obecny.
+ * Wpisy obecne tylko lokalnie zostają, usunięcia nie są synchronizowane.
+ * Obecny wpis, który nie jest obiektem, traktujemy jak nieistniejący.
+ * @returns {{entries: Record<string, object>, added: number, updated: number, unchanged: number}}
+ */
 export function mergeEntries(current, imported) {
-  return Object.assign({}, current, imported);
+  const entries = { ...current };
+  let added = 0;
+  let updated = 0;
+  let unchanged = 0;
+  for (const [key, incoming] of Object.entries(imported)) {
+    const existing = current[key];
+    if (!isPlainObject(existing)) {
+      entries[key] = incoming;
+      added++;
+    } else if (!sameContent(existing, incoming) && savedAtOf(incoming) > savedAtOf(existing)) {
+      entries[key] = incoming;
+      updated++;
+    } else {
+      unchanged++;
+    }
+  }
+  return { entries, added, updated, unchanged };
+}
+
+/**
+ * Stan licznika „Ostatnia kopia”. Bez wpisów nie ma czego kopiować, więc licznika nie ma;
+ * zepsuta data kopii liczy się jak brak kopii, a data z przyszłości (przestawiony zegar) jak „dziś”.
+ * @param {{entryCount: number, lastBackup: unknown, today: string}} input daty to klucze YYYY-MM-DD
+ * @returns {{kind: 'none'} | {kind: 'never'} | {kind: 'done', days: number}}
+ */
+export function backupStatus({ entryCount, lastBackup, today }) {
+  if (entryCount === 0) return { kind: 'none' };
+  if (!isValidKey(lastBackup)) return { kind: 'never' };
+  return { kind: 'done', days: Math.max(0, daysBetween(lastBackup, today)) };
 }

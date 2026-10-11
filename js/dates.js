@@ -88,6 +88,20 @@ export function addDaysKey(key, days) {
   return dateKey(shifted.getUTCFullYear(), shifted.getUTCMonth() + 1, shifted.getUTCDate());
 }
 
+/**
+ * Liczba dni kalendarzowych od `fromKey` do `toKey` (ujemna, gdy `toKey` jest wcześniejszy).
+ * Liczone na północach UTC, więc zmiana czasu nie skraca ani nie wydłuża doby.
+ * @throws {RangeError} gdy któryś klucz nie jest prawdziwym dniem
+ */
+export function daysBetween(fromKey, toKey) {
+  const from = parseKey(fromKey);
+  const to = parseKey(toKey);
+  if (!from) throw new RangeError(`Niepoprawny klucz dnia: ${fromKey}`);
+  if (!to) throw new RangeError(`Niepoprawny klucz dnia: ${toKey}`);
+  const utc = ({ year, month, day }) => Date.UTC(year, month - 1, day);
+  return Math.round((utc(to) - utc(from)) / DAY_MS);
+}
+
 /** „Piątek, 25 września 2026”. Niepoprawny klucz wraca bez zmian, żeby widok się nie wywrócił. */
 export function formatDatePL(key) {
   const parsed = parseKey(key);

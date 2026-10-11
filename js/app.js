@@ -51,6 +51,7 @@ function refreshAll() {
   history.render(entries);
   renderStreak(entries);
   summary.refresh(entries);
+  backupPanel.refresh(entries);
 }
 
 function renderMode() {
@@ -273,7 +274,7 @@ renderTodayLabel();
 initThemes();
 initGarlands();
 initQuote();
-initBackupPanel({ onImported: handleImported });
+const backupPanel = initBackupPanel({ onImported: handleImported });
 loadFormForDate();
 refreshAll();
 offerOtherDraft();

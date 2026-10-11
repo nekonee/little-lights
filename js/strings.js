@@ -63,9 +63,19 @@ export const strings = {
 
   backup: {
     exported: 'Pobrano kopię zapasową ✓',
-    imported: (skipped) =>
-      'Wczytano kopię zapasową ✓ (wpisy scalone z obecnymi)' +
+    shared: 'Kopia zapasowa gotowa ✓',
+    imported: ({ added, updated, unchanged, skipped }) =>
+      (added + updated + unchanged === 0
+        ? 'W pliku nie ma wpisów do wczytania'
+        : `Wczytano kopię zapasową ✓ Dodano: ${added}, zaktualizowano: ${updated}, bez zmian: ${unchanged}`) +
       (skipped > 0 ? `. Pominięto nieprawidłowe wpisy: ${skipped}` : ''),
+    lastBackup: (status) => {
+      if (status.kind === 'never') return 'Jeszcze nie robiłaś kopii zapasowej';
+      if (status.kind !== 'done') return '';
+      if (status.days === 0) return 'Ostatnia kopia: dziś';
+      if (status.days === 1) return 'Ostatnia kopia: wczoraj';
+      return `Ostatnia kopia: ${status.days} dni temu`;
+    },
     importKeptForm:
       'Import zmienił wpis z tego dnia, a w formularzu masz niezapisane zmiany. Zapis nadpisze zaimportowany wpis.',
     importFailed: 'Nie udało się wczytać pliku — sprawdź, czy to poprawna kopia zapasowa.',

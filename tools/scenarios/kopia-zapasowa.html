@@ -1,0 +1,232 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Scenariusz: kopia zapasowa</title>
+<!--
+  Scenariusz w prawdziwej przeglądarce dla punktu 14 (eksport/import, „nowszy wygrywa”, licznik „Ostatnia kopia”).
+  Uruchomienie: npm start, potem http://localhost:8000/tools/scenarios/kopia-zapasowa.html
+  Aplikacja działa w ramce. Okno udostępniania (navigator.share) jest atrapą, pobranie linkiem jest przechwytywane,
+  a zegar przesuwany, więc nic nie trzeba klikać ani czekać. Dane są wymyślone, prawdziwe wpisy nie są używane.
+  UWAGA: scenariusz czyści localStorage adresu localhost:8000. Dane są kopiowane na początku i przywracane na końcu,
+  ale na wszelki wypadek zrób kopię zapasową wpisów przed uruchomieniem.
+  Prawdziwego okna udostępniania w Safari na iPhonie ten scenariusz nie sprawdza.
+-->
+<style>
+  body { font: 13px/1.5 monospace; margin: 12px; }
+  iframe { width: 390px; height: 844px; border: 1px solid #999; }
+  .ok { color: #1a7f37; }
+  .bad { color: #c00; font-weight: bold; }
+</style>
+<iframe id="frame" title="aplikacja"></iframe>
+<pre id="out"></pre>
+<script type="module">
+  import { addDaysKey, daysBetween, todayKey } from '/js/dates.js';
+
+  const out = document.getElementById('out');
+  const frame = document.getElementById('frame');
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  const HOUR = 60 * 60 * 1000;
+  const KEYS = {
+    entries: 'gratitude_journal_entries_v1',
+    drafts: 'gratitude_journal_drafts_v1',
+    lastBackup: 'gratitude_journal_last_backup',
+  };
+  let failures = 0;
+
+  function check(name, condition, extra = '') {
+    if (!condition) failures++;
+    const cls = condition ? 'ok' : 'bad';
+    out.insertAdjacentHTML('beforeend', `<span class="${cls}">${condition ? 'OK  ' : 'FAIL'}</span> ${name} ${extra}\n`);
+  }
+
+  const win = () => frame.contentWindow;
+  const doc = () => frame.contentDocument;
+  const $ = (selector) => doc().querySelector(selector);
+  const stored = () => JSON.parse(localStorage.getItem(KEYS.entries) || '{}');
+  const appToday = () => todayKey(new Date(Date.now() + win().__offsetMs));
+  const lastBackupText = () => $('#lastBackup').textContent;
+  const backupStatusText = () => $('#backupStatus').textContent;
+
+  function make(date, savedAt, why) {
+    return { date, grateful: ['kawa'], why, person: '', proud: '', lesson: '', savedAt };
+  }
+
+  /** Ramka z kodem aplikacji. Tryb okna udostępniania: ok | abort | fail | none (brak obsługi plików). */
+  async function boot({ seedEntries = {}, shareMode = 'ok' } = {}) {
+    localStorage.setItem(KEYS.entries, JSON.stringify(seedEntries));
+    localStorage.removeItem(KEYS.drafts);
+    localStorage.removeItem(KEYS.lastBackup);
+    const html = await (await fetch('/index.html', { cache: 'no-store' })).text();
+    const prelude = `<base href="/"><script>
+      window.__offsetMs = 0; window.__shared = []; window.__downloads = []; window.__shareMode = ${JSON.stringify(shareMode)};
+      const RealDate = Date;
+      window.Date = class extends RealDate {
+        constructor(...args) { if (args.length === 0) super(RealDate.now() + window.__offsetMs); else super(...args); }
+        static now() { return RealDate.now() + window.__offsetMs; }
+      };
+      Object.defineProperty(navigator, 'canShare', { configurable: true, value: (data) =>
+        window.__shareMode !== 'none' && !!data && !!data.files && data.files.length === 1 });
+      Object.defineProperty(navigator, 'share', { configurable: true, value: async (data) => {
+        window.__shared.push(data.files[0]);
+        if (window.__shareMode === 'abort') throw new DOMException('anulowano', 'AbortError');
+        if (window.__shareMode === 'fail') throw new DOMException('brak gestu', 'NotAllowedError');
+      } });
+      const realClick = HTMLAnchorElement.prototype.click;
+      HTMLAnchorElement.prototype.click = function () {
+        if (this.download) window.__downloads.push(this.download); else realClick.call(this);
+      };
+    <\/script>`;
+    await new Promise((resolve) => {
+      frame.onload = resolve;
+      frame.srcdoc = html.replace('<head>', '<head>' + prelude);
+    });
+    await sleep(250);
+  }
+
+  async function importText(text) {
+    const input = $('#importFile');
+    const transfer = new (win().DataTransfer)();
+    transfer.items.add(new (win().File)([text], 'kopia.json', { type: 'application/json' }));
+    input.files = transfer.files;
+    input.dispatchEvent(new (win().Event)('change', { bubbles: true }));
+    await sleep(200);
+  }
+
+  async function pickDay(key) {
+    if ($('#calendarPanel').hidden) $('#dateTrigger').click();
+    await sleep(30);
+    $(`.cal-day[data-date="${key}"]`).click();
+    await sleep(80);
+  }
+
+  function typeInto(selector, value) {
+    const element = $(selector);
+    element.value = value;
+    element.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  const backup = Object.fromEntries(Object.keys(localStorage).map((key) => [key, localStorage.getItem(key)]));
+
+  try {
+    const D0 = todayKey();
+    const D_1 = addDaysKey(D0, -1);
+    const D_2 = addDaysKey(D0, -2);
+    const D_3 = addDaysKey(D0, -3);
+    const D_5 = addDaysKey(D0, -5);
+
+    // A. licznik zależy od tego, czy są wpisy
+    await boot();
+    check('A1 bez wpisów nie ma licznika', lastBackupText() === '', JSON.stringify(lastBackupText()));
+    typeInto('#g1', 'pierwsza rzecz');
+    $('#saveBtn').click();
+    await sleep(120);
+    check('A2 po pierwszym wpisie: „Jeszcze nie robiłaś kopii”', lastBackupText() === 'Jeszcze nie robiłaś kopii zapasowej', lastBackupText());
+    check('A3 wybór pliku akceptuje .json (iOS)', $('#importFile').accept === '.json,application/json', $('#importFile').accept);
+
+    // B. import: nowszy wygrywa, raport z liczbami
+    await boot({ seedEntries: { [D_3]: make(D_3, 1000, 'lokalny-stary'), [D_2]: make(D_2, 9000, 'lokalny-nowy') } });
+    const file = {
+      [D_3]: make(D_3, 2000, 'plik-nowszy'),
+      [D_2]: make(D_2, 5000, 'plik-starszy'),
+      [D_5]: make(D_5, 3000, 'plik-nowy'),
+      [D_1]: { ...make(D_1, 0, 'plik-bez-savedAt'), savedAt: undefined },
+      '2026-02-31': make('2026-02-31', 1, 'zły dzień'),
+    };
+    await importText(JSON.stringify(file));
+    check('B1 nowszy wpis z pliku zastąpił lokalny', stored()[D_3]?.why === 'plik-nowszy', stored()[D_3]?.why);
+    check('B2 nowszy lokalny wpis został', stored()[D_2]?.why === 'lokalny-nowy' && stored()[D_2].savedAt === 9000, stored()[D_2]?.why);
+    check('B3 wpis tylko w pliku dodany (także bez savedAt, jako 0)', stored()[D_5]?.why === 'plik-nowy' && stored()[D_1]?.savedAt === 0);
+    check('B4 zły dzień pominięty', !('2026-02-31' in stored()));
+    check('B5 raport', backupStatusText() === 'Wczytano kopię zapasową ✓ Dodano: 2, zaktualizowano: 1, bez zmian: 1. Pominięto nieprawidłowe wpisy: 1', backupStatusText());
+    check('B6 import nie ustawia licznika kopii', lastBackupText() === 'Jeszcze nie robiłaś kopii zapasowej', lastBackupText());
+
+    // C. ponowne wczytanie tego samego pliku nic nie zmienia
+    const before = localStorage.getItem(KEYS.entries);
+    await importText(JSON.stringify(file));
+    check('C1 wpisy bez zmian po drugim imporcie', localStorage.getItem(KEYS.entries) === before);
+    check('C2 raport: same „bez zmian”', backupStatusText() === 'Wczytano kopię zapasową ✓ Dodano: 0, zaktualizowano: 0, bez zmian: 4. Pominięto nieprawidłowe wpisy: 1', backupStatusText());
+
+    // D. pusty plik i zepsute pliki
+    await importText('{}');
+    check('D1 pusty obiekt: „nic do wczytania”', backupStatusText() === 'W pliku nie ma wpisów do wczytania', backupStatusText());
+    await importText('to nie jest json');
+    check('D2 zepsuty plik: komunikat o błędzie', backupStatusText().startsWith('Nie udało się wczytać pliku'), backupStatusText());
+    await importText('[]');
+    check('D3 tablica zamiast obiektu: komunikat o błędzie', backupStatusText().startsWith('Nie udało się wczytać pliku'), backupStatusText());
+    check('D4 wpisy nietknięte po błędach', localStorage.getItem(KEYS.entries) === before);
+
+    // E. import a otwarty formularz
+    await boot({ seedEntries: { [D_1]: make(D_1, 1000, 'stary-opis') } });
+    await pickDay(D_1);
+    check('E0 formularz pokazuje wpis lokalny', $('#why').value === 'stary-opis', $('#why').value);
+    await importText(JSON.stringify({ [D_1]: make(D_1, 2000, 'nowy-opis') }));
+    check('E1 nietknięty formularz odświeża się po imporcie', $('#why').value === 'nowy-opis', $('#why').value);
+    typeInto('#why', 'moje zmiany');
+    await importText(JSON.stringify({ [D_1]: make(D_1, 3000, 'jeszcze-nowszy') }));
+    check('E2 rozgrzebany formularz zostaje', $('#why').value === 'moje zmiany', $('#why').value);
+    check('E3 ostrzeżenie w formularzu', $('#status').textContent.startsWith('Import zmienił wpis z tego dnia'), $('#status').textContent);
+    check('E4 import zapisał nowszą wersję', stored()[D_1]?.why === 'jeszcze-nowszy');
+
+    // F. eksport przez okno udostępniania
+    const exportSeed = { [D_3]: make(D_3, 1000, 'a'), [D_2]: make(D_2, 2000, 'b') };
+    await boot({ seedEntries: exportSeed });
+    check('F0 przed eksportem: „Jeszcze nie robiłaś kopii”', lastBackupText() === 'Jeszcze nie robiłaś kopii zapasowej');
+    $('#exportBtn').click();
+    check('F1 navigator.share ruszył synchronicznie z kliknięcia', win().__shared.length === 1);
+    await sleep(150);
+    const shared = win().__shared[0];
+    check('F2 nazwa pliku z lokalną datą', shared?.name === `kopia-dziennika-wdziecznosci-${D0}.json`, shared?.name);
+    check('F3 typ pliku application/json', shared?.type === 'application/json', shared?.type);
+    const sharedText = await shared.text();
+    check('F4 zawartość to wpisy z wcięciem 2 spacji', sharedText === JSON.stringify(exportSeed, null, 2));
+    check('F5 komunikat po udostępnieniu', backupStatusText() === 'Kopia zapasowa gotowa ✓', backupStatusText());
+    check('F6 licznik: dziś', lastBackupText() === 'Ostatnia kopia: dziś', lastBackupText());
+    check('F7 data kopii zapisana lokalnie', localStorage.getItem(KEYS.lastBackup) === D0, localStorage.getItem(KEYS.lastBackup));
+    check('F8 bez pobierania linkiem', win().__downloads.length === 0);
+    check('F9 klucz licznika nie wchodzi do kopii', !sharedText.includes('last_backup'));
+
+    // G. licznik po kilku dniach
+    win().__offsetMs += 49 * HOUR;
+    Object.defineProperty(doc(), 'visibilityState', { value: 'hidden', configurable: true });
+    doc().dispatchEvent(new Event('visibilitychange'));
+    Object.defineProperty(doc(), 'visibilityState', { value: 'visible', configurable: true });
+    doc().dispatchEvent(new Event('visibilitychange'));
+    await sleep(150);
+    const days = daysBetween(D0, appToday());
+    check('G1 licznik po zmianie dni', lastBackupText() === `Ostatnia kopia: ${days} dni temu` && days >= 2, lastBackupText());
+
+    // H. anulowanie okna udostępniania
+    await boot({ seedEntries: exportSeed, shareMode: 'abort' });
+    $('#exportBtn').click();
+    await sleep(150);
+    check('H1 anulowanie: pusty komunikat', backupStatusText() === '', JSON.stringify(backupStatusText()));
+    check('H2 anulowanie: licznik bez zmian', lastBackupText() === 'Jeszcze nie robiłaś kopii zapasowej' && localStorage.getItem(KEYS.lastBackup) === null);
+    check('H3 anulowanie: bez pobierania', win().__downloads.length === 0);
+
+    // I. błąd okna udostępniania: awaryjne pobranie
+    await boot({ seedEntries: exportSeed, shareMode: 'fail' });
+    $('#exportBtn').click();
+    await sleep(150);
+    check('I1 błąd: awaryjne pobranie', win().__downloads.length === 1 && win().__downloads[0] === `kopia-dziennika-wdziecznosci-${D0}.json`, JSON.stringify(win().__downloads));
+    check('I2 komunikat o pobraniu', backupStatusText() === 'Pobrano kopię zapasową ✓', backupStatusText());
+    check('I3 licznik: dziś', lastBackupText() === 'Ostatnia kopia: dziś');
+
+    // J. przeglądarka bez obsługi plików w oknie udostępniania: pobranie od razu
+    await boot({ seedEntries: exportSeed, shareMode: 'none' });
+    $('#exportBtn').click();
+    check('J1 pobranie od razu, bez okna udostępniania', win().__downloads.length === 1 && win().__shared.length === 0);
+    check('J2 komunikat i licznik', backupStatusText() === 'Pobrano kopię zapasową ✓' && lastBackupText() === 'Ostatnia kopia: dziś');
+
+    // K. kopia z 26.09 ma format zgodny z importem (dane wymyślone w tym samym kształcie)
+    await boot();
+    await importText(JSON.stringify({ [D_1]: { date: D_1, grateful: ['a', 'b'], why: '', person: '', proud: '', lesson: '', savedAt: 1790000000000 } }));
+    check('K1 wpis w formacie kopii wczytuje się', stored()[D_1]?.grateful.length === 2 && backupStatusText().includes('Dodano: 1'), backupStatusText());
+  } catch (error) {
+    failures++;
+    out.insertAdjacentHTML('beforeend', `<span class="bad">WYJĄTEK: ${error.stack}</span>\n`);
+  } finally {
+    localStorage.clear();
+    for (const [key, value] of Object.entries(backup)) localStorage.setItem(key, value);
+    out.insertAdjacentHTML('beforeend', `\n<b>Niepowodzenia: ${failures}</b> (dane localStorage przywrócone)\n`);
+    document.title = failures ? 'FAIL' : 'ALL OK';
+  }
+</script>
