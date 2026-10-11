@@ -62,9 +62,9 @@
     "priority": "normal",
     "details": [
       "localStorage jest przypisany do adresu (origin). Zmiana adresu, nazwy użytkownika, repozytorium albo domeny oznacza nowy, pusty magazyn danych — wpisy trzeba by przenieść przez eksport i import. Wybrać docelowy adres przed pierwszym wpisem w PWA.",
-      "Na hosting trafia tylko kod (index.html, manifest, ikony). Wpisy zostają na telefonie. Nie wrzucać do repozytorium plików z kopią zapasową (kopia-dziennika-wdziecznosci-*.json).",
+      "✅ (workflow publikuje tylko index.html, manifest, ikony, css, js i assets; kopii wpisów tam nie ma) Na hosting trafia tylko kod (index.html, manifest, ikony). Wpisy zostają na telefonie. Nie wrzucać do repozytorium plików z kopią zapasową (kopia-dziennika-wdziecznosci-*.json).",
       "Ten sam adres otwarty na komputerze będzie działał, ale ma osobny magazyn danych (patrz punkt 20).",
-      "Publikacja z repozytorium git (punkt 1): struktura plików działa bez budowania, więc GitHub Pages serwuje ją bez zmian. Przed pierwszą publikacją sprawdzić .gitignore, żeby żaden plik z kopią wpisów nie trafił do repozytorium."
+      "✅ (workflow GitHub Actions z testami przed publikacją; .gitignore sprawdzony testem) Publikacja z repozytorium git (punkt 1): struktura plików działa bez budowania, więc GitHub Pages serwuje ją bez zmian. Przed pierwszą publikacją sprawdzić .gitignore, żeby żaden plik z kopią wpisów nie trafił do repozytorium."
     ]
   },
   {

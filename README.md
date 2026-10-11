@@ -66,6 +66,7 @@ js/
   themes.js           wybór motywu, emoji pory roku
   garland-model.js    geometria girlandy: łuki, żarówki, kolory, migotanie   (czyste)
   garland.js          girlanda światełek w motywach zimowych (rysowanie SVG)
+.github/workflows/   publikacja na GitHub Pages: testy, potem tylko pliki aplikacji (pages.yml)
 tests/                testy logiki (node --test), dane wymyślone
 tools/                serwer bez cache'u, kontrola testów przez psucie kodu, scenariusze w przeglądarce
 assets/               favicon, ikona aplikacji (źródło SVG i PNG), docelowo ekran startowy

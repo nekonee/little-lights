@@ -28,6 +28,8 @@ STR = 'js/strings.js'
 MF = 'manifest.json'
 IX = 'index.html'
 CSS = 'css/base.css'
+WF = '.github/workflows/pages.yml'
+GI = '.gitignore'
 mutants=[
  ('tydzień od niedzieli', M, "(weekdayOfFirst + DAYS_IN_WEEK - 1) % DAYS_IN_WEEK", "weekdayOfFirst"),
  ('5 wierszy zamiast 6 (35 komórek)', M, "const GRID_ROWS = 6;", "const GRID_ROWS = 5;"),
@@ -204,14 +206,45 @@ mutants=[
  ('pwa: APP_TITLE inny niż w manifeście', STR, "export const APP_TITLE = 'Little Lights';", "export const APP_TITLE = 'Little Light';"),
  ('pwa: brak wcięcia u góry (notch)', CSS, 'calc(28px + env(safe-area-inset-top))', '28px'),
  ('pwa: brak wcięcia na dole (pasek home)', CSS, 'calc(60px + env(safe-area-inset-bottom))', '60px'),
+ ('deploy: na stronę trafia docs', WF, "cp -R css js _site/", "cp -R css js docs _site/"),
+ ('deploy: na stronę trafiają testy', WF, "cp -R css js _site/", "cp -R css js tests _site/"),
+ ('deploy: na stronę trafia legacy', WF, "cp -R css js _site/", "cp -R css js legacy _site/"),
+ ('deploy: na stronę trafiają narzędzia', WF, "cp -R css js _site/", "cp -R css js tools _site/"),
+ ('deploy: na stronę trafiają prywatne kopie', WF, "cp -R css js _site/", "cp -R css js backups _site/"),
+ ('deploy: kopiowanie całego repozytorium', WF, "cp -R css js _site/", "cp -R . _site/"),
+ ('deploy: wzorzec zamiast listy plików', WF, "cp -R css js _site/", "cp -R css js* _site/"),
+ ('deploy: README na stronie', WF, "cp index.html manifest.json apple-touch-icon.png _site/", "cp index.html manifest.json apple-touch-icon.png README.md _site/"),
+ ('deploy: package.json na stronie', WF, "cp index.html manifest.json apple-touch-icon.png _site/", "cp index.html manifest.json apple-touch-icon.png package.json _site/"),
+ ('deploy: brak katalogu js', WF, "cp -R css js _site/", "cp -R css _site/"),
+ ('deploy: brak katalogu css', WF, "cp -R css js _site/", "cp -R js _site/"),
+ ('deploy: brak manifestu', WF, "cp index.html manifest.json apple-touch-icon.png _site/", "cp index.html apple-touch-icon.png _site/"),
+ ('deploy: brak ikony apple-touch-icon', WF, "cp index.html manifest.json apple-touch-icon.png _site/", "cp index.html manifest.json _site/"),
+ ('deploy: brak index.html', WF, "cp index.html manifest.json apple-touch-icon.png _site/", "cp manifest.json apple-touch-icon.png _site/"),
+ ('deploy: brak ikon z katalogu assets/icons', WF, "          cp -R assets/icons _site/assets/\n", ""),
+ ('deploy: brak favicony', WF, "          cp assets/favicon.svg _site/assets/\n", ""),
+ ('deploy: publikacja z innej gałęzi', WF, "branches: [main]", "branches: [develop]"),
+ ('deploy: publikacja bez testów (brak needs)', WF, "    needs: test\n", ""),
+ ('deploy: zadanie testów nie uruchamia testów', WF, "      - run: npm test\n", ""),
+ ('deploy: brak kroku publikacji', WF, "actions/deploy-pages@v5", "actions/configure-pages@v6"),
+ ('deploy: brak wysyłania artefaktu', WF, "actions/upload-pages-artifact@v5", "actions/configure-pages@v6"),
+ ('deploy: uprawnienia zapisu do kodu', WF, "permissions:\n  contents: read", "permissions:\n  contents: write"),
+ ('deploy: write-all', WF, "permissions:\n  contents: read", "permissions: write-all\n  x: read"),
+ ('deploy: brak uprawnienia pages', WF, "      pages: write\n", ""),
+ ('deploy: brak tokenu OIDC', WF, "      id-token: write\n", ""),
+ ('deploy: brak uprawnienia odczytu kodu', WF, "permissions:\n  contents: read", "permissions:\n  actions: read"),
+ ('deploy: cudza akcja', WF, "actions/checkout@v7", "someone/checkout@v7"),
+ ('deploy: akcja bez wersji głównej', WF, "actions/setup-node@v7", "actions/setup-node@main"),
+ ('deploy: sekret w workflow', WF, "      - run: npm test", "      - run: npm test\n        env:\n          T: ${{ secrets.TOKEN }}"),
+ ('gitignore: brak ochrony katalogu backups', GI, "backups/\n", ""),
+ ('gitignore: brak ochrony plików kopii', GI, "kopia-dziennika-*.json\n", ""),
 ]
 TZS=['Europe/Warsaw','America/Los_Angeles','Pacific/Kiritimati','UTC']
 def fresh():
     if os.path.exists(TMP):
         shutil.rmtree(TMP)
     os.makedirs(TMP)
-    for d in ('js','tests','css','assets'): shutil.copytree(f'{SRC}/{d}', f'{TMP}/{d}')
-    for f in ('package.json','index.html','manifest.json','apple-touch-icon.png'): shutil.copy(f'{SRC}/{f}', TMP)
+    for d in ('js','tests','css','assets','.github'): shutil.copytree(f'{SRC}/{d}', f'{TMP}/{d}')
+    for f in ('package.json','index.html','manifest.json','apple-touch-icon.png','.gitignore'): shutil.copy(f'{SRC}/{f}', TMP)
 def run(tz):
     r=subprocess.run(['node','--test'],cwd=TMP,env={**os.environ,'TZ':tz},capture_output=True,text=True)
     m=re.search(r'ℹ fail (\d+)',r.stdout); return int(m.group(1)) if m else -1

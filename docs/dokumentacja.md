@@ -269,6 +269,14 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 
 ## 11. iOS i PWA
 
+- **Publikacja** (`.github/workflows/pages.yml`, GitHub Pages z Actions): po wypchnięciu na `main` najpierw działają testy (`npm test`),
+  a dopiero po nich publikacja. Na stronę trafiają tylko `index.html`, `manifest.json`, `apple-touch-icon.png`, `css/`, `js/`,
+  `assets/favicon.svg` i `assets/icons/`. Dokumentacja, testy, narzędzia, `legacy/` i kopie zostają w repozytorium: prototyp pod tym samym
+  adresem używa tego samego klucza `localStorage` co aplikacja, a scenariusze w `tools/` czyszczą `localStorage`.
+  Uprawnienia są minimalne (odczyt kodu, zapis Pages, token OIDC), akcje tylko oficjalne `actions/*` z numerem wersji głównej,
+  bez sekretów. Zachowania W1–W6 są na początku [`tests/deploy.test.js`](../tests/deploy.test.js).
+- **Docelowy adres:** `https://nekonee.github.io/little-lights/` (podkatalog, stąd względne ścieżki). Nazwa repozytorium jest częścią adresu,
+  a domena `nekonee.github.io` decyduje o magazynie danych, więc nazwy konta ani repozytorium nie zmieniamy bez eksportu kopii.
 - **Osobny magazyn danych** zainstalowanej aplikacji (patrz „Adres decyduje o danych”).
 - **Ikona:** rudy kotek śpiący pod girlandą na żurawinowym tle (`assets/icon-source.svg`), stała i niezależna od motywu sezonowego.
   Pliki PNG (pełne tło, bez przezroczystości) są w `assets/icons/` (120–512 px) oraz jako `apple-touch-icon.png` w katalogu głównym.
@@ -354,6 +362,7 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - **D51 Ikona: kotek pod girlandą na żurawinie, jedna przez cały rok.** Wybór autorki spośród czterech projektów (girlanda, kubek, słoik, kotek); ciepła, „cozy” ikona ma cieszyć o każdej porze. Czerwona żarówka zamieniona na kremową, żeby nie ginęła na czerwonym tle.
 - **D52 Nazwa „Little Lights” wszędzie:** manifest, tytuł pod ikoną, `<title>`, nagłówek w aplikacji (`APP_TITLE`) i nazwa repozytorium. Spójność wybrana przez autorkę; stara nazwa „Dziennik Wdzięczności” zostaje tylko w dokumentach projektu i w `legacy/`.
 - **D53 `black-translucent` razem z odstępami na safe area.** Półprzezroczysty pasek statusu wciąga treść pod zegar i notch, więc tag i odstępy idą w jednym kroku (początek punktu 13).
+- **D54 Publikacja tylko plików aplikacji przez GitHub Actions, po przejściu testów.** Prototyp w `legacy/` dzieliłby z aplikacją klucz `localStorage`, scenariusze czyszczą magazyn, a błąd w kodzie nie powinien trafiać na stronę. Repozytorium jest publiczne (wymaga tego darmowy plan), dane wpisów są tylko w telefonie.
 
 ## 14. Konwencje
 

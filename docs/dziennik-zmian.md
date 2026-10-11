@@ -8,6 +8,38 @@ Format wpisu: data, krótki tytuł, potem sekcje (tylko te, które są potrzebne
 
 ---
 
+## 2026-10-11: Workflow publikacji na GitHub Pages (pkt 4, część)
+
+**Dodano**
+
+- `.github/workflows/pages.yml`: po wypchnięciu na `main` zadanie `test` (`npm test`, Node 22), a po nim `deploy`: zbiera tylko pliki
+  aplikacji do `_site/` i publikuje je (`configure-pages`, `upload-pages-artifact`, `deploy-pages`). Wersje główne akcji sprawdzone
+  w repozytoriach akcji (checkout v7, setup-node v7, configure-pages v6, upload-pages-artifact v5, deploy-pages v5).
+- 7 testów (`tests/deploy.test.js`, W1–W6): na stronę nie trafia nic prywatnego ani wzorce, trafia wszystko, czego aplikacja potrzebuje,
+  opublikowane katalogi zawierają tylko kod i obrazy, testy poprzedzają publikację, uprawnienia są minimalne, `.gitignore` chroni kopie.
+
+**Zmieniono**
+
+- `tools/mutation-check.py` kopiuje także `.github` i `.gitignore`.
+
+**Sprawdzono**
+
+- Testy: 286 w czterech strefach (7 nowych, najpierw czerwone: brak pliku workflow).
+- Kontrola przez psucie kodu: 205 usterek (31 nowych: docs, tests, legacy, backups, wzorce, brakujące pliki, brak `needs`, szerokie
+  uprawnienia, cudza akcja, sekret), wszystkie wykryte. Jedna przeżyła za pierwszym razem (brak uprawnień na najwyższym poziomie
+  ukryty przez to samo uprawnienie w zadaniu `deploy`); test W5 wzmocniony.
+- Symulacja publikacji: dokładnie polecenia z workflow wykonane na kopii repozytorium, wynik uruchomiony pod `/little-lights/`
+  (adres z podkatalogiem). Aplikacja, manifest, ikony i skrypty odpowiadają (200), a `docs/`, `legacy/`, `tools/`, `README.md`,
+  `backups/` i `package.json` dają 404. Zapis próbnego wpisu działa z podkatalogu.
+- Składnia YAML sprawdzona parserem Prettiera.
+
+**Nie sprawdzono**
+
+- Prawdziwego przebiegu workflow na GitHubie (repozytorium jeszcze nie istnieje): uprawnienia środowiska `github-pages`,
+  ustawienie źródła publikacji „GitHub Actions” i zielone zadania zobaczymy po pierwszym pushu.
+
+---
+
 ## 2026-10-11: Manifest i tagi aplikacji, nazwa „Little Lights” (pkt 2, początek pkt 13)
 
 **Dodano**

@@ -1,0 +1,50 @@
+name: Publikacja na GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm test
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      # Na stronę trafiają tylko pliki aplikacji. Dokumentacja, testy, narzędzia, prototyp i kopie zostają w repozytorium.
+      - name: Zbierz pliki aplikacji
+        run: |
+          mkdir -p _site/assets
+          cp index.html manifest.json apple-touch-icon.png _site/
+          cp -R css js _site/
+          cp assets/favicon.svg _site/assets/
+          cp -R assets/icons _site/assets/
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v5
