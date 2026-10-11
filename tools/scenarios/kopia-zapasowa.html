@@ -174,7 +174,7 @@
     check('F1 navigator.share ruszył synchronicznie z kliknięcia', win().__shared.length === 1);
     await sleep(150);
     const shared = win().__shared[0];
-    check('F2 nazwa pliku z lokalną datą', shared?.name === `kopia-dziennika-wdziecznosci-${D0}.json`, shared?.name);
+    check('F2 nazwa pliku z lokalną datą', shared?.name === `little-lights-kopia-${D0}.json`, shared?.name);
     check('F3 typ pliku application/json', shared?.type === 'application/json', shared?.type);
     const sharedText = await shared.text();
     check('F4 zawartość to wpisy z wcięciem 2 spacji', sharedText === JSON.stringify(exportSeed, null, 2));
@@ -206,7 +206,7 @@
     await boot({ seedEntries: exportSeed, shareMode: 'fail' });
     $('#exportBtn').click();
     await sleep(150);
-    check('I1 błąd: awaryjne pobranie', win().__downloads.length === 1 && win().__downloads[0] === `kopia-dziennika-wdziecznosci-${D0}.json`, JSON.stringify(win().__downloads));
+    check('I1 błąd: awaryjne pobranie', win().__downloads.length === 1 && win().__downloads[0] === `little-lights-kopia-${D0}.json`, JSON.stringify(win().__downloads));
     check('I2 komunikat o pobraniu', backupStatusText() === 'Pobrano kopię zapasową ✓', backupStatusText());
     check('I3 licznik: dziś', lastBackupText() === 'Ostatnia kopia: dziś');
 

@@ -120,6 +120,12 @@ describe('index.html', () => {
     assert.equal(/Dziennik Wdzięczności/.test(html), false, 'stara nazwa w index.html');
   });
 
+  test('P10: nazwa pakietu zgadza się z nazwą aplikacji i repozytorium', () => {
+    const pkg = JSON.parse(text('package.json'));
+    assert.equal(pkg.name, 'little-lights');
+    assert.match(pkg.description, /^Little Lights/);
+  });
+
   test('P9: viewport-fit=cover i brak blokady powiększania', () => {
     const viewport = metaContent('viewport');
     assert.match(viewport, /viewport-fit=cover/);

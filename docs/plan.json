@@ -229,7 +229,7 @@
     "priority": "normal",
     "details": [
       "Eksport: navigator.canShare({files}) i navigator.share z plikiem application/json (UTF-8, wcięcie 2 spacje), wywołany bezpośrednio w obsłudze kliknięcia (bez wcześniejszych await, inaczej iOS zwraca NotAllowedError). Gdy Share Sheet nie jest dostępny, fallback: dotychczasowe pobranie linkiem. Anulowanie okna udostępniania nie jest błędem.",
-      "Nazwa pliku: kopia-dziennika-wdziecznosci-YYYY-MM-DD.json z lokalną datą (punkt 7).",
+      "Nazwa pliku: little-lights-kopia-YYYY-MM-DD.json z lokalną datą (punkt 7); dawniej kopia-dziennika-wdziecznosci-…, wczytywanie nie zależy od nazwy.",
       "Import: input type=file z accept=.json,application/json. Kompatybilny wstecz z obecnym formatem, w tym z plikiem kopia-dziennika-wdziecznosci-2026-09-26.json.",
       "Zasada scalania: dla każdej daty zostaje wpis z większym savedAt. Brak lub niepoprawny savedAt liczy się jako 0; przy remisie zostaje wpis obecny; wpis obecny tylko w pliku jest dodawany, a tylko lokalny — zachowany.",
       "Konsekwencja do udokumentowania w aplikacji: usunięcia nie są synchronizowane. Jeśli usuniesz wpis, a później wgrasz starszą kopię, wpis wróci.",

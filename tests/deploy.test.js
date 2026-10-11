@@ -154,6 +154,7 @@ describe('workflow', () => {
       .split('\n')
       .map((line) => line.trim());
     assert.ok(lines.includes('backups/'));
-    assert.ok(lines.includes('kopia-dziennika-*.json'));
+    assert.ok(lines.includes('kopia-dziennika-*.json'), 'stary wzorzec nazwy kopii');
+    assert.ok(lines.includes('little-lights-kopia-*.json'), 'obecny wzorzec nazwy kopii');
   });
 });

@@ -4,7 +4,7 @@ Jak aplikacja działa i dlaczego tak. Dokument opisuje **stan obecny**. Co i kie
 a co dopiero będzie, w planie.
 
 - [`../README.md`](../README.md): uruchamianie, testy, struktura katalogów.
-- [`specyfikacja-dziennik-wdziecznosci.md`](specyfikacja-dziennik-wdziecznosci.md): wymagania i wygląd (palety, cytaty).
+- [`specyfikacja.md`](specyfikacja.md): wymagania i wygląd (palety, cytaty).
 - [`plan.json`](plan.json): plan prac, ✅ = zrobione.
 - [`dziennik-zmian.md`](dziennik-zmian.md): historia zmian i wyniki sprawdzeń.
 
@@ -43,7 +43,7 @@ Przebieg głównych akcji:
 - **Wybór dnia:** kalendarz (`pickDay`) → `onSelectDate` → `app` wczytuje szkic, wpis albo pusty formularz.
 - **Zapis:** wymaga min. jednej wdzięczności. Wpis trafia pod klucz dnia z `savedAt`, szkic dnia jest usuwany. Błąd zapisu daje komunikat i nic nie zmienia.
 - **Usunięcie:** pytanie z datą, potem usunięcie wpisu i szkicu tego dnia.
-- **Eksport:** JSON z wcięciem 2 spacji, plik `kopia-dziennika-wdziecznosci-YYYY-MM-DD.json`, przez okno udostępniania albo pobranie (sekcja 5).
+- **Eksport:** JSON z wcięciem 2 spacji, plik `little-lights-kopia-YYYY-MM-DD.json`, przez okno udostępniania albo pobranie (sekcja 5).
 - **Import:** JSON → `sanitizeEntries` → `mergeEntries` → zapis → raport. Błąd na dowolnym etapie nic nie zmienia.
 
 ## 3. Dane
@@ -71,11 +71,12 @@ Przebieg głównych akcji:
 
 - `grateful`: 1–3 niepuste teksty. `savedAt`: moment zapisu w ms (epoch).
 - Plik kopii zapasowej to ten sam obiekt co w `localStorage`: jeden format, zgodny ze starymi kopiami.
+- Klucze `gratitude_journal_*` zachowują historyczną nazwę, mimo nowej nazwy aplikacji: zmiana klucza oznaczałaby utratę zapisanych wpisów.
 - `_v1` w kluczu to wersja formatu. Zmiana formatu = `_v2` i migracja _(plan, pkt 1)_.
 - **Adres decyduje o danych.** `localStorage` należy do adresu (protokół + domena + port), więc `localhost:8000`, strona
   publiczna i zainstalowana aplikacja mają osobne magazyny. Nowa przeglądarka zaczyna pusta, dane przenosi się plikiem
   kopii. Adres hostingu wybieramy przed pierwszym wpisem w PWA _(plan, pkt 4)_.
-- **Prywatność:** `.gitignore` wyklucza `backups/` i `kopia-dziennika-*.json`. Na hosting trafia tylko kod.
+- **Prywatność:** `.gitignore` wyklucza `backups/` oraz `little-lights-kopia-*.json` i `kopia-dziennika-*.json` (dawna nazwa kopii). Na hosting trafia tylko kod.
 - Dlaczego `localStorage`, a nie IndexedDB: to kilka kB tekstu rocznie, a ryzyko wyczyszczenia danych przez iOS łagodzi kopia zapasowa.
 
 ## 4. Daty

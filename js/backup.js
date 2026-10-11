@@ -8,7 +8,7 @@ export function serializeEntries(entries) {
 }
 
 export function backupFilename(dateKey) {
-  return `kopia-dziennika-wdziecznosci-${dateKey}.json`;
+  return `little-lights-kopia-${dateKey}.json`;
 }
 
 function isPlainObject(value) {

@@ -447,5 +447,5 @@ describe('strings.backup.lastBackup', () => {
 });
 
 test('M16: backupFilename zawiera datę', () => {
-  assert.equal(backupFilename('2026-09-27'), 'kopia-dziennika-wdziecznosci-2026-09-27.json');
+  assert.equal(backupFilename('2026-09-27'), 'little-lights-kopia-2026-09-27.json');
 });

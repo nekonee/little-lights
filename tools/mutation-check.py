@@ -15,7 +15,7 @@ import subprocess
 import tempfile
 
 SRC = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TMP = os.path.join(tempfile.mkdtemp(prefix='dziennik-mutacje-'), 'kopia')
+TMP = os.path.join(tempfile.mkdtemp(prefix='little-lights-mutacje-'), 'kopia')
 M = 'js/calendar-model.js'
 D = 'js/dates.js'
 J = 'js/drafts.js'
@@ -237,14 +237,18 @@ mutants=[
  ('deploy: sekret w workflow', WF, "      - run: npm test", "      - run: npm test\n        env:\n          T: ${{ secrets.TOKEN }}"),
  ('gitignore: brak ochrony katalogu backups', GI, "backups/\n", ""),
  ('gitignore: brak ochrony plików kopii', GI, "kopia-dziennika-*.json\n", ""),
+ ('gitignore: brak ochrony obecnych plików kopii', GI, "little-lights-kopia-*.json\n", ""),
+ ('docs: zepsuty link do specyfikacji w README', 'README.md', "](docs/specyfikacja.md)", "](docs/specyfikacja-stara.md)"),
+ ('docs: zepsuty link do dziennika zmian w dokumentacji', 'docs/dokumentacja.md', "(dziennik-zmian.md)", "(dziennik-zmian-stary.md)"),
+ ('pakiet: stara nazwa pakietu', 'package.json', '"name": "little-lights"', '"name": "dziennik-wdziecznosci"'),
 ]
 TZS=['Europe/Warsaw','America/Los_Angeles','Pacific/Kiritimati','UTC']
 def fresh():
     if os.path.exists(TMP):
         shutil.rmtree(TMP)
     os.makedirs(TMP)
-    for d in ('js','tests','css','assets','.github'): shutil.copytree(f'{SRC}/{d}', f'{TMP}/{d}')
-    for f in ('package.json','index.html','manifest.json','apple-touch-icon.png','.gitignore'): shutil.copy(f'{SRC}/{f}', TMP)
+    for d in ('js','tests','css','assets','.github','docs'): shutil.copytree(f'{SRC}/{d}', f'{TMP}/{d}')
+    for f in ('package.json','index.html','manifest.json','apple-touch-icon.png','.gitignore','README.md'): shutil.copy(f'{SRC}/{f}', TMP)
 def run(tz):
     r=subprocess.run(['node','--test'],cwd=TMP,env={**os.environ,'TZ':tz},capture_output=True,text=True)
     m=re.search(r'ℹ fail (\d+)',r.stdout); return int(m.group(1)) if m else -1

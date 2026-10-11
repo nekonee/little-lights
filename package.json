@@ -1,8 +1,8 @@
 {
-  "name": "dziennik-wdziecznosci",
+  "name": "little-lights",
   "version": "0.1.0",
   "private": true,
-  "description": "Dziennik wdzięczności — lokalna aplikacja PWA (bez backendu)",
+  "description": "Little Lights — prywatny dziennik wdzięczności, lokalna aplikacja PWA (bez backendu)",
   "type": "module",
   "scripts": {
     "start": "python3 tools/dev-server.py",

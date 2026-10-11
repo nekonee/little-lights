@@ -8,6 +8,36 @@ Format wpisu: data, krótki tytuł, potem sekcje (tylko te, które są potrzebne
 
 ---
 
+## 2026-10-11: Przegląd przed publikacją i nazwa „Little Lights” w plikach (pkt 4, część)
+
+**Sprawdzono (przegląd przed upublicznieniem repozytorium)**
+
+- Wszystkie pliki i cała historia (27 commitów) pod kątem e-maili, numerów telefonu, ścieżek lokalnych, nazwiska, kluczy i tokenów: nic nie znaleziono.
+  Żaden plik nigdy nie został usunięty z historii, więc nic prywatnego się w niej nie ukrywa. Dane w testach, scenariuszach i dokumentach są wymyślone.
+- Wszystkie commity mają autora i committera z adresem noreply GitHuba (historia przepisana wcześniej, zawartość drzew bez zmian).
+
+**Zmieniono**
+
+- Nazwa pliku eksportu: `little-lights-kopia-RRRR-MM-DD.json` (dawniej `kopia-dziennika-wdziecznosci-…`). Wczytywanie nie zależy od nazwy,
+  więc starsze kopie nadal działają. `.gitignore` wyklucza oba wzorce.
+- `package.json`: nazwa `little-lights` i opis. `docs/specyfikacja-dziennik-wdziecznosci.md` → `docs/specyfikacja.md` (tytuł i wzmianka o tytule aplikacji w treści).
+- Zostają bez zmian: klucze `localStorage` `gratitude_journal_*` (zmiana = utrata danych), `docs/dziennik-zmian.md` (changelog), prototyp w `legacy/`.
+
+**Dodano**
+
+- Test linków w dokumentach (`tests/docs.test.js`, L1) i test nazwy pakietu (P10). `tools/mutation-check.py` kopiuje także `docs/` i `README.md`.
+
+**Sprawdzono**
+
+- Testy: 288 w czterech strefach (najpierw trzy czerwone: nazwa pliku, `.gitignore`, nazwa pakietu).
+- Pierwsze uruchomienie kontroli przez psucie kodu było nieważne: baza (kod bez usterek) pokazała 1 niepowodzenie, bo skrypt nie kopiował
+  `README.md` ani `docs/`, więc wszystko „wykrywało się” trywialnie. Poprawione i uruchomione ponownie: baza 0 niepowodzeń,
+  209 usterek (4 nowe: stara nazwa pakietu, obecny wzorzec `.gitignore`, zepsute linki w README i dokumentacji), wszystkie wykryte.
+  Jedna usterka była źle wycelowana (zamieniała tekst linku zamiast jego celu); po poprawce sprawdzona osobno.
+- Scenariusz kopii w przeglądarce z nową nazwą pliku: bez niepowodzeń.
+
+---
+
 ## 2026-10-11: Workflow publikacji na GitHub Pages (pkt 4, część)
 
 **Dodano**

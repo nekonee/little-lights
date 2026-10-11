@@ -6,7 +6,7 @@ wpisy zapisują się w `localStorage` przeglądarki, a kopię zapasową robi si�
 - [`docs/dokumentacja.md`](docs/dokumentacja.md): jak to działa i skąd wynikają decyzje (w tym format danych i zasady dat).
 - [`docs/dziennik-zmian.md`](docs/dziennik-zmian.md): co i kiedy się zmieniło.
 - [`docs/plan.json`](docs/plan.json): plan prac z priorytetami.
-- [`docs/specyfikacja-dziennik-wdziecznosci.md`](docs/specyfikacja-dziennik-wdziecznosci.md): wymagania i wygląd.
+- [`docs/specyfikacja.md`](docs/specyfikacja.md): wymagania i wygląd.
 
 ## Uruchamianie lokalnie
 
