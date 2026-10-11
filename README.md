@@ -67,7 +67,8 @@ js/
   garland.js          girlanda światełek w motywach zimowych (rysowanie SVG)
 tests/                testy logiki (node --test), dane wymyślone
 tools/                serwer bez cache'u, kontrola testów przez psucie kodu, scenariusze w przeglądarce
-assets/               favicon (docelowo ikony i ekran startowy)
+assets/               favicon, ikona aplikacji (źródło SVG i PNG), docelowo ekran startowy
+apple-touch-icon.png  ikona 180×180 dla iOS (kopia w katalogu głównym, tak jej szuka Safari)
 docs/                 dokumentacja, dziennik zmian, plan, specyfikacja
 legacy/               prototyp w jednym pliku HTML — punkt odniesienia
 backups/              prywatne kopie wpisów, poza repozytorium (.gitignore)

@@ -8,6 +8,30 @@ Format wpisu: data, krótki tytuł, potem sekcje (tylko te, które są potrzebne
 
 ---
 
+## 2026-10-11: Ikona aplikacji (pkt 3, część)
+
+**Dodano**
+
+- Ikona „Little Lights”: rudy kotek śpiący pod girlandą na żurawinowym tle. Autorka wybrała ją spośród czterech projektów
+  (girlanda, kubek z sercem, słoik ze świetlikami, kotek), potem z dwóch odcieni czerwieni (żurawina wygrała z jaśniejszą czerwienią). Źródło: `assets/icon-source.svg`.
+- Pliki PNG 120, 152, 167, 180, 192 i 512 px w `assets/icons/` oraz `apple-touch-icon.png` (180 px) w katalogu głównym.
+  Każdy rozmiar renderowany osobno z SVG (Inkscape), bez kanału przezroczystości (RGB).
+
+**Zmieniono**
+
+- Czerwona żarówka w girlandzie jest na ikonie kremowa, bo na czerwonym tle by znikała.
+
+**Sprawdzono**
+
+- Wymiary i format każdego pliku, brak kanału alfa, kolor rogów (żurawina, nie czerń), środek obrazu.
+- Podgląd w 60 pt z zaokrągleniem iOS na jasnej i ciemnej tapecie oraz plansza kontrolna 512/180/120 px.
+
+**Nie sprawdzono**
+
+- Ikony na prawdziwym iPhonie. Nie jest jeszcze podpięta w `index.html` ani w manifeście (reszta punktów 2–4).
+
+---
+
 ## 2026-10-11: Eksport i import kopii, „nowszy wygrywa” (pkt 14)
 
 **Naprawiono**

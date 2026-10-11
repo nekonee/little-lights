@@ -270,6 +270,9 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 ## 11. iOS i PWA
 
 - **Osobny magazyn danych** zainstalowanej aplikacji (patrz „Adres decyduje o danych”).
+- **Ikona:** rudy kotek śpiący pod girlandą na żurawinowym tle (`assets/icon-source.svg`), stała i niezależna od motywu sezonowego.
+  Pliki PNG (pełne tło, bez przezroczystości) są w `assets/icons/` (120–512 px) oraz jako `apple-touch-icon.png` w katalogu głównym.
+  Podpięcie w `<head>` i w manifeście jeszcze nie zrobione _(plan, pkt 2–3)_.
 - **Ikona i ekran startowy są czytane raz, przy instalacji.** Zmiana = usunąć aplikację i dodać ponownie; podbijamy wersję w nazwie pliku.
 - **Timery w tle są usypiane**, więc o zmianie dnia decydują zdarzenia powrotu (`visibilitychange`, `pageshow`), a nie timer.
 - **Aplikacja może zostać zamknięta bez ostrzeżenia**, stąd natychmiastowy zapis szkicu przy ukryciu i `pagehide`.
@@ -343,6 +346,7 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - **D48 Import bez cofania.** Aplikacja jest dla zabawy, a „nowszy wygrywa” z raportem wystarcza; cofanie podwajałoby dane i dodawało kod, którego autorka nie potrzebuje (jej decyzja).
 - **D49 Remis `savedAt` i ta sama treść to „bez zmian”, bez osobnej liczby konfliktów.** Remis z różną treścią zdarza się tylko przy wpisach bez `savedAt`, a prostszy raport jest czytelniejszy.
 - **D50 „Ostatnia kopia” w osobnym kluczu i liczona w dniach kalendarzowych.** Zapis licznika nie może psuć eksportu ani trafiać do pliku, a zmiana czasu nie może przesuwać wyniku.
+- **D51 Ikona: kotek pod girlandą na żurawinie, jedna przez cały rok.** Wybór autorki spośród czterech projektów (girlanda, kubek, słoik, kotek); ciepła, „cozy” ikona ma cieszyć o każdej porze. Czerwona żarówka zamieniona na kremową, żeby nie ginęła na czerwonym tle.
 
 ## 14. Konwencje
 

@@ -41,11 +41,11 @@
   {
     "id": 3,
     "title": "Ikona na ekranie głównym zawsze taka, jaką zaprojektowałam",
-    "description": "Ikona (kubek pumpkin spice latte z listkiem na jasnym tle) jest odczytywana raz, przy dodaniu do ekranu początkowego, i iOS potrafi ją po cichu zastąpić zrzutem strony albo czarnymi rogami. Dlatego stosujemy wszystkie dostępne zabezpieczenia naraz.",
+    "description": "Ikona (rudy kotek śpiący pod girlandą na żurawinowym tle, wybrana przez autorkę) jest odczytywana raz, przy dodaniu do ekranu początkowego, i iOS potrafi ją po cichu zastąpić zrzutem strony albo czarnymi rogami. Dlatego stosujemy wszystkie dostępne zabezpieczenia naraz.",
     "priority": "normal",
     "details": [
-      "Zrobić prawdziwe pliki PNG z obecnego SVG (ten z favicon): apple-touch-icon 180x180 (opcjonalnie 167, 152, 120) oraz 192 i 512 do manifestu. iOS ignoruje SVG i data: URI jako ikonę ekranu głównego.",
-      "Obecny SVG ma tło w kształcie koła z przezroczystymi rogami — na ikonę zrobić pełne, kwadratowe tło (#fbf0e2) bez przezroczystości i bez własnych zaokrągleń. iOS sam zaokrągla rogi, a przezroczystość wypełnia na czarno. Ważne elementy trzymać w środkowych ok. 80%.",
+      "✅ Pliki PNG z assets/icon-source.svg: assets/icons/icon-{120,152,167,180,192,512}.png oraz apple-touch-icon.png w katalogu głównym (kopia 180x180). iOS ignoruje SVG i data: URI jako ikonę ekranu głównego. ",
+      "✅ Pełne, kwadratowe tło (żurawina) bez przezroczystości i bez własnych zaokrągleń; iOS sam zaokrągla rogi, a przezroczystość wypełnia na czarno. Ważne elementy w środkowych ok. 80%. ",
       "Static <link rel=apple-touch-icon sizes=180x180 href=apple-touch-icon.png?v=1> w <head> oraz dodatkowa kopia w katalogu głównym /apple-touch-icon.png (Safari szuka jej tam samo, gdy link zawiedzie).",
       "Ikona z tego samego adresu i po https, bez przekierowań, poprawny typ image/png. Pliku nie ukrywać za żadnym logowaniem.",
       "Zmiana ikony w przyszłości: podbić wersję w nazwie (?v=2 albo nowa nazwa pliku), bo Safari mocno cache’uje, a potem usunąć aplikację z ekranu i dodać ją ponownie.",
