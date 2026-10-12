@@ -43,9 +43,8 @@ Powód: przegląd testów (patrz niżej „Wnioski z przeglądu”). Zachowania 
   Pierwszy przebieg: 213 z 217 przez wadę skryptu opisaną wyżej.
 - `build-site.js` uruchomiony z linii poleceń: 37 plików, ponowne uruchomienie na tym samym katalogu kończy się błędem.
 
-**Nie sprawdzono**
-
-- Przebiegu zmienionego workflow na GitHubie (macierz stref, `node-version-file`, `build-site.js`) przed pierwszym pushem.
+- Na GitHubie: pierwszy przebieg zmienionego workflow zielony (4 zadania testowe, po jednym na strefę, potem publikacja). Strona odpowiada,
+  `docs/`, `scripts/` i `tests/` dają 404.
 
 ---
 
