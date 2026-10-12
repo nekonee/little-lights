@@ -1,30 +1,5 @@
-// Zachowania szkiców (S1–S23). Numer S jest na początku nazwy testu, który go sprawdza.
-//
-//  S1: Szkic dotyczy jednego dnia, ma pola formularza i `updatedAt`, leży w osobnym kluczu.
-//  S2: Wartości surowe i pozycyjne (3 pola wdzięczności).
-//  S3: Porównanie po normalizacji: różnica tylko w spacjach lub w polu wdzięczności nie tworzy szkicu.
-//  S4: Szkic powstaje tylko, gdy formularz różni się od stanu bazowego.
-//  S5: Pusty formularz nigdy nie jest szkicem, nawet gdy wpis istnieje.
-//  S6: Formularz równy stanowi bazowemu usuwa szkic.
-//  S7: Zapis 500 ms po ostatnim znaku.
-//  S8: Zapis od razu przy zmianie dnia (też „Dziś” i „edytuj”), `visibilitychange` (ukryta) i `pagehide`.
-//  S9: Zapis zmienia tylko szkic bieżącego dnia.
-//  S10: Awaria zapisu nie blokuje pisania, pokazuje komunikat.
-//  S11: Wczytanie dnia: szkic, potem wpis, potem pusty formularz.
-//  S12: Szkic pusty albo równy wpisowi jest ignorowany i usuwany.
-//  S13: Przy szkicu wskaźnik „📝 Szkic — jeszcze niezapisany” (dzień bez wpisu) albo „📝 Szkic zmian — wpis z tego dnia nie jest jeszcze zaktualizowany” oraz przycisk „Odrzuć szkic”.
-//  S14: Zmiana dnia i powrót przywraca wpisany tekst.
-//  S15: Po odświeżeniu szkic wraca.
-//  S16: Zapis wpisu usuwa szkic i anuluje oczekujący zapis.
-//  S17: Odmowa zapisu (brak wdzięczności) nie usuwa szkicu.
-//  S18: „Odrzuć szkic” (z potwierdzeniem) usuwa szkic i wczytuje wpis albo pusty formularz.
-//  S19: Usunięcie wpisu usuwa jego szkic i odświeża formularz, jeśli to wybrany dzień.
-//  S20: Po imporcie nietknięty formularz odświeża się, a z wpisanym tekstem zostaje z ostrzeżeniem, że zapis nadpisze zaimportowany wpis.
-//  S21: Szkice nie wchodzą do eksportu, serii, podsumowania ani historii.
-//  S22: Uszkodzone dane szkiców nie wywracają aplikacji.
-//  S23: Dzień ze szkicem bez wpisu ma w kalendarzu pustą kropkę.
-//
-// S7 i S8 (czas zapisu) sprawdza draft-sync.test.js.
+// Szkice niezapisanych wpisów (js/drafts.js): normalizacja, porównanie z wpisem, wybór źródła formularza,
+// wskaźnik trybu i zachowanie po imporcie. Czas zapisu szkicu sprawdza draft-sync.test.js.
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import {
@@ -38,7 +13,8 @@ import {
   updateDrafts,
   withDraft,
   withoutDraft,
-} from '../js/drafts.js';
+} from '../../js/drafts.js';
+import { deepFreeze } from '../helpers/freeze.js';
 
 const DAY = '2026-10-05';
 const NOW = 1790000000000;
@@ -66,15 +42,8 @@ function storedDraft(overrides = {}) {
   return { ...rawFields({ grateful: ['kawa', '', ''] }), updatedAt: 5, ...overrides };
 }
 
-function deepFreeze(value) {
-  for (const inner of Object.values(value)) {
-    if (typeof inner === 'object' && inner !== null) deepFreeze(inner);
-  }
-  return Object.freeze(value);
-}
-
 describe('normalizeFields', () => {
-  test('S3: przycina spacje i pomija puste wdzięczności, zachowując kolejność', () => {
+  test('przycina spacje i pomija puste wdzięczności, zachowując kolejność', () => {
     const result = normalizeFields(
       rawFields({ grateful: ['  a ', '', 'b  '], why: ' x ', person: '\ty\n' }),
     );
@@ -87,7 +56,7 @@ describe('normalizeFields', () => {
     });
   });
 
-  test('S3: pole wdzięczności złożone tylko ze spacji jest puste', () => {
+  test('pole wdzięczności złożone tylko ze spacji jest puste', () => {
     assert.deepEqual(normalizeFields(rawFields({ grateful: ['   ', '\t', ''] })).grateful, []);
   });
 
@@ -112,14 +81,14 @@ describe('normalizeFields', () => {
 });
 
 describe('fieldsEqual', () => {
-  test('S3: różnica tylko w spacjach nie jest różnicą', () => {
+  test('różnica tylko w spacjach nie jest różnicą', () => {
     assert.equal(
       fieldsEqual(rawFields({ grateful: ['a ', '', ''] }), rawFields({ grateful: [' a', '', ''] })),
       true,
     );
   });
 
-  test('S3: ten sam tekst w innym polu wdzięczności nie jest różnicą', () => {
+  test('ten sam tekst w innym polu wdzięczności nie jest różnicą', () => {
     assert.equal(
       fieldsEqual(rawFields({ grateful: ['', 'a', ''] }), rawFields({ grateful: ['a', '', ''] })),
       true,
@@ -157,41 +126,41 @@ describe('fieldsEqual', () => {
 });
 
 describe('draftDecision', () => {
-  test('S4: formularz różny od pustej bazy daje zapis szkicu', () => {
+  test('formularz różny od pustej bazy daje zapis szkicu', () => {
     assert.equal(draftDecision(rawFields({ grateful: ['a', '', ''] }), null), 'save');
     assert.equal(draftDecision(rawFields({ lesson: 'coś' }), null), 'save');
   });
 
-  test('S4: formularz różny od zapisanego wpisu daje zapis szkicu', () => {
+  test('formularz różny od zapisanego wpisu daje zapis szkicu', () => {
     const form = rawFields({ grateful: ['kawa', 'spacer', 'nowe'], why: 'spokój', person: 'Ala' });
     assert.equal(draftDecision(form, savedEntry()), 'save');
   });
 
-  test('S5: pusty formularz usuwa szkic, także gdy wpis istnieje', () => {
+  test('pusty formularz usuwa szkic, także gdy wpis istnieje', () => {
     assert.equal(draftDecision(rawFields(), null), 'remove');
     assert.equal(draftDecision(rawFields(), savedEntry()), 'remove');
   });
 
-  test('S5: formularz ze samych spacji jest pusty', () => {
+  test('formularz ze samych spacji jest pusty', () => {
     assert.equal(
       draftDecision(rawFields({ grateful: ['  ', '', ''], why: '   ' }), null),
       'remove',
     );
   });
 
-  test('S6: formularz równy zapisanemu wpisowi usuwa szkic', () => {
+  test('formularz równy zapisanemu wpisowi usuwa szkic', () => {
     const form = rawFields({ grateful: ['kawa', 'spacer', ''], why: 'spokój', person: 'Ala' });
     assert.equal(draftDecision(form, savedEntry()), 'remove');
   });
 
-  test('S3: formularz różniący się od wpisu tylko spacjami i pozycją pola usuwa szkic', () => {
+  test('formularz różniący się od wpisu tylko spacjami i pozycją pola usuwa szkic', () => {
     const form = rawFields({ grateful: [' kawa ', '', 'spacer'], why: 'spokój ', person: 'Ala' });
     assert.equal(draftDecision(form, savedEntry()), 'remove');
   });
 });
 
 describe('withDraft i withoutDraft', () => {
-  test('S1, S2: szkic ma 3 pola wdzięczności na swoich miejscach, wartości surowe i updatedAt', () => {
+  test('szkic ma 3 pola wdzięczności na swoich miejscach, wartości surowe i updatedAt', () => {
     const drafts = withDraft({}, DAY, rawFields({ grateful: ['', ' b ', ''], why: ' x ' }), NOW);
     assert.deepEqual(drafts[DAY], {
       grateful: ['', ' b ', ''],
@@ -203,7 +172,7 @@ describe('withDraft i withoutDraft', () => {
     });
   });
 
-  test('S2: krótką listę wdzięczności uzupełnia do trzech, a dłuższą obcina do trzech', () => {
+  test('krótką listę wdzięczności uzupełnia do trzech, a dłuższą obcina do trzech', () => {
     assert.deepEqual(withDraft({}, DAY, { grateful: ['a'] }, NOW)[DAY].grateful, ['a', '', '']);
     assert.deepEqual(withDraft({}, DAY, { grateful: ['a', 'b', 'c', 'd'] }, NOW)[DAY].grateful, [
       'a',
@@ -243,20 +212,20 @@ describe('withDraft i withoutDraft', () => {
 describe('updateDrafts', () => {
   const others = { '2026-10-01': storedDraft({ updatedAt: 1 }) };
 
-  test('S4: zapisuje szkic, gdy formularz różni się od bazy', () => {
+  test('zapisuje szkic, gdy formularz różni się od bazy', () => {
     const next = updateDrafts(others, DAY, rawFields({ why: 'x' }), null, NOW);
     assert.equal(next[DAY].why, 'x');
     assert.equal(next[DAY].updatedAt, NOW);
   });
 
-  test('S9: szkice innych dni zostają nietknięte przy zapisie i przy usunięciu', () => {
+  test('szkice innych dni zostają nietknięte przy zapisie i przy usunięciu', () => {
     const saved = updateDrafts(others, DAY, rawFields({ why: 'x' }), null, NOW);
     assert.equal(saved['2026-10-01'], others['2026-10-01']);
     const removed = updateDrafts(saved, DAY, rawFields(), null, NOW);
     assert.deepEqual(Object.keys(removed), ['2026-10-01']);
   });
 
-  test('S5, S6: usuwa istniejący szkic, gdy formularz jest pusty albo równy bazie', () => {
+  test('usuwa istniejący szkic, gdy formularz jest pusty albo równy bazie', () => {
     const drafts = { ...others, [DAY]: storedDraft() };
     assert.equal(DAY in updateDrafts(drafts, DAY, rawFields(), null, NOW), false);
     const same = rawFields({ grateful: ['kawa', 'spacer', ''], why: 'spokój', person: 'Ala' });
@@ -277,44 +246,44 @@ describe('updateDrafts', () => {
 describe('chooseFormSource', () => {
   const saved = savedEntry();
 
-  test('S11: szkic ma pierwszeństwo przed zapisanym wpisem', () => {
+  test('szkic ma pierwszeństwo przed zapisanym wpisem', () => {
     const draft = storedDraft({ grateful: ['kawa', 'spacer', 'szkic'] });
     const result = chooseFormSource(saved, draft);
     assert.equal(result.source, 'draft');
     assert.deepEqual(result.fields.grateful, ['kawa', 'spacer', 'szkic']);
   });
 
-  test('S11: bez szkicu pokazuje zapisany wpis', () => {
+  test('bez szkicu pokazuje zapisany wpis', () => {
     const result = chooseFormSource(saved, undefined);
     assert.equal(result.source, 'saved');
     assert.deepEqual(result.fields.grateful, ['kawa', 'spacer', '']);
     assert.equal(result.fields.why, 'spokój');
   });
 
-  test('S11: bez szkicu i bez wpisu pokazuje pusty formularz', () => {
+  test('bez szkicu i bez wpisu pokazuje pusty formularz', () => {
     const result = chooseFormSource(undefined, undefined);
     assert.equal(result.source, 'empty');
     assert.deepEqual(result.fields, rawFields());
   });
 
-  test('S11: szkic bez wpisu jest pokazywany', () => {
+  test('szkic bez wpisu jest pokazywany', () => {
     const result = chooseFormSource(undefined, storedDraft());
     assert.equal(result.source, 'draft');
   });
 
-  test('S2: szkic wraca do formularza surowy i pozycyjny', () => {
+  test('szkic wraca do formularza surowy i pozycyjny', () => {
     const draft = storedDraft({ grateful: ['', ' b ', ''] });
     assert.deepEqual(chooseFormSource(undefined, draft).fields.grateful, ['', ' b ', '']);
   });
 
-  test('S12: szkic równy zapisanemu wpisowi jest nieaktualny i ignorowany', () => {
+  test('szkic równy zapisanemu wpisowi jest nieaktualny i ignorowany', () => {
     const draft = storedDraft({ grateful: ['kawa', 'spacer', ''], why: 'spokój', person: 'Ala' });
     const result = chooseFormSource(saved, draft);
     assert.equal(result.source, 'saved');
     assert.equal(result.staleDraft, true);
   });
 
-  test('S12: pusty szkic jest ignorowany, także gdy nie ma wpisu', () => {
+  test('pusty szkic jest ignorowany, także gdy nie ma wpisu', () => {
     const empty = storedDraft({ grateful: ['', '', ''] });
     assert.equal(chooseFormSource(undefined, empty).source, 'empty');
     assert.equal(chooseFormSource(undefined, empty).staleDraft, true);
@@ -331,12 +300,12 @@ describe('chooseFormSource', () => {
 describe('formMode', () => {
   const texts = (mode) => [mode.indicatorText, mode.saveLabel, mode.showDiscard];
 
-  test('S13: szkic dnia bez wpisu', () => {
+  test('szkic dnia bez wpisu', () => {
     const mode = formMode({ hasSaved: false, hasDraft: true, isToday: true });
     assert.deepEqual(texts(mode), ['📝 Szkic — jeszcze niezapisany', 'Zapisz wpis', true]);
   });
 
-  test('S13: szkic zmian dnia z wpisem', () => {
+  test('szkic zmian dnia z wpisem', () => {
     const mode = formMode({ hasSaved: true, hasDraft: true, isToday: false });
     assert.deepEqual(texts(mode), [
       '📝 Szkic zmian — wpis z tego dnia nie jest jeszcze zaktualizowany',
@@ -376,21 +345,21 @@ describe('afterImport', () => {
   const imported = savedEntry({ grateful: ['z importu'], savedAt: 9 });
   const untouched = rawFields({ grateful: ['kawa', 'spacer', ''], why: 'spokój', person: 'Ala' });
 
-  test('S20: nietknięty formularz i zmieniony wpis: przeładuj, bez ostrzeżenia', () => {
+  test('nietknięty formularz i zmieniony wpis: przeładuj, bez ostrzeżenia', () => {
     assert.deepEqual(afterImport({ formFields: untouched, baseline, newSaved: imported }), {
       action: 'reload',
       warn: false,
     });
   });
 
-  test('S20: nietknięty pusty formularz i nowy wpis z importu: przeładuj', () => {
+  test('nietknięty pusty formularz i nowy wpis z importu: przeładuj', () => {
     assert.deepEqual(afterImport({ formFields: rawFields(), baseline: null, newSaved: imported }), {
       action: 'reload',
       warn: false,
     });
   });
 
-  test('S20: formularz z niezapisanym tekstem zostaje, a zmieniony wpis daje ostrzeżenie', () => {
+  test('formularz z niezapisanym tekstem zostaje, a zmieniony wpis daje ostrzeżenie', () => {
     const typed = rawFields({
       grateful: ['kawa', 'spacer', 'pisałam'],
       why: 'spokój',
@@ -402,7 +371,7 @@ describe('afterImport', () => {
     });
   });
 
-  test('S20: rozgrzebany pusty dzień i nowy wpis z importu: zostaje z ostrzeżeniem', () => {
+  test('rozgrzebany pusty dzień i nowy wpis z importu: zostaje z ostrzeżeniem', () => {
     const typed = rawFields({ grateful: ['coś', '', ''] });
     assert.deepEqual(afterImport({ formFields: typed, baseline: null, newSaved: imported }), {
       action: 'keep',
@@ -410,7 +379,7 @@ describe('afterImport', () => {
     });
   });
 
-  test('S20: wpis tego dnia się nie zmienił, więc nic nie trzeba robić', () => {
+  test('wpis tego dnia się nie zmienił, więc nic nie trzeba robić', () => {
     assert.deepEqual(afterImport({ formFields: untouched, baseline, newSaved: baseline }), {
       action: 'unchanged',
       warn: false,
@@ -429,7 +398,7 @@ describe('afterImport', () => {
     );
   });
 
-  test('S20: wpis tego dnia zniknął z magazynu, a formularz był nietknięty: przeładuj', () => {
+  test('wpis tego dnia zniknął z magazynu, a formularz był nietknięty: przeładuj', () => {
     assert.deepEqual(afterImport({ formFields: untouched, baseline, newSaved: undefined }), {
       action: 'reload',
       warn: false,
@@ -438,12 +407,12 @@ describe('afterImport', () => {
 });
 
 describe('sanitizeDrafts', () => {
-  test('S22: poprawne szkice przechodzą bez zmian', () => {
+  test('poprawne szkice przechodzą bez zmian', () => {
     const drafts = { [DAY]: storedDraft(), '2026-10-06': storedDraft({ updatedAt: 7 }) };
     assert.deepEqual(sanitizeDrafts(drafts), drafts);
   });
 
-  test('S22: pomija klucze, które nie są prawdziwymi dniami', () => {
+  test('pomija klucze, które nie są prawdziwymi dniami', () => {
     const result = sanitizeDrafts({
       '2026-02-31': storedDraft(),
       jutro: storedDraft(),
@@ -453,7 +422,7 @@ describe('sanitizeDrafts', () => {
     assert.deepEqual(Object.keys(result), [DAY]);
   });
 
-  test('S22: pomija wartości, które nie są obiektami', () => {
+  test('pomija wartości, które nie są obiektami', () => {
     const result = sanitizeDrafts({
       '2026-10-01': 'tekst',
       '2026-10-02': null,
@@ -464,7 +433,7 @@ describe('sanitizeDrafts', () => {
     assert.deepEqual(Object.keys(result), [DAY]);
   });
 
-  test('S22: uzupełnia wdzięczności do trzech i zamienia nie-teksty na puste', () => {
+  test('uzupełnia wdzięczności do trzech i zamienia nie-teksty na puste', () => {
     const result = sanitizeDrafts({
       [DAY]: { grateful: ['a', 5, null, 'd'], why: 7, person: null, updatedAt: 'x' },
     });
@@ -478,13 +447,13 @@ describe('sanitizeDrafts', () => {
     });
   });
 
-  test('S22: grateful, które nie jest tablicą, daje trzy puste pola', () => {
+  test('grateful, które nie jest tablicą, daje trzy puste pola', () => {
     const result = sanitizeDrafts({ [DAY]: { grateful: 'tekst', why: 'x', updatedAt: 1 } });
     assert.deepEqual(result[DAY].grateful, ['', '', '']);
     assert.equal(result[DAY].why, 'x');
   });
 
-  test('S22: updatedAt, który nie jest dodatnią liczbą, staje się zerem', () => {
+  test('updatedAt, który nie jest dodatnią liczbą, staje się zerem', () => {
     for (const updatedAt of [-5, 0, NaN, Infinity, '5', null, undefined]) {
       const result = sanitizeDrafts({ [DAY]: { ...storedDraft(), updatedAt } });
       assert.equal(result[DAY].updatedAt, 0, String(updatedAt));
@@ -492,12 +461,12 @@ describe('sanitizeDrafts', () => {
     assert.equal(sanitizeDrafts({ [DAY]: { ...storedDraft(), updatedAt: 12 } })[DAY].updatedAt, 12);
   });
 
-  test('S22: pomija obce pola', () => {
+  test('pomija obce pola', () => {
     const result = sanitizeDrafts({ [DAY]: { ...storedDraft(), extra: 'x' } });
     assert.equal('extra' in result[DAY], false);
   });
 
-  test('S22: wszystko, co nie jest obiektem, daje zero szkiców', () => {
+  test('wszystko, co nie jest obiektem, daje zero szkiców', () => {
     for (const raw of [null, undefined, 'tekst', 5, [], true]) {
       assert.deepEqual(sanitizeDrafts(raw), {}, String(raw));
     }

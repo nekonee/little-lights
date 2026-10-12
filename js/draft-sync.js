@@ -1,31 +1,26 @@
 export const DRAFT_DELAY_MS = 500;
 
-const browserTimers = {
-  set: (callback, delay) => setTimeout(callback, delay),
-  clear: (handle) => clearTimeout(handle),
-};
-
 /**
  * Czas zapisu szkicu: opóźniony po ostatniej zmianie (`schedule`) albo wymuszony od razu (`flush`).
  * Reguł „co zapisać” tu nie ma, wykonuje je `persist`.
- * @param {{persist: () => void, delayMs?: number, timers?: typeof browserTimers}} options
+ * @param {{persist: () => void}} options
  */
-export function createDraftSync({ persist, delayMs = DRAFT_DELAY_MS, timers = browserTimers }) {
+export function createDraftSync({ persist }) {
   let handle = null;
 
   function cancel() {
     if (handle === null) return;
-    timers.clear(handle);
+    clearTimeout(handle);
     handle = null;
   }
 
   return {
     schedule() {
       cancel();
-      handle = timers.set(() => {
+      handle = setTimeout(() => {
         handle = null;
         persist();
-      }, delayMs);
+      }, DRAFT_DELAY_MS);
     },
     /** Zapisuje od razu, ale tylko wtedy, gdy czeka niezapisana zmiana. */
     flush() {

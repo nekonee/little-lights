@@ -127,7 +127,7 @@ Bez wpisów licznika nie ma, wpisy bez kopii (albo z zepsutą datą) dają „Je
 (przestawiony zegar) to „dziś”. Import licznika nie zmienia. Licznik odświeża się razem z resztą ekranu (`refreshAll`).
 Aplikacja cicho prosi też o trwały magazyn (`navigator.storage.persist()`).
 
-Zachowania **M1–M18** są na początku [`tests/backup.test.js`](../tests/backup.test.js) (M17–M18 w [`tests/share.test.js`](../tests/share.test.js)).
+Testy: [`tests/unit/backup.test.js`](../tests/unit/backup.test.js) i [`tests/unit/share.test.js`](../tests/unit/share.test.js).
 
 ## 6. Kalendarz wyboru daty
 
@@ -144,7 +144,7 @@ Model: `monthGrid(y, m)`, `shiftMonth(view, delta)`, `isFuture`, `canGoNext`, `d
 
 **Zachowania.** Siatka ma zawsze 42 komórki (6×7) od poniedziałku. Miesiące przesuwają się na liczbach, więc z każdego miesiąca w obie strony i przez granicę roku. „Dalej” jest wyłączone w bieżącym miesiącu, a dni z przyszłości nie da się wybrać. Otwarcie panelu pokazuje miesiąc wybranego dnia; wybór dnia go zaznacza i zamyka panel (dzień z sąsiedniego miesiąca przełącza widok). „Dziś” wybiera dziś i wraca do bieżącego miesiąca. Dzień ze szkicem ma pustą kropkę, a gdy ma też wpis, wygrywa znacznik wpisu. Reduktor nie zmienia stanu wejściowego, a nieznana akcja rzuca wyjątek.
 
-Pełna lista **K1–K23** jest na początku [`tests/calendar-model.test.js`](../tests/calendar-model.test.js), a numer K stoi na początku nazwy każdego testu.
+Testy: [`tests/unit/calendar-model.test.js`](../tests/unit/calendar-model.test.js).
 
 **Sprawdzane ręcznie** (390×844): komórki i strzałki to `<button>` ≥ 44×44 pt z `aria-label`, `aria-pressed`,
 `aria-current`; panel rozwija się w karcie; kropki odświeżają się po zapisie, usunięciu i imporcie; wszystkie motywy
@@ -216,7 +216,7 @@ dokładnie taki, jaki był. Do porównań pola są normalizowane (przycięte, be
 
 **Zachowania.** Szkic zapisuje się 500 ms po ostatnim znaku, a od razu przy zmianie dnia, ukryciu aplikacji i `pagehide`. Pusty formularz ani formularz równy stanowi bazowemu szkicu nie tworzą (różnica tylko w spacjach też nie). Wczytanie dnia: szkic, potem wpis, potem pusty formularz; szkic pusty albo równy wpisowi jest ignorowany i usuwany. Szkic znika po zapisie wpisu, po „Odrzuć szkic” (z potwierdzeniem) i po usunięciu wpisu. Po imporcie nietknięty formularz odświeża się, a z wpisanym tekstem zostaje z ostrzeżeniem. Szkice nie wchodzą do eksportu, serii, podsumowania ani historii, a uszkodzone dane szkiców nie wywracają aplikacji. Przy szkicu wskaźnik w formularzu mówi „📝 Szkic — jeszcze niezapisany” (dzień bez wpisu) albo „📝 Szkic zmian — wpis z tego dnia nie jest jeszcze zaktualizowany”.
 
-Pełna lista **S1–S23** jest na początku [`tests/drafts.test.js`](../tests/drafts.test.js), a numer S stoi na początku nazwy każdego testu.
+Testy: [`tests/unit/drafts.test.js`](../tests/unit/drafts.test.js) i [`tests/unit/draft-sync.test.js`](../tests/unit/draft-sync.test.js).
 
 Szkice nie są w kopii zapasowej i nie wygasają same: tekst znika tylko przez zapis, odrzucenie albo usunięcie wpisu.
 
@@ -234,8 +234,8 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - Dzień liczymy za każdym razem od nowa z zegara urządzenia. Timer do północy tylko przypomina (iOS usypia timery w tle),
   a źródłem są zdarzenia powrotu.
 
-**Budowa.** `today-sync.js`: czysta logika (`decideSync`, `msUntilNextDay`, `findOtherDraft`), zachowania T1–T12 są na początku
-[`tests/today-sync.test.js`](../tests/today-sync.test.js). `notice.js`: baner. `app.js`: `syncToday`, zdarzenia i timer.
+**Budowa.** `today-sync.js`: czysta logika (`decideSync`, `msUntilNextDay`, `findOtherDraft`), testy w
+[`tests/unit/today-sync.test.js`](../tests/unit/today-sync.test.js). `notice.js`: baner. `app.js`: `syncToday`, zdarzenia i timer.
 
 ## 9. Interfejs
 
@@ -247,7 +247,7 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 - **Emoji pór roku:** 🍂 ❄️ 🌿 🌊, jedno źródło prawdy (`SEASON_EMOJI`). Lista motywów i historia jeszcze używają starych _(plan, pkt 16)_.
 - **Girlanda** (motywy zimowe, najbardziej lubiany detal): zwisające łuki sznurka od krawędzi do krawędzi i okrągłe żarówki
   na oprawkach z miękką poświatą. `garland-model.js` to czysta geometria (łuki Béziera, żarówki, kolory, rytm migotania
-  zależne tylko od szerokości i ziarna; zachowania G1–G12 na początku [`tests/garland-model.test.js`](../tests/garland-model.test.js)),
+  zależne tylko od szerokości i ziarna; testy w [`tests/unit/garland-model.test.js`](../tests/unit/garland-model.test.js)),
   `garland.js` rysuje SVG i mierzy szerokość w pikselach (`ResizeObserver`), więc przebudowuje się przy obrocie ekranu, zmianie
   okna i przełączeniu na motyw zimowy. SVG ma `viewBox` równy szerokości w px, więc żarówki są kółkami, nie owalami.
   Żarówek jest ok. jedna na 30 px, łuków jedno na 110 px, a każda girlanda ma własne ziarno (inny zwis, kolory, opóźnienia).
@@ -261,10 +261,12 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
 ## 10. Testy i narzędzia
 
 - `npm start`: serwer `tools/dev-server.py` z `Cache-Control: no-store` (moduły ES nie działają z `file://`, a zwykły serwer pozwalał przeglądarce trzymać stare pliki). `npm test`: `node --test`, bez zależności.
-- Testy idą w czterech strefach: `Europe/Warsaw`, `America/Los_Angeles`, `Pacific/Kiritimati`, `UTC`. Czas w testach powstaje lokalnie (`new Date(rok, m, d, h)`).
-- Zasady testów: oczekiwane wartości z niezależnego źródła (nie liczone testowanym kodem), własności sprawdzane pętlą po wielu latach, test regresyjny dla każdego znanego błędu, granice zamiast samego środka, numer zachowania (K, S) w nazwie testu.
+- **Układ testów:** `tests/unit/` (logika modułów `*-model.js`, `dates`, `drafts`, `backup`… bez DOM), `tests/static/` (kontrakty plików: manifest, ikony, publikacja, linki w dokumentach), `tests/helpers/` (wspólne narzędzia). Nazwa testu opisuje zachowanie pełnym zdaniem, bez numerów; `npm run test:spec` pokazuje je jako czytelną listę.
+- **Polecenia:** `npm test`, `npm run test:watch`, `npm run test:tz` (4 strefy), `npm run test:coverage`. Jeden test: `node --test --test-name-pattern="remis"`.
+- Testy idą w czterech strefach: `Europe/Warsaw`, `America/Los_Angeles`, `Pacific/Kiritimati`, `UTC` (lokalnie `test:tz`, w CI macierz w workflow; test pilnuje, żeby listy były takie same). Czas w testach powstaje lokalnie (`new Date(rok, m, d, h)`), a timery sterują wbudowane `mock.timers`.
+- Zasady testów: oczekiwane wartości z niezależnego źródła (nie liczone testowanym kodem), własności sprawdzane pętlą po wielu latach, test regresyjny dla każdego znanego błędu, granice zamiast samego środka.
 - **Test musi dać się oblać:** `python3 tools/mutation-check.py` psuje kod na kopii (stare `toISOString`, tydzień od niedzieli, brak blokady przyszłości…) i sprawdza, że testy to wykrywają. Usterka, która przeżyje, to słaby test.
-- Interfejs (DOM) nie ma testów automatycznych: sprawdzamy go ręcznie w podglądzie 390×844 w kilku motywach (zawsze też zimowych).
+- Interfejs (DOM: `app.js`, `form.js`, `history.js`, `themes.js`, `store.js`…) nie ma testów automatycznych (raport `npm run test:coverage` obejmuje tylko moduły wczytywane przez testy, więc te się w nim nie pojawiają): sprawdzamy go ręcznie w podglądzie 390×844 w kilku motywach (zawsze też zimowych).
   Scenariusze w prawdziwej przeglądarce są w `tools/scenarios/` (powrót do dziś, girlanda, kopia zapasowa z atrapą okna udostępniania; otwiera się je po `npm start`, zachowują i przywracają `localStorage`). Playwright odłożony jako zbyt ciężki na tę skalę.
 - Prettier i `.editorconfig`. `legacy/` to prototyp do porównań, nie część aplikacji.
 
@@ -275,7 +277,7 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
   `assets/favicon.svg` i `assets/icons/`. Dokumentacja, testy, narzędzia, `legacy/` i kopie zostają w repozytorium: prototyp pod tym samym
   adresem używa tego samego klucza `localStorage` co aplikacja, a scenariusze w `tools/` czyszczą `localStorage`.
   Uprawnienia są minimalne (odczyt kodu, zapis Pages, token OIDC), akcje tylko oficjalne `actions/*` z numerem wersji głównej,
-  bez sekretów. Zachowania W1–W6 są na początku [`tests/deploy.test.js`](../tests/deploy.test.js).
+  bez sekretów. Stronę składa [`scripts/build-site.js`](../scripts/build-site.js) (jedyna lista publikowanych plików), a [`tests/static/publication.test.js`](../tests/static/publication.test.js) sprawdza jej prawdziwy wynik.
 - **Adres (działa):** `https://nekonee.github.io/little-lights/` (podkatalog, stąd względne ścieżki). Nazwa repozytorium jest częścią adresu,
   a domena `nekonee.github.io` decyduje o magazynie danych, więc nazwy konta ani repozytorium nie zmieniamy bez eksportu kopii.
 - **Osobny magazyn danych** zainstalowanej aplikacji (patrz „Adres decyduje o danych”).
@@ -286,7 +288,7 @@ PWA na iPhonie miesiącami żyje w tle. Bez tego po powrocie pokazywałaby wczor
   `start_url` i `scope` `./`, kolory `#fbf0e2` z motywu domyślnego, ikony 192 i 512) oraz tagi Apple (tryb aplikacji, tytuł pod ikoną,
   pasek statusu `black-translucent`, `format-detection telephone=no`). Wszystkie ścieżki są względne, bo aplikacja stoi pod adresem
   z podkatalogiem (`…/little-lights/`). Manifest i ikona są czytane przy instalacji; zmiana nazwy lub koloru wymaga ponownego dodania aplikacji.
-  Zachowania P1–P9 są na początku [`tests/pwa.test.js`](../tests/pwa.test.js).
+  Testy: [`tests/static/pwa.test.js`](../tests/static/pwa.test.js).
 - **Ikona i ekran startowy są czytane raz, przy instalacji.** Zmiana = usunąć aplikację i dodać ponownie; podbijamy wersję w nazwie pliku.
 - **Timery w tle są usypiane**, więc o zmianie dnia decydują zdarzenia powrotu (`visibilitychange`, `pageshow`), a nie timer.
 - **Aplikacja może zostać zamknięta bez ostrzeżenia**, stąd natychmiastowy zapis szkicu przy ukryciu i `pagehide`.

@@ -25,8 +25,12 @@ dopóki nie zaimportujesz kopii przyciskiem „Importuj kopię zapasową” na d
 ## Testy
 
 ```sh
-npm test         # node --test (Node 20+), bez zależności
-TZ=America/Los_Angeles npm test   # to samo w innej strefie czasowej
+npm test                # node --test (Node 22+), bez zależności
+npm run test:watch      # ponowne uruchomienie po zmianie pliku
+npm run test:spec       # czytelna lista zachowań zamiast skrótu
+npm run test:tz         # te same testy w czterech strefach czasowych
+npm run test:coverage   # pokrycie kodu w js/
+npm run build:site      # składa folder _site z samymi plikami aplikacji
 ```
 
 Testy obejmują logikę bez DOM: daty, serię, podsumowanie, kopię zapasową, kalendarz i szkice. Interfejs sprawdzamy ręcznie
@@ -67,7 +71,10 @@ js/
   garland-model.js    geometria girlandy: łuki, żarówki, kolory, migotanie   (czyste)
   garland.js          girlanda światełek w motywach zimowych (rysowanie SVG)
 .github/workflows/   publikacja na GitHub Pages: testy, potem tylko pliki aplikacji (pages.yml)
-tests/                testy logiki (node --test), dane wymyślone
+tests/unit/           testy logiki bez DOM (node --test), dane wymyślone
+tests/static/         kontrakty plików: manifest, ikony, publikacja, linki w dokumentach
+tests/helpers/        wspólne narzędzia testów
+scripts/              build-site.js: składa stronę (używa go workflow i test publikacji)
 tools/                serwer bez cache'u, kontrola testów przez psucie kodu, scenariusze w przeglądarce
 assets/               favicon, ikona aplikacji (źródło SVG i PNG), docelowo ekran startowy
 apple-touch-icon.png  ikona 180×180 dla iOS (kopia w katalogu głównym, tak jej szuka Safari)

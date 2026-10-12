@@ -15,11 +15,18 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # Testy czasu muszą przejść w kilku strefach, tak samo jak lokalnie (npm run test:tz).
+    strategy:
+      fail-fast: false
+      matrix:
+        tz: [Europe/Warsaw, America/Los_Angeles, Pacific/Kiritimati, UTC]
+    env:
+      TZ: ${{ matrix.tz }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version-file: .nvmrc
       - run: npm test
 
   deploy:
@@ -34,14 +41,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
-      # Na stronę trafiają tylko pliki aplikacji. Dokumentacja, testy, narzędzia, prototyp i kopie zostają w repozytorium.
+      # Na stronę trafiają tylko pliki aplikacji (lista w scripts/build-site.js).
       - name: Zbierz pliki aplikacji
-        run: |
-          mkdir -p _site/assets
-          cp index.html manifest.json apple-touch-icon.png _site/
-          cp -R css js _site/
-          cp assets/favicon.svg _site/assets/
-          cp -R assets/icons _site/assets/
+        run: node scripts/build-site.js _site
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

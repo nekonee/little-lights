@@ -8,6 +8,47 @@ Format wpisu: data, krótki tytuł, potem sekcje (tylko te, które są potrzebne
 
 ---
 
+## 2026-10-12: Przepisanie testów na standardowy, czytelny układ
+
+Powód: przegląd testów (patrz niżej „Wnioski z przeglądu”). Zachowania aplikacji bez zmian, bez Playwrighta i bez nowych zależności.
+
+**Zmieniono**
+
+- Układ: `tests/unit/` (logika), `tests/static/` (kontrakty plików: `pwa`, `publication`, `docs-links`), `tests/helpers/` (`deepFreeze` w jednym miejscu zamiast trzech kopii).
+- Nazwy testów opisują zachowanie pełnym zdaniem, bez numerów K/S/M/G/T/P/W. Z nagłówków plików usunięto listy numerowanych zachowań
+  (powielały nazwy testów i się z nimi rozjeżdżały); zostały krótkie opisy pliku i uwagi o niezależnym źródle wartości.
+  `npm run test:spec` pokazuje testy jako listę zachowań. Komentarze w `js/` i odwołania w dokumentacji/planie poprawione.
+- `draft-sync.test.js`: własny `fakeClock` zastąpiony wbudowanym `mock.timers`. Z `js/draft-sync.js` usunięto parametry `timers` i `delayMs`,
+  które istniały tylko dla testu (test „własne opóźnienie” usunięty razem z nimi).
+- Publikacja: nowy `scripts/build-site.js` z jedyną listą publikowanych plików. Używa go workflow, a `tests/static/publication.test.js`
+  buduje nim stronę w katalogu tymczasowym i sprawdza jej prawdziwą zawartość (dawniej: regexy po poleceniach `cp` w YAML).
+  Nowe sprawdzenia: pliki na stronie są identyczne z repozytorium, odwołania z HTML, manifestu, CSS i importów JS wskazują pliki obecne na stronie,
+  skrypt odmawia niepustego katalogu.
+- CI: testy idą w macierzy czterech stref czasowych (dotąd tylko w UTC, więc testy zmiany czasu i Kiritimati nic tam nie sprawdzały);
+  wersja Node z `.nvmrc` (22), `engines` w `package.json`. Test pilnuje, żeby strefy w workflow i w `npm run test:tz` były te same.
+- `package.json`: `test:watch`, `test:spec`, `test:tz`, `test:coverage`, `build:site`. `.gitignore`: `_site/`.
+- `tools/mutation-check.py`: ocena po kodzie wyjścia `node --test` (błąd w hooku node liczy jako „cancelled”, nie „fail”, więc cztery usterki
+  publikacji wcześniej błędnie „przeżywały”); kopia robocza zawiera `legacy/`, `tools/` i atrapę `backups/`; usterki publikacji przepięte na `build-site.js`.
+
+**Wnioski z przeglądu (bez zmian w kodzie, do zrobienia osobno)**
+
+- 13 z 23 modułów `js/` nie ma testów (`app.js`, `store.js`, `themes.js`, `quote.js`, `form.js`, `history.js` i inne). Raport pokrycia (99,3%) dotyczy tylko
+  wczytywanych modułów. Nagłówek dawnego `drafts.test.js` deklarował 23 zachowania, a automatyczny test miało 11; reszta dotyczyła DOM.
+- Wciąż niewykorzystane standardowe narzędzia: ESLint, Stryker (zamiast ręcznych usterek), parser HTML w testach `pwa`, testy przeglądarkowe zamiast `tools/scenarios/`.
+
+**Sprawdzono**
+
+- Testy: 294 (dawniej 288) zielone w czterech strefach (`npm run test:tz`).
+- Kontrola przez psucie kodu: 217 usterek (24 nowe dla publikacji, stref czasowych, wersji Node i `.gitignore`), wszystkie wykryte, baza czysta.
+  Pierwszy przebieg: 213 z 217 przez wadę skryptu opisaną wyżej.
+- `build-site.js` uruchomiony z linii poleceń: 37 plików, ponowne uruchomienie na tym samym katalogu kończy się błędem.
+
+**Nie sprawdzono**
+
+- Przebiegu zmienionego workflow na GitHubie (macierz stref, `node-version-file`, `build-site.js`) przed pierwszym pushem.
+
+---
+
 ## 2026-10-11: Repozytorium i pierwsza publikacja (pkt 4)
 
 **Dodano**

@@ -1,22 +1,5 @@
-// Zachowania scalania kopii zapasowej (M1–M16). Numer M jest na początku nazwy testu, który go sprawdza.
-//
-//  M1:  Wpis z pliku z większym savedAt zastępuje obecny („zaktualizowano”).
-//  M2:  Obecny wpis z większym savedAt zostaje („bez zmian”).
-//  M3:  Remis savedAt (także 0 i 0): zostaje obecny, bez osobnej liczby w raporcie.
-//  M4:  Brak, tekst albo NaN w savedAt liczy się jako 0, po obu stronach.
-//  M5:  Wpis tylko w pliku jest dodawany („dodano”), wpis tylko lokalny zostaje.
-//  M6:  Ta sama treść (5 pól) przy innym savedAt: „bez zmian”, obecny wpis zostaje, nawet gdy plik jest nowszy.
-//  M7:  Raport {added, updated, unchanged} zgadza się z wynikiem; suma to liczba wpisów z pliku.
-//  M8:  Scalanie nie zmienia argumentów i znosi uszkodzone wpisy lokalne (nie obiekt, zły savedAt).
-//  M9:  Drugie wczytanie tego samego pliku nic nie zmienia: same „bez zmian”.
-//  M10: Bez remisów wynik nie zależy od tego, która strona jest „obecna”, a która z pliku.
-//  M11: Komunikat po imporcie: „Dodano X, zaktualizowano Y, bez zmian Z” (plus liczba pominiętych, gdy > 0).
-//  M12: Plik bez żadnego poprawnego wpisu: komunikat „nic do wczytania” (plus pominięte).
-//  M13: Zmiana czasu i strefa nie wpływają na liczbę dni od ostatniej kopii (testy w 4 strefach).
-//  M14: Status kopii: bez wpisów brak licznika; wpisy bez kopii (albo z zepsutą datą) to „jeszcze nie”; data z przyszłości to „dziś”.
-//  M15: Teksty licznika: dziś, wczoraj, „X dni temu”.
-//  M16: Nazwa pliku zawiera lokalną datę.
-// Wybór sposobu eksportu (M17, M18) jest w tests/share.test.js.
+// Kopia zapasowa (js/backup.js): zapis i odczyt pliku, oczyszczanie wpisów, scalanie „nowszy wygrywa”,
+// raport po imporcie, licznik „Ostatnia kopia” i nazwa pliku. Wybór sposobu eksportu: share.test.js.
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import {
@@ -26,8 +9,9 @@ import {
   parseBackup,
   sanitizeEntries,
   serializeEntries,
-} from '../js/backup.js';
-import { strings } from '../js/strings.js';
+} from '../../js/backup.js';
+import { strings } from '../../js/strings.js';
+import { deepFreeze } from '../helpers/freeze.js';
 
 const ENTRY = {
   date: '2026-01-02',
@@ -129,16 +113,8 @@ function entry(date, savedAt, why = '') {
   return { date, grateful: ['kawa'], why, person: '', proud: '', lesson: '', savedAt };
 }
 
-function deepFreeze(value) {
-  if (typeof value === 'object' && value !== null) {
-    Object.values(value).forEach(deepFreeze);
-    Object.freeze(value);
-  }
-  return value;
-}
-
 describe('mergeEntries', () => {
-  test('M1: wpis z pliku z większym savedAt zastępuje obecny', () => {
+  test('wpis z pliku z większym savedAt zastępuje obecny', () => {
     const current = { '2026-01-02': entry('2026-01-02', 100, 'stary') };
     const imported = { '2026-01-02': entry('2026-01-02', 200, 'nowy') };
     const result = mergeEntries(current, imported);
@@ -147,7 +123,7 @@ describe('mergeEntries', () => {
     assert.deepEqual([result.added, result.updated, result.unchanged], [0, 1, 0]);
   });
 
-  test('M2: obecny wpis z większym savedAt zostaje', () => {
+  test('obecny wpis z większym savedAt zostaje', () => {
     const current = { '2026-01-02': entry('2026-01-02', 300, 'obecny') };
     const imported = { '2026-01-02': entry('2026-01-02', 200, 'z pliku') };
     const result = mergeEntries(current, imported);
@@ -155,7 +131,7 @@ describe('mergeEntries', () => {
     assert.deepEqual([result.added, result.updated, result.unchanged], [0, 0, 1]);
   });
 
-  test('M3: remis savedAt zostawia obecny wpis, także gdy oba mają 0', () => {
+  test('remis savedAt zostawia obecny wpis, także gdy oba mają 0', () => {
     for (const savedAt of [0, 5]) {
       const current = { '2026-01-02': entry('2026-01-02', savedAt, 'obecny') };
       const imported = { '2026-01-02': entry('2026-01-02', savedAt, 'z pliku') };
@@ -169,7 +145,7 @@ describe('mergeEntries', () => {
     }
   });
 
-  test('M4: brak, tekst albo NaN w savedAt liczy się jako 0 po stronie obecnej', () => {
+  test('brak, tekst albo NaN w savedAt liczy się jako 0 po stronie obecnej', () => {
     for (const savedAt of [undefined, '999', NaN, null]) {
       const current = { '2026-01-02': { ...entry('2026-01-02', 0, 'obecny'), savedAt } };
       const imported = { '2026-01-02': entry('2026-01-02', 1, 'z pliku') };
@@ -179,7 +155,7 @@ describe('mergeEntries', () => {
     }
   });
 
-  test('M4: brak, tekst albo NaN w savedAt liczy się jako 0 po stronie pliku', () => {
+  test('brak, tekst albo NaN w savedAt liczy się jako 0 po stronie pliku', () => {
     for (const savedAt of [undefined, '999', NaN, null]) {
       const current = { '2026-01-02': entry('2026-01-02', 1, 'obecny') };
       const imported = { '2026-01-02': { ...entry('2026-01-02', 0, 'z pliku'), savedAt } };
@@ -189,13 +165,13 @@ describe('mergeEntries', () => {
     }
   });
 
-  test('M4: oba savedAt zepsute to remis, zostaje obecny', () => {
+  test('oba savedAt zepsute to remis, zostaje obecny', () => {
     const current = { '2026-01-02': { ...entry('2026-01-02', 0, 'obecny'), savedAt: 'x' } };
     const imported = { '2026-01-02': { ...entry('2026-01-02', 0, 'z pliku'), savedAt: NaN } };
     assert.equal(mergeEntries(current, imported).entries['2026-01-02'].why, 'obecny');
   });
 
-  test('M5: wpis tylko w pliku jest dodawany, a tylko lokalny zostaje', () => {
+  test('wpis tylko w pliku jest dodawany, a tylko lokalny zostaje', () => {
     const current = { '2026-01-01': entry('2026-01-01', 10, 'lokalny') };
     const imported = { '2026-01-03': entry('2026-01-03', 20, 'z pliku') };
     const result = mergeEntries(current, imported);
@@ -205,7 +181,7 @@ describe('mergeEntries', () => {
     assert.deepEqual([result.added, result.updated, result.unchanged], [1, 0, 0]);
   });
 
-  test('M6: ta sama treść przy innym savedAt to „bez zmian”, nawet gdy plik jest nowszy', () => {
+  test('ta sama treść przy innym savedAt to „bez zmian”, nawet gdy plik jest nowszy', () => {
     const current = { '2026-01-02': entry('2026-01-02', 10) };
     const imported = { '2026-01-02': entry('2026-01-02', 999) };
     const result = mergeEntries(current, imported);
@@ -213,7 +189,7 @@ describe('mergeEntries', () => {
     assert.deepEqual([result.added, result.updated, result.unchanged], [0, 0, 1]);
   });
 
-  test('M6: inna kolejność wdzięczności albo inne pole to inna treść', () => {
+  test('inna kolejność wdzięczności albo inne pole to inna treść', () => {
     const base = { ...entry('2026-01-02', 10), grateful: ['a', 'b'] };
     const variants = [
       { ...base, grateful: ['b', 'a'] },
@@ -232,13 +208,13 @@ describe('mergeEntries', () => {
     }
   });
 
-  test('M6: plik z dodatkową wdzięcznością to inna treść, nawet gdy zaczyna się tak samo', () => {
+  test('plik z dodatkową wdzięcznością to inna treść, nawet gdy zaczyna się tak samo', () => {
     const current = { '2026-01-02': { ...entry('2026-01-02', 10), grateful: ['a'] } };
     const imported = { '2026-01-02': { ...entry('2026-01-02', 20), grateful: ['a', 'b'] } };
     assert.equal(mergeEntries(current, imported).updated, 1);
   });
 
-  test('M4: ujemny savedAt liczy się jako 0', () => {
+  test('ujemny savedAt liczy się jako 0', () => {
     const current = { '2026-01-02': { ...entry('2026-01-02', 0, 'obecny'), savedAt: -5 } };
     const imported = { '2026-01-02': entry('2026-01-02', 0, 'z pliku') };
     const result = mergeEntries(current, imported);
@@ -246,7 +222,7 @@ describe('mergeEntries', () => {
     assert.equal(result.unchanged, 1);
   });
 
-  test('M7: raport zgadza się z wynikiem, a suma to liczba wpisów z pliku', () => {
+  test('raport zgadza się z wynikiem, a suma to liczba wpisów z pliku', () => {
     const current = {
       '2026-01-01': entry('2026-01-01', 100, 'a-obecny'),
       '2026-01-02': entry('2026-01-02', 300, 'b-obecny'),
@@ -280,7 +256,7 @@ describe('mergeEntries', () => {
     assert.equal(entries['2026-01-07'].savedAt, 10);
   });
 
-  test('M8: nie zmienia przekazanych obiektów', () => {
+  test('nie zmienia przekazanych obiektów', () => {
     const current = deepFreeze({
       '2026-01-01': entry('2026-01-01', 100, 'obecny'),
       '2026-01-02': entry('2026-01-02', 100, 'obecny'),
@@ -295,7 +271,7 @@ describe('mergeEntries', () => {
     assert.notEqual(result.entries, current);
   });
 
-  test('M8: uszkodzone wpisy lokalne nie wywracają scalania', () => {
+  test('uszkodzone wpisy lokalne nie wywracają scalania', () => {
     const current = {
       '2026-01-01': null,
       '2026-01-02': 'tekst',
@@ -313,7 +289,7 @@ describe('mergeEntries', () => {
     for (const key of Object.keys(imported)) assert.deepEqual(result.entries[key], imported[key]);
   });
 
-  test('M9: ponowne wczytanie tego samego pliku nic nie zmienia', () => {
+  test('ponowne wczytanie tego samego pliku nic nie zmienia', () => {
     const current = {
       '2026-01-01': entry('2026-01-01', 100, 'obecny'),
       '2026-01-05': entry('2026-01-05', 70),
@@ -329,7 +305,7 @@ describe('mergeEntries', () => {
     assert.deepEqual([second.added, second.updated, second.unchanged], [0, 0, 3]);
   });
 
-  test('M10: bez remisów wynik nie zależy od tego, która strona jest „obecna”', () => {
+  test('bez remisów wynik nie zależy od tego, która strona jest „obecna”', () => {
     const left = {
       '2026-01-01': entry('2026-01-01', 100, 'l1'),
       '2026-01-02': entry('2026-01-02', 300, 'l2'),
@@ -345,21 +321,21 @@ describe('mergeEntries', () => {
 });
 
 describe('strings.backup.imported', () => {
-  test('M11: podaje liczby dodanych, zaktualizowanych i bez zmian', () => {
+  test('podaje liczby dodanych, zaktualizowanych i bez zmian', () => {
     assert.equal(
       strings.backup.imported({ added: 2, updated: 1, unchanged: 3, skipped: 0 }),
       'Wczytano kopię zapasową ✓ Dodano: 2, zaktualizowano: 1, bez zmian: 3',
     );
   });
 
-  test('M11: dopisuje liczbę pominiętych wpisów tylko, gdy jest większa od zera', () => {
+  test('dopisuje liczbę pominiętych wpisów tylko, gdy jest większa od zera', () => {
     assert.equal(
       strings.backup.imported({ added: 0, updated: 0, unchanged: 4, skipped: 2 }),
       'Wczytano kopię zapasową ✓ Dodano: 0, zaktualizowano: 0, bez zmian: 4. Pominięto nieprawidłowe wpisy: 2',
     );
   });
 
-  test('M12: plik bez poprawnych wpisów to „nic do wczytania”', () => {
+  test('plik bez poprawnych wpisów to „nic do wczytania”', () => {
     assert.equal(
       strings.backup.imported({ added: 0, updated: 0, unchanged: 0, skipped: 0 }),
       'W pliku nie ma wpisów do wczytania',
@@ -374,7 +350,7 @@ describe('strings.backup.imported', () => {
 describe('backupStatus', () => {
   const TODAY = '2026-10-11';
 
-  test('M13: liczy dni kalendarzowe od ostatniej kopii, także przez zmianę czasu', () => {
+  test('liczy dni kalendarzowe od ostatniej kopii, także przez zmianę czasu', () => {
     const cases = [
       ['2026-10-11', 0],
       ['2026-10-10', 1],
@@ -398,7 +374,7 @@ describe('backupStatus', () => {
     );
   });
 
-  test('M14: bez wpisów nie ma licznika', () => {
+  test('bez wpisów nie ma licznika', () => {
     assert.deepEqual(backupStatus({ entryCount: 0, lastBackup: null, today: TODAY }), {
       kind: 'none',
     });
@@ -407,7 +383,7 @@ describe('backupStatus', () => {
     });
   });
 
-  test('M14: wpisy bez kopii albo z zepsutą datą kopii to „jeszcze nie”', () => {
+  test('wpisy bez kopii albo z zepsutą datą kopii to „jeszcze nie”', () => {
     for (const lastBackup of [null, undefined, '', 'wczoraj', '2026-02-31', 20261011]) {
       assert.deepEqual(
         backupStatus({ entryCount: 1, lastBackup, today: TODAY }),
@@ -417,7 +393,7 @@ describe('backupStatus', () => {
     }
   });
 
-  test('M14: data kopii z przyszłości (przestawiony zegar) to „dziś”', () => {
+  test('data kopii z przyszłości (przestawiony zegar) to „dziś”', () => {
     assert.deepEqual(backupStatus({ entryCount: 1, lastBackup: '2026-10-20', today: TODAY }), {
       kind: 'done',
       days: 0,
@@ -426,7 +402,7 @@ describe('backupStatus', () => {
 });
 
 describe('strings.backup.lastBackup', () => {
-  test('M15: dziś, wczoraj i „X dni temu”', () => {
+  test('dziś, wczoraj i „X dni temu”', () => {
     const text = (days) => strings.backup.lastBackup({ kind: 'done', days });
     assert.equal(text(0), 'Ostatnia kopia: dziś');
     assert.equal(text(1), 'Ostatnia kopia: wczoraj');
@@ -437,7 +413,7 @@ describe('strings.backup.lastBackup', () => {
     assert.equal(text(365), 'Ostatnia kopia: 365 dni temu');
   });
 
-  test('M15: brak kopii i brak wpisów', () => {
+  test('brak kopii i brak wpisów', () => {
     assert.equal(
       strings.backup.lastBackup({ kind: 'never' }),
       'Jeszcze nie robiłaś kopii zapasowej',
@@ -446,6 +422,8 @@ describe('strings.backup.lastBackup', () => {
   });
 });
 
-test('M16: backupFilename zawiera datę', () => {
-  assert.equal(backupFilename('2026-09-27'), 'little-lights-kopia-2026-09-27.json');
+describe('backupFilename', () => {
+  test('nazwa pliku zawiera lokalną datę', () => {
+    assert.equal(backupFilename('2026-09-27'), 'little-lights-kopia-2026-09-27.json');
+  });
 });

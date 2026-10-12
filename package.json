@@ -6,6 +6,14 @@
   "type": "module",
   "scripts": {
     "start": "python3 tools/dev-server.py",
-    "test": "node --test"
+    "test": "node --test",
+    "test:watch": "node --test --watch",
+    "test:spec": "node --test --test-reporter=spec",
+    "test:tz": "for tz in Europe/Warsaw America/Los_Angeles Pacific/Kiritimati UTC; do echo \"== $tz\"; TZ=$tz node --test || exit 1; done",
+    "test:coverage": "node --test --experimental-test-coverage --test-coverage-include=\"js/**/*.js\"",
+    "build:site": "node scripts/build-site.js _site"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

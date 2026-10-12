@@ -1,5 +1,5 @@
 // Czysta logika szkiców niezapisanych formularzy. Bez DOM i bez localStorage.
-// Zachowania S1–S23 wypisane są na początku tests/drafts.test.js.
+// Testy: tests/unit/drafts.test.js.
 import { isValidKey } from './dates.js';
 import { strings } from './strings.js';
 

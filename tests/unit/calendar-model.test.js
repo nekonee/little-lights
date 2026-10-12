@@ -1,34 +1,9 @@
-// Zachowania kalendarza (K1–K23). Numer K jest na początku nazwy testu, który go sprawdza.
-//
-//  K1: Siatka ma zawsze 42 komórki (6×7), także gdy miesiąc mieści się w 5 wierszach.
-//  K2: Tydzień zaczyna się w poniedziałek.
-//  K3: Pierwszy dzień miesiąca leży w kolumnie swojego dnia tygodnia (też przesunięcia 0 i 6).
-//  K4: Kolejne dni bez dziur i powtórzeń; dni „w miesiącu” to dokładnie 1…N (28/29/30/31).
-//  K5: Dni sąsiednich miesięcy dopełniają siatkę, także przez granicę roku.
-//  K6: Przesunięcie miesiąca działa z każdego miesiąca w obie strony; +1 i −1 wraca na miejsce.
-//  K7: „Dziś” to dzień lokalny; dziś nie jest przyszłością, jutro jest.
-//  K8: „Dalej” jest wyłączone w bieżącym miesiącu. Wstecz bez limitu.
-//  K9: Cechy komórki (dziś, wybrany, wpis) są przypisane dokładnie do jej dnia, bez przesunięć.
-//  K10: Opis dla czytnika ekranu: „Piątek, 25 września 2026[, wpis zapisany]”.
-//  K11: Otwarcie panelu pokazuje miesiąc wybranego dnia.
-//  K12: Zamknięcie (przycisk daty, dotknięcie poza panelem, Escape) nie zmienia dnia ani widoku.
-//  K13: Wybór dnia zaznacza go i zamyka panel; dzień z sąsiedniego miesiąca przełącza widok.
-//  K14: Dzień z przyszłości i niepoprawny klucz są ignorowane.
-//  K15: „Dziś” wybiera dziś, ustawia bieżący miesiąc i zamyka panel.
-//  K16: Zmiana z zewnątrz synchronizuje dzień i widok, bez otwierania i zamykania panelu.
-//  K17: Reduktor nie zmienia stanu wejściowego.
-//  K18: Przesuwanie miesięcy nie zmienia wybranego dnia.
-//  K19: Niepoprawny rok lub miesiąc → `RangeError`.
-//  K20: Nieznana akcja → wyjątek (literówka nie może udawać, że działa).
-//  K21: Dzień ze szkicem, bez wpisu: znacznik `draft` (pusta kropka).
-//  K22: Dzień z wpisem i szkicem: wygrywa znacznik `entry` (kafelek i pełna kropka).
-//  K23: Opis dla czytnika uwzględnia szkic („…, szkic niezapisany”, „…, wpis zapisany, szkic zmian”).
-//
-// Oczekiwane wartości (układy siatek, liczby dni) zostały sprawdzone w niezależnym źródle
-// (moduł calendar z Pythona), a nie policzone algorytmem z kodu, który testują.
+// Kalendarz (js/calendar-model.js): siatka miesiąca, przesuwanie widoku, opisy komórek i reduktor stanu panelu.
+// Oczekiwane układy siatek i liczby dni pochodzą z niezależnego źródła (moduł calendar z Pythona),
+// a nie z algorytmu, który testują.
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { todayKey } from '../js/dates.js';
+import { todayKey } from '../../js/dates.js';
 import {
   calendarReducer,
   canGoNext,
@@ -37,7 +12,8 @@ import {
   isFuture,
   monthGrid,
   shiftMonth,
-} from '../js/calendar-model.js';
+} from '../../js/calendar-model.js';
+import { deepFreeze } from '../helpers/freeze.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const TODAY = '2026-10-07'; // środa
@@ -63,15 +39,8 @@ function everyMonth(fromYear, toYear) {
   return months;
 }
 
-function deepFreeze(value) {
-  for (const inner of Object.values(value)) {
-    if (typeof inner === 'object' && inner !== null) deepFreeze(inner);
-  }
-  return Object.freeze(value);
-}
-
 describe('monthGrid: kształt siatki', () => {
-  test('K1: zawsze 42 komórki, także w miesiącach mieszczących się w 5 wierszach', () => {
+  test('zawsze 42 komórki, także w miesiącach mieszczących się w 5 wierszach', () => {
     for (const { year, month } of everyMonth(2020, 2035)) {
       assert.equal(monthGrid(year, month).length, 42, `${year}-${month}`);
     }
@@ -79,14 +48,14 @@ describe('monthGrid: kształt siatki', () => {
     assert.equal(monthGrid(2026, 9).length, 42);
   });
 
-  test('K2: tydzień zaczyna się od poniedziałku w każdym miesiącu', () => {
+  test('tydzień zaczyna się od poniedziałku w każdym miesiącu', () => {
     for (const { year, month } of everyMonth(2020, 2035)) {
       const first = monthGrid(year, month)[0];
       assert.equal(weekdayOf(first.key), 1, `${year}-${month} zaczyna się od ${first.key}`);
     }
   });
 
-  test('K3: pierwszy dzień miesiąca leży w kolumnie swojego dnia tygodnia (przesunięcia 0 i 6 też)', () => {
+  test('pierwszy dzień miesiąca leży w kolumnie swojego dnia tygodnia (przesunięcia 0 i 6 też)', () => {
     const expected = [
       // [rok, miesiąc, pierwsza komórka siatki, kolumna 1. dnia, dzień tygodnia 1. dnia]
       [2026, 6, '2026-06-01', 0, 'poniedziałek'],
@@ -112,7 +81,7 @@ describe('monthGrid: kształt siatki', () => {
     }
   });
 
-  test('K3: wrzesień 2026 ma dokładnie taki układ jak w kalendarzu', () => {
+  test('wrzesień 2026 ma dokładnie taki układ jak w kalendarzu', () => {
     const grid = monthGrid(2026, 9);
     const days = [
       ...[31],
@@ -131,7 +100,7 @@ describe('monthGrid: kształt siatki', () => {
     );
   });
 
-  test('K4: komórki to kolejne dni, bez dziur i powtórzeń', () => {
+  test('komórki to kolejne dni, bez dziur i powtórzeń', () => {
     for (const { year, month } of everyMonth(2020, 2035)) {
       const grid = monthGrid(year, month);
       assert.equal(new Set(grid.map((cell) => cell.key)).size, 42, `${year}-${month}`);
@@ -145,7 +114,7 @@ describe('monthGrid: kształt siatki', () => {
     }
   });
 
-  test('K4: dni „w miesiącu” to dokładnie 1…N, a pole day zgadza się z kluczem', () => {
+  test('dni „w miesiącu” to dokładnie 1…N, a pole day zgadza się z kluczem', () => {
     for (const { year, month } of everyMonth(2020, 2035)) {
       const inMonth = monthGrid(year, month).filter((cell) => cell.inMonth);
       assert.deepEqual(
@@ -159,7 +128,7 @@ describe('monthGrid: kształt siatki', () => {
     }
   });
 
-  test('K4: liczba dni w miesiącu: 28, 29 (rok przestępny), 30 i 31', () => {
+  test('liczba dni w miesiącu: 28, 29 (rok przestępny), 30 i 31', () => {
     const expected = [
       [2026, 2, 28],
       [2028, 2, 29],
@@ -176,14 +145,14 @@ describe('monthGrid: kształt siatki', () => {
     assert.ok(!monthGrid(2026, 2).some((cell) => cell.key === '2026-02-29'));
   });
 
-  test('K4: marzec 2026 potrzebuje pełnych 6 wierszy i kończy się w kwietniu', () => {
+  test('marzec 2026 potrzebuje pełnych 6 wierszy i kończy się w kwietniu', () => {
     const grid = monthGrid(2026, 3);
     assert.equal(grid[36].key, '2026-03-31'); // 6. wiersz zaczyna się od indeksu 35
     assert.equal(grid[36].inMonth, true);
     assert.equal(grid[41].key, '2026-04-05');
   });
 
-  test('K5: grudzień dopełnia siatkę dniami stycznia następnego roku', () => {
+  test('grudzień dopełnia siatkę dniami stycznia następnego roku', () => {
     const grid = monthGrid(2026, 12);
     assert.equal(grid[41].key, '2027-01-10');
     const tail = grid.slice(32);
@@ -194,7 +163,7 @@ describe('monthGrid: kształt siatki', () => {
     assert.ok(tail.every((cell) => !cell.inMonth));
   });
 
-  test('K5: styczeń zaczyna siatkę dniami grudnia poprzedniego roku', () => {
+  test('styczeń zaczyna siatkę dniami grudnia poprzedniego roku', () => {
     const grid = monthGrid(2027, 1);
     assert.deepEqual(
       grid.slice(0, 4).map((cell) => cell.key),
@@ -204,7 +173,7 @@ describe('monthGrid: kształt siatki', () => {
     assert.equal(grid[4].key, '2027-01-01');
   });
 
-  test('K19: niepoprawny miesiąc lub rok kończy się RangeError', () => {
+  test('niepoprawny miesiąc lub rok kończy się RangeError', () => {
     for (const [year, month] of [
       [2026, 0],
       [2026, 13],
@@ -227,7 +196,7 @@ describe('monthGrid: kształt siatki', () => {
 });
 
 describe('shiftMonth', () => {
-  test('K6: przesuwa miesiąc, także przez granice roku', () => {
+  test('przesuwa miesiąc, także przez granice roku', () => {
     const expected = [
       [{ year: 2026, month: 9 }, 1, { year: 2026, month: 10 }],
       [{ year: 2026, month: 12 }, 1, { year: 2027, month: 1 }],
@@ -242,7 +211,7 @@ describe('shiftMonth', () => {
     }
   });
 
-  test('K6: dwa lata kolejnych kroków +1 odwiedzają każdy miesiąc po kolei, bez przeskoków', () => {
+  test('dwa lata kolejnych kroków +1 odwiedzają każdy miesiąc po kolei, bez przeskoków', () => {
     // Regresja: setMonth(+1) ze stanu „31 stycznia” przeskakiwał z stycznia na marzec.
     let view = { year: 2026, month: 1 };
     for (let step = 0; step < 24; step++) {
@@ -251,7 +220,7 @@ describe('shiftMonth', () => {
     }
   });
 
-  test('K6: krok w przód i z powrotem wraca dokładnie na to samo miejsce', () => {
+  test('krok w przód i z powrotem wraca dokładnie na to samo miejsce', () => {
     for (const view of everyMonth(2024, 2028)) {
       for (let delta = -30; delta <= 30; delta++) {
         assert.deepEqual(shiftMonth(shiftMonth(view, delta), -delta), view);
@@ -259,7 +228,7 @@ describe('shiftMonth', () => {
     }
   });
 
-  test('K6: wynik ma zawsze miesiąc 1–12 i nie zmienia przekazanego obiektu', () => {
+  test('wynik ma zawsze miesiąc 1–12 i nie zmienia przekazanego obiektu', () => {
     const view = Object.freeze({ year: 2026, month: 12 });
     const result = shiftMonth(view, 25);
     assert.deepEqual(view, { year: 2026, month: 12 });
@@ -272,13 +241,13 @@ describe('shiftMonth', () => {
 });
 
 describe('isFuture i canGoNext', () => {
-  test('K7: dziś nie jest przyszłością, jutro jest', () => {
+  test('dziś nie jest przyszłością, jutro jest', () => {
     assert.equal(isFuture('2026-10-07', TODAY), false);
     assert.equal(isFuture('2026-10-08', TODAY), true);
     assert.equal(isFuture('2026-10-06', TODAY), false);
   });
 
-  test('K7: granice miesiąca i roku', () => {
+  test('granice miesiąca i roku', () => {
     assert.equal(isFuture('2026-11-01', '2026-10-31'), true);
     assert.equal(isFuture('2027-01-01', '2026-12-31'), true);
     assert.equal(isFuture('2026-12-31', '2027-01-01'), false);
@@ -286,7 +255,7 @@ describe('isFuture i canGoNext', () => {
     assert.equal(isFuture('2028-02-29', '2028-02-28'), true);
   });
 
-  test('K7: dzień jest liczony lokalnie, więc tuż po północy „dziś” to już nowy dzień', () => {
+  test('dzień jest liczony lokalnie, więc tuż po północy „dziś” to już nowy dzień', () => {
     const justAfterMidnight = todayKey(new Date(2026, 9, 7, 0, 30));
     assert.equal(justAfterMidnight, '2026-10-07');
     assert.equal(isFuture('2026-10-07', justAfterMidnight), false);
@@ -296,20 +265,20 @@ describe('isFuture i canGoNext', () => {
     assert.equal(isFuture('2026-10-07', justBeforeMidnight), false);
   });
 
-  test('K8: strzałka „dalej” jest wyłączona w bieżącym i późniejszych miesiącach', () => {
+  test('strzałka „dalej” jest wyłączona w bieżącym i późniejszych miesiącach', () => {
     assert.equal(canGoNext({ year: 2026, month: 10 }, TODAY), false);
     assert.equal(canGoNext({ year: 2026, month: 11 }, TODAY), false);
     assert.equal(canGoNext({ year: 2027, month: 1 }, TODAY), false);
   });
 
-  test('K8: strzałka „dalej” jest włączona we wcześniejszych miesiącach, także przez granicę roku', () => {
+  test('strzałka „dalej” jest włączona we wcześniejszych miesiącach, także przez granicę roku', () => {
     assert.equal(canGoNext({ year: 2026, month: 9 }, TODAY), true);
     assert.equal(canGoNext({ year: 2025, month: 12 }, TODAY), true);
     assert.equal(canGoNext({ year: 2026, month: 12 }, '2027-01-05'), true);
     assert.equal(canGoNext({ year: 2027, month: 1 }, '2027-01-05'), false);
   });
 
-  test('K8: ostatni dzień miesiąca nie odblokowuje następnego, pierwszy dzień go odblokowuje', () => {
+  test('ostatni dzień miesiąca nie odblokowuje następnego, pierwszy dzień go odblokowuje', () => {
     assert.equal(canGoNext({ year: 2026, month: 10 }, '2026-10-31'), false);
     assert.equal(canGoNext({ year: 2026, month: 10 }, '2026-11-01'), true);
   });
@@ -320,7 +289,7 @@ describe('describeCell', () => {
   const context = { today: TODAY, selected: '2026-09-30', entries };
   const described = () => monthGrid(2026, 10).map((cell) => describeCell(cell, context));
 
-  test('K9: dokładnie jedna komórka jest „dziś” i jest to właściwy dzień', () => {
+  test('dokładnie jedna komórka jest „dziś” i jest to właściwy dzień', () => {
     const todays = described().filter((cell) => cell.isToday);
     assert.deepEqual(
       todays.map((cell) => cell.key),
@@ -328,7 +297,7 @@ describe('describeCell', () => {
     );
   });
 
-  test('K9: „dziś” wymaga zgodności całego dnia, a nie samego numeru ani miesiąca', () => {
+  test('„dziś” wymaga zgodności całego dnia, a nie samego numeru ani miesiąca', () => {
     const sameDayNumberOtherMonth = describeCell(
       { key: '2026-09-07', day: 7, inMonth: true },
       context,
@@ -338,7 +307,7 @@ describe('describeCell', () => {
     assert.equal(sameMonthOtherYear.isToday, false);
   });
 
-  test('K9: dokładnie jedna komórka jest wybrana, także gdy należy do sąsiedniego miesiąca', () => {
+  test('dokładnie jedna komórka jest wybrana, także gdy należy do sąsiedniego miesiąca', () => {
     const selected = described().filter((cell) => cell.isSelected);
     assert.deepEqual(
       selected.map((cell) => cell.key),
@@ -347,7 +316,7 @@ describe('describeCell', () => {
     assert.equal(selected[0].inMonth, false);
   });
 
-  test('K9: dzisiejszy dzień może być jednocześnie wybrany', () => {
+  test('dzisiejszy dzień może być jednocześnie wybrany', () => {
     const cell = describeCell(
       { key: TODAY, day: 7, inMonth: true },
       { ...context, selected: TODAY },
@@ -356,7 +325,7 @@ describe('describeCell', () => {
     assert.equal(cell.isSelected, true);
   });
 
-  test('K9: kropkę mają tylko dni z wpisem, bez przesunięcia o dzień', () => {
+  test('kropkę mają tylko dni z wpisem, bez przesunięcia o dzień', () => {
     const withEntry = described()
       .filter((cell) => cell.hasEntry)
       .map((cell) => cell.key);
@@ -368,7 +337,7 @@ describe('describeCell', () => {
     assert.equal(byKey['2026-10-06'].hasEntry, false);
   });
 
-  test('K9: dni po dzisiejszym są przyszłością, dzisiejszy i wcześniejsze nie', () => {
+  test('dni po dzisiejszym są przyszłością, dzisiejszy i wcześniejsze nie', () => {
     const future = described()
       .filter((cell) => cell.isFuture)
       .map((cell) => cell.key);
@@ -380,7 +349,7 @@ describe('describeCell', () => {
     assert.equal(byKey['2026-10-06'].isFuture, false);
   });
 
-  test('K9: dni sąsiednich miesięcy są oznaczone jako nienależące do widoku', () => {
+  test('dni sąsiednich miesięcy są oznaczone jako nienależące do widoku', () => {
     const outside = described()
       .filter((cell) => !cell.inMonth)
       .map((cell) => cell.key);
@@ -389,7 +358,7 @@ describe('describeCell', () => {
     assert.equal(described().filter((cell) => cell.inMonth).length, 31);
   });
 
-  test('K10: opis dla czytnika ekranu zawiera dzień tygodnia, datę i informację o wpisie', () => {
+  test('opis dla czytnika ekranu zawiera dzień tygodnia, datę i informację o wpisie', () => {
     const cell = { key: '2026-09-25', day: 25, inMonth: true };
     const withEntry = describeCell(cell, {
       today: TODAY,
@@ -413,26 +382,26 @@ describe('describeCell', () => {
   });
 });
 
-describe('describeCell: szkice (K21–K23)', () => {
+describe('describeCell: szkice', () => {
   const base = { today: TODAY, selected: TODAY };
   const cell = { key: '2026-10-05', day: 5, inMonth: true };
   const entry = { date: '2026-10-05' };
   const draft = { grateful: ['a', '', ''], updatedAt: 1 };
 
-  test('K21: dzień ze szkicem i bez wpisu ma znacznik „draft”', () => {
+  test('dzień ze szkicem i bez wpisu ma znacznik „draft”', () => {
     const info = describeCell(cell, { ...base, entries: {}, drafts: { '2026-10-05': draft } });
     assert.equal(info.marker, 'draft');
     assert.equal(info.hasDraft, true);
     assert.equal(info.hasEntry, false);
   });
 
-  test('K21: dzień bez szkicu i bez wpisu nie ma znacznika', () => {
+  test('dzień bez szkicu i bez wpisu nie ma znacznika', () => {
     const info = describeCell(cell, { ...base, entries: {}, drafts: { '2026-10-06': draft } });
     assert.equal(info.marker, null);
     assert.equal(info.hasDraft, false);
   });
 
-  test('K21: szkic dotyczy tylko swojego dnia, bez przesunięcia o dzień', () => {
+  test('szkic dotyczy tylko swojego dnia, bez przesunięcia o dzień', () => {
     const drafts = { '2026-10-05': draft };
     const markers = monthGrid(2026, 10)
       .map((c) => describeCell(c, { ...base, entries: {}, drafts }))
@@ -441,7 +410,7 @@ describe('describeCell: szkice (K21–K23)', () => {
     assert.deepEqual(markers, ['2026-10-05']);
   });
 
-  test('K22: dzień z wpisem i szkicem zmian ma znacznik wpisu', () => {
+  test('dzień z wpisem i szkicem zmian ma znacznik wpisu', () => {
     const info = describeCell(cell, {
       ...base,
       entries: { '2026-10-05': entry },
@@ -452,13 +421,13 @@ describe('describeCell: szkice (K21–K23)', () => {
     assert.equal(info.hasDraft, true);
   });
 
-  test('K22: dzień z samym wpisem ma znacznik wpisu', () => {
+  test('dzień z samym wpisem ma znacznik wpisu', () => {
     const info = describeCell(cell, { ...base, entries: { '2026-10-05': entry }, drafts: {} });
     assert.equal(info.marker, 'entry');
     assert.equal(info.hasDraft, false);
   });
 
-  test('K23: opis dla czytnika ekranu wymienia szkic', () => {
+  test('opis dla czytnika ekranu wymienia szkic', () => {
     const context = { ...base, entries: {}, drafts: { '2026-10-05': draft } };
     assert.equal(
       describeCell(cell, context).label,
@@ -471,7 +440,7 @@ describe('describeCell: szkice (K21–K23)', () => {
     );
   });
 
-  test('K23: brak przekazanych szkiców działa jak brak szkiców', () => {
+  test('brak przekazanych szkiców działa jak brak szkiców', () => {
     const info = describeCell(cell, { ...base, entries: { '2026-10-05': entry } });
     assert.equal(info.hasDraft, false);
     assert.equal(info.marker, 'entry');
@@ -504,13 +473,13 @@ describe('calendarReducer', () => {
     });
   });
 
-  test('K11: otwarcie pokazuje miesiąc wybranego dnia', () => {
+  test('otwarcie pokazuje miesiąc wybranego dnia', () => {
     assert.equal(openedState().open, true);
     assert.equal(openedState().viewYear, 2026);
     assert.equal(openedState().viewMonth, 9);
   });
 
-  test('K11: po przewinięciu miesięcy, zamknięciu i ponownym otwarciu widok wraca do miesiąca wybranego dnia', () => {
+  test('po przewinięciu miesięcy, zamknięciu i ponownym otwarciu widok wraca do miesiąca wybranego dnia', () => {
     let state = reduce(openedState(), { type: 'prev' });
     state = reduce(state, { type: 'prev' });
     assert.equal(state.viewMonth, 7);
@@ -522,19 +491,19 @@ describe('calendarReducer', () => {
     assert.equal(state.selected, '2026-09-30');
   });
 
-  test('K12: ponowne dotknięcie przycisku daty zamyka panel, nie zmieniając dnia ani widoku', () => {
+  test('ponowne dotknięcie przycisku daty zamyka panel, nie zmieniając dnia ani widoku', () => {
     const moved = reduce(openedState(), { type: 'prev' });
     const result = reduce(moved, { type: 'toggle' });
     assert.deepEqual(result, { ...moved, open: false });
   });
 
-  test('K12: dotknięcie poza panelem i Escape (akcja close) zamykają panel bez innych zmian', () => {
+  test('dotknięcie poza panelem i Escape (akcja close) zamykają panel bez innych zmian', () => {
     const moved = reduce(openedState(), { type: 'prev' });
     assert.deepEqual(reduce(moved, { type: 'close' }), { ...moved, open: false });
     assert.deepEqual(reduce(closedState(), { type: 'close' }), closedState());
   });
 
-  test('K13: wybór dnia z widocznego miesiąca zaznacza go i zamyka panel', () => {
+  test('wybór dnia z widocznego miesiąca zaznacza go i zamyka panel', () => {
     const result = reduce(openedState(), { type: 'pickDay', key: '2026-09-12' });
     assert.deepEqual(result, {
       open: false,
@@ -544,36 +513,36 @@ describe('calendarReducer', () => {
     });
   });
 
-  test('K13: wybór dnia z poprzedniego miesiąca przełącza widok na ten miesiąc', () => {
+  test('wybór dnia z poprzedniego miesiąca przełącza widok na ten miesiąc', () => {
     const result = reduce(openedState(), { type: 'pickDay', key: '2026-08-31' });
     assert.equal(result.selected, '2026-08-31');
     assert.deepEqual([result.viewYear, result.viewMonth], [2026, 8]);
     assert.equal(result.open, false);
   });
 
-  test('K13: wybór dnia z następnego miesiąca (nie z przyszłości) przełącza widok', () => {
+  test('wybór dnia z następnego miesiąca (nie z przyszłości) przełącza widok', () => {
     const result = reduce(openedState(), { type: 'pickDay', key: '2026-10-01' });
     assert.equal(result.selected, '2026-10-01');
     assert.deepEqual([result.viewYear, result.viewMonth], [2026, 10]);
   });
 
-  test('K13: wybór dnia z przeszłego roku zmienia rok widoku', () => {
+  test('wybór dnia z przeszłego roku zmienia rok widoku', () => {
     const result = reduce(openedState(), { type: 'pickDay', key: '2025-12-31' });
     assert.deepEqual([result.viewYear, result.viewMonth], [2025, 12]);
   });
 
-  test('K13: dzisiejszy dzień można wybrać', () => {
+  test('dzisiejszy dzień można wybrać', () => {
     const result = reduce(openedState(), { type: 'pickDay', key: TODAY });
     assert.equal(result.selected, TODAY);
     assert.equal(result.open, false);
   });
 
-  test('K14: wybór dnia z przyszłości jest ignorowany, a panel zostaje otwarty', () => {
+  test('wybór dnia z przyszłości jest ignorowany, a panel zostaje otwarty', () => {
     assert.deepEqual(reduce(openedState(), { type: 'pickDay', key: '2026-10-08' }), openedState());
     assert.deepEqual(reduce(openedState(), { type: 'pickDay', key: '2030-01-01' }), openedState());
   });
 
-  test('K14: granica roku: ostatni dzień starego roku wolno, pierwszy po dzisiejszym nie', () => {
+  test('granica roku: ostatni dzień starego roku wolno, pierwszy po dzisiejszym nie', () => {
     const state = createCalendarState('2026-12-30');
     const open = reduce(state, { type: 'toggle' }, '2027-01-01');
     assert.equal(
@@ -583,13 +552,13 @@ describe('calendarReducer', () => {
     assert.deepEqual(reduce(open, { type: 'pickDay', key: '2027-01-02' }, '2027-01-01'), open);
   });
 
-  test('K14: niepoprawny klucz dnia jest ignorowany', () => {
+  test('niepoprawny klucz dnia jest ignorowany', () => {
     for (const key of ['2026-02-31', 'abc', '', undefined, null, 20260912]) {
       assert.deepEqual(reduce(openedState(), { type: 'pickDay', key }), openedState(), String(key));
     }
   });
 
-  test('K8: „dalej” w bieżącym miesiącu nic nie zmienia, a we wcześniejszym przesuwa widok', () => {
+  test('„dalej” w bieżącym miesiącu nic nie zmienia, a we wcześniejszym przesuwa widok', () => {
     const inCurrentMonth = reduce(createCalendarState(TODAY), { type: 'toggle' });
     assert.deepEqual(reduce(inCurrentMonth, { type: 'next' }), inCurrentMonth);
     const next = reduce(openedState(), { type: 'next' });
@@ -597,7 +566,7 @@ describe('calendarReducer', () => {
     assert.deepEqual(reduce(next, { type: 'next' }), next);
   });
 
-  test('K8: „wstecz” nie ma ograniczenia i przechodzi przez granicę roku', () => {
+  test('„wstecz” nie ma ograniczenia i przechodzi przez granicę roku', () => {
     let state = createCalendarState('2026-01-15');
     state = reduce(state, { type: 'toggle' });
     state = reduce(state, { type: 'prev' });
@@ -606,7 +575,7 @@ describe('calendarReducer', () => {
     assert.deepEqual([state.viewYear, state.viewMonth], [2000, 12]);
   });
 
-  test('K18: przesuwanie miesięcy nie zmienia wybranego dnia ani stanu otwarcia', () => {
+  test('przesuwanie miesięcy nie zmienia wybranego dnia ani stanu otwarcia', () => {
     let state = openedState();
     for (const type of ['prev', 'prev', 'next', 'prev', 'prev', 'prev']) {
       state = reduce(state, { type });
@@ -615,7 +584,7 @@ describe('calendarReducer', () => {
     }
   });
 
-  test('K15: „Dziś” z przeszłego miesiąca przy otwartym panelu wybiera dziś i zamyka panel', () => {
+  test('„Dziś” z przeszłego miesiąca przy otwartym panelu wybiera dziś i zamyka panel', () => {
     let state = reduce(openedState(), { type: 'pickDay', key: '2025-03-10' });
     state = reduce(state, { type: 'toggle' });
     assert.equal(state.open, true);
@@ -623,18 +592,18 @@ describe('calendarReducer', () => {
     assert.deepEqual(result, { open: false, viewYear: 2026, viewMonth: 10, selected: TODAY });
   });
 
-  test('K15: „Dziś” przy zamkniętym panelu zmienia wybrany dzień i widok', () => {
+  test('„Dziś” przy zamkniętym panelu zmienia wybrany dzień i widok', () => {
     const past = reduce(openedState(), { type: 'pickDay', key: '2026-09-12' });
     const result = reduce(past, { type: 'goToToday' });
     assert.deepEqual(result, { open: false, viewYear: 2026, viewMonth: 10, selected: TODAY });
   });
 
-  test('K15: „Dziś” korzysta z przekazanego dnia, więc po zmianie dnia wskazuje nowy', () => {
+  test('„Dziś” korzysta z przekazanego dnia, więc po zmianie dnia wskazuje nowy', () => {
     const result = reduce(openedState(), { type: 'goToToday' }, '2027-01-01');
     assert.deepEqual(result, { open: false, viewYear: 2027, viewMonth: 1, selected: '2027-01-01' });
   });
 
-  test('K16: zewnętrzna zmiana dnia synchronizuje wybór i widok, bez zmiany stanu otwarcia', () => {
+  test('zewnętrzna zmiana dnia synchronizuje wybór i widok, bez zmiany stanu otwarcia', () => {
     const fromClosed = reduce(closedState(), { type: 'select', key: '2026-08-15' });
     assert.deepEqual(fromClosed, {
       open: false,
@@ -651,12 +620,12 @@ describe('calendarReducer', () => {
     });
   });
 
-  test('K16: zewnętrzna zmiana na dzień z przyszłości lub niepoprawny jest ignorowana', () => {
+  test('zewnętrzna zmiana na dzień z przyszłości lub niepoprawny jest ignorowana', () => {
     assert.deepEqual(reduce(closedState(), { type: 'select', key: '2026-10-08' }), closedState());
     assert.deepEqual(reduce(closedState(), { type: 'select', key: 'oops' }), closedState());
   });
 
-  test('K17: reduktor nie zmienia stanu wejściowego (zamrożony stan nie powoduje błędu)', () => {
+  test('reduktor nie zmienia stanu wejściowego (zamrożony stan nie powoduje błędu)', () => {
     const frozen = deepFreeze({ open: true, viewYear: 2026, viewMonth: 9, selected: '2026-09-30' });
     const snapshot = structuredClone(frozen);
     const actions = [
@@ -675,7 +644,7 @@ describe('calendarReducer', () => {
     }
   });
 
-  test('K6: stan ma wyłącznie pola open, viewYear, viewMonth i selected, czyli nie zawiera dnia widoku', () => {
+  test('stan ma wyłącznie pola open, viewYear, viewMonth i selected, czyli nie zawiera dnia widoku', () => {
     // To odróżnia model od starego kalendarza, w którym ukryty dzień powodował przeskoki miesięcy (setMonth).
     const expectedKeys = ['open', 'selected', 'viewMonth', 'viewYear'];
     let state = closedState();
@@ -697,12 +666,12 @@ describe('calendarReducer', () => {
     }
   });
 
-  test('K17: kolejne wywołania z tym samym stanem dają ten sam wynik (brak ukrytego stanu)', () => {
+  test('kolejne wywołania z tym samym stanem dają ten sam wynik (brak ukrytego stanu)', () => {
     const action = { type: 'pickDay', key: '2026-08-31' };
     assert.deepEqual(reduce(openedState(), action), reduce(openedState(), action));
   });
 
-  test('K20: nieznana akcja kończy się błędem zamiast cichego pominięcia', () => {
+  test('nieznana akcja kończy się błędem zamiast cichego pominięcia', () => {
     assert.throws(() => reduce(openedState(), { type: 'toogle' }));
     assert.throws(() => reduce(openedState(), { type: undefined }));
   });

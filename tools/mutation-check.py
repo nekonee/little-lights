@@ -2,7 +2,7 @@
 """Kontrola testów przez psucie kodu (mutation testing „na piechotę”).
 
 Dla każdej celowej usterki w kopii kodu (poza repozytorium) uruchamia wszystkie testy w czterech
-strefach czasowych. Usterka jest „wykryta”, gdy choć jeden test pada. Usterka, która przeżyje,
+strefach czasowych. Usterka jest „wykryta”, gdy `node --test` kończy się błędem w którejkolwiek strefie. Usterka, która przeżyje,
 oznacza słaby test albo martwy kod. Uruchomienie: python3 tools/mutation-check.py
 
 Wzorce tekstu są przypisane do obecnego kodu. Gdy kod się zmieni, skrypt zgłosi „NIE ZNALEZIONO WZORCA”
@@ -30,6 +30,8 @@ IX = 'index.html'
 CSS = 'css/base.css'
 WF = '.github/workflows/pages.yml'
 GI = '.gitignore'
+BS = 'scripts/build-site.js'
+PK = 'package.json'
 mutants=[
  ('tydzień od niedzieli', M, "(weekdayOfFirst + DAYS_IN_WEEK - 1) % DAYS_IN_WEEK", "weekdayOfFirst"),
  ('5 wierszy zamiast 6 (35 komórek)', M, "const GRID_ROWS = 6;", "const GRID_ROWS = 5;"),
@@ -87,7 +89,7 @@ mutants=[
  ('sanitizeDrafts: bez sprawdzania klucza', J, "if (!isValidKey(key) || !isPlainObject(value)) continue;", "if (!isPlainObject(value)) continue;"),
  ('sanitizeDrafts: ujemne updatedAt przechodzi', J, " && value.updatedAt > 0", ""),
  ('draft-sync: flush zapisuje zawsze', S, "if (handle === null) return;\n      cancel();\n      persist();", "cancel();\n      persist();"),
- ('draft-sync: schedule nie anuluje poprzedniego', S, "cancel();\n      handle = timers.set(", "handle = timers.set("),
+ ('draft-sync: schedule nie anuluje poprzedniego', S, "cancel();\n      handle = setTimeout(", "handle = setTimeout("),
  ('draft-sync: flush nie anuluje timera', S, "      cancel();\n      persist();\n    },", "      persist();\n    },"),
  ('draft-sync: cancel nic nie robi', S, "function cancel() {\n    if (handle === null) return;", "function cancel() {\n    return;"),
  ('draft-sync: opóźnienie 0', S, "export const DRAFT_DELAY_MS = 500;", "export const DRAFT_DELAY_MS = 0;"),
@@ -206,22 +208,6 @@ mutants=[
  ('pwa: APP_TITLE inny niż w manifeście', STR, "export const APP_TITLE = 'Little Lights';", "export const APP_TITLE = 'Little Light';"),
  ('pwa: brak wcięcia u góry (notch)', CSS, 'calc(28px + env(safe-area-inset-top))', '28px'),
  ('pwa: brak wcięcia na dole (pasek home)', CSS, 'calc(60px + env(safe-area-inset-bottom))', '60px'),
- ('deploy: na stronę trafia docs', WF, "cp -R css js _site/", "cp -R css js docs _site/"),
- ('deploy: na stronę trafiają testy', WF, "cp -R css js _site/", "cp -R css js tests _site/"),
- ('deploy: na stronę trafia legacy', WF, "cp -R css js _site/", "cp -R css js legacy _site/"),
- ('deploy: na stronę trafiają narzędzia', WF, "cp -R css js _site/", "cp -R css js tools _site/"),
- ('deploy: na stronę trafiają prywatne kopie', WF, "cp -R css js _site/", "cp -R css js backups _site/"),
- ('deploy: kopiowanie całego repozytorium', WF, "cp -R css js _site/", "cp -R . _site/"),
- ('deploy: wzorzec zamiast listy plików', WF, "cp -R css js _site/", "cp -R css js* _site/"),
- ('deploy: README na stronie', WF, "cp index.html manifest.json apple-touch-icon.png _site/", "cp index.html manifest.json apple-touch-icon.png README.md _site/"),
- ('deploy: package.json na stronie', WF, "cp index.html manifest.json apple-touch-icon.png _site/", "cp index.html manifest.json apple-touch-icon.png package.json _site/"),
- ('deploy: brak katalogu js', WF, "cp -R css js _site/", "cp -R css _site/"),
- ('deploy: brak katalogu css', WF, "cp -R css js _site/", "cp -R js _site/"),
- ('deploy: brak manifestu', WF, "cp index.html manifest.json apple-touch-icon.png _site/", "cp index.html apple-touch-icon.png _site/"),
- ('deploy: brak ikony apple-touch-icon', WF, "cp index.html manifest.json apple-touch-icon.png _site/", "cp index.html manifest.json _site/"),
- ('deploy: brak index.html', WF, "cp index.html manifest.json apple-touch-icon.png _site/", "cp manifest.json apple-touch-icon.png _site/"),
- ('deploy: brak ikon z katalogu assets/icons', WF, "          cp -R assets/icons _site/assets/\n", ""),
- ('deploy: brak favicony', WF, "          cp assets/favicon.svg _site/assets/\n", ""),
  ('deploy: publikacja z innej gałęzi', WF, "branches: [main]", "branches: [develop]"),
  ('deploy: publikacja bez testów (brak needs)', WF, "    needs: test\n", ""),
  ('deploy: zadanie testów nie uruchamia testów', WF, "      - run: npm test\n", ""),
@@ -235,6 +221,30 @@ mutants=[
  ('deploy: cudza akcja', WF, "actions/checkout@v7", "someone/checkout@v7"),
  ('deploy: akcja bez wersji głównej', WF, "actions/setup-node@v7", "actions/setup-node@main"),
  ('deploy: sekret w workflow', WF, "      - run: npm test", "      - run: npm test\n        env:\n          T: ${{ secrets.TOKEN }}"),
+ ('publikacja: na stronę trafia docs', BS, "  'js',\n", "  'js',\n  'docs',\n"),
+ ('publikacja: na stronę trafiają testy', BS, "  'js',\n", "  'js',\n  'tests',\n"),
+ ('publikacja: na stronę trafia legacy', BS, "  'js',\n", "  'js',\n  'legacy',\n"),
+ ('publikacja: na stronę trafiają narzędzia', BS, "  'js',\n", "  'js',\n  'tools',\n"),
+ ('publikacja: na stronę trafiają prywatne kopie', BS, "  'js',\n", "  'js',\n  'backups',\n"),
+ ('publikacja: kopiowanie całego repozytorium', BS, "  'index.html',\n", "  '.',\n"),
+ ('publikacja: wzorzec zamiast listy plików', BS, "  'js',\n", "  'js*',\n"),
+ ('publikacja: README na stronie', BS, "  'index.html',\n", "  'index.html',\n  'README.md',\n"),
+ ('publikacja: package.json na stronie', BS, "  'index.html',\n", "  'index.html',\n  'package.json',\n"),
+ ('publikacja: brak katalogu js', BS, "  'js',\n", ""),
+ ('publikacja: brak katalogu css', BS, "  'css',\n", ""),
+ ('publikacja: brak manifestu', BS, "  'manifest.json',\n", ""),
+ ('publikacja: brak ikony apple-touch-icon', BS, "  'apple-touch-icon.png',\n", ""),
+ ('publikacja: brak index.html', BS, "  'index.html',\n", ""),
+ ('publikacja: brak ikon z katalogu assets/icons', BS, "  'assets/icons',\n", ""),
+ ('publikacja: brak favicony', BS, "  'assets/favicon.svg',\n", ""),
+ ('publikacja: niepusty katalog nie jest odrzucany', BS, "if (existsSync(outDir) && readdirSync(outDir).length > 0) {", "if (false) {"),
+ ('workflow: ręczne kopiowanie zamiast skryptu', WF, "run: node scripts/build-site.js _site", "run: cp -R . _site"),
+ ('workflow: macierz bez strefy Kiritimati', WF, "Pacific/Kiritimati, UTC]", "UTC]"),
+ ('workflow: strefa nie jest ustawiona', WF, "    env:\n      TZ: ${{ matrix.tz }}\n", ""),
+ ('workflow: wersja Node na sztywno', WF, "node-version-file: .nvmrc", "node-version: 22"),
+ ('pakiet: test:tz bez strefy Kiritimati', PK, "Pacific/Kiritimati UTC", "UTC"),
+ ('pakiet: wymagana inna wersja Node niż w .nvmrc', PK, '"node": ">=22"', '"node": ">=20"'),
+ ('gitignore: brak ochrony wyniku budowania strony', GI, "_site/\n", ""),
  ('gitignore: brak ochrony katalogu backups', GI, "backups/\n", ""),
  ('gitignore: brak ochrony plików kopii', GI, "kopia-dziennika-*.json\n", ""),
  ('gitignore: brak ochrony obecnych plików kopii', GI, "little-lights-kopia-*.json\n", ""),
@@ -247,11 +257,15 @@ def fresh():
     if os.path.exists(TMP):
         shutil.rmtree(TMP)
     os.makedirs(TMP)
-    for d in ('js','tests','css','assets','.github','docs'): shutil.copytree(f'{SRC}/{d}', f'{TMP}/{d}')
-    for f in ('package.json','index.html','manifest.json','apple-touch-icon.png','.gitignore','README.md'): shutil.copy(f'{SRC}/{f}', TMP)
+    for d in ('js','tests','css','assets','.github','docs','scripts','legacy','tools'): shutil.copytree(f'{SRC}/{d}', f'{TMP}/{d}')
+    # atrapa prywatnej kopii wpisów: gdyby trafiła na stronę, test publikacji ma to wykryć
+    os.makedirs(f'{TMP}/backups')
+    open(f'{TMP}/backups/little-lights-kopia-2026-01-01.json','w').write('{}')
+    for f in ('package.json','index.html','manifest.json','apple-touch-icon.png','.gitignore','.nvmrc','README.md'): shutil.copy(f'{SRC}/{f}', TMP)
 def run(tz):
+    # Kod wyjścia, a nie licznik „fail”: błąd w hooku (np. nieudane budowanie strony) node liczy jako „cancelled”.
     r=subprocess.run(['node','--test'],cwd=TMP,env={**os.environ,'TZ':tz},capture_output=True,text=True)
-    m=re.search(r'ℹ fail (\d+)',r.stdout); return int(m.group(1)) if m else -1
+    return r.returncode
 fresh()
 print('baza:', {tz:run(tz) for tz in TZS})
 survivors=[]

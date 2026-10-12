@@ -6,5 +6,8 @@ backups/
 kopia-dziennika-*.json
 little-lights-kopia-*.json
 
+# Wynik budowania strony (npm run build:site)
+_site/
+
 # Zrzuty ekranu i pliki robocze narzędzi
 .openchamber/

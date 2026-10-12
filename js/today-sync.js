@@ -1,5 +1,5 @@
 // Czysta logika powrotu do dzisiejszej daty. Bez DOM, bez zegara systemowego i bez localStorage.
-// Zachowania T1–T12 wypisane są na początku tests/today-sync.test.js.
+// Testy: tests/unit/today-sync.test.js.
 import { draftDecision } from './drafts.js';
 
 export const RETURN_THRESHOLD_MS = 10 * 60 * 1000;

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { computeStreak, listMonths, summarizeMonth } from '../js/streak-summary.js';
+import { computeStreak, listMonths, summarizeMonth } from '../../js/streak-summary.js';
 
 const NOON = new Date(2026, 8, 27, 12);
 

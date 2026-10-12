@@ -12,7 +12,7 @@ import {
   monthOf,
   parseKey,
   todayKey,
-} from '../js/dates.js';
+} from '../../js/dates.js';
 
 describe('dateKey i monthKey', () => {
   test('składają klucze z liczb z zerami wiodącymi', () => {

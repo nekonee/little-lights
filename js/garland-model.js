@@ -1,6 +1,6 @@
 // Czysta geometria girlandy świetlnej: łuki sznurka, żarówki, kolory i rytm migotania.
 // Bez DOM i bez zegara; wynik zależy tylko od szerokości i ziarna.
-// Zachowania G1–G12 wypisane są na początku tests/garland-model.test.js.
+// Testy: tests/unit/garland-model.test.js.
 
 // Jedyne kolory spoza motywu: mają wyglądać jak prawdziwe kolorowe lampki.
 export const BULB_COLORS = ['#e2483f', '#3fae6a', '#e8c15a', '#5f9bc7', '#e28fc0'];
